@@ -18,9 +18,12 @@
     <ClCompile Include="main.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="hittest.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="collision.h">
+    <ClInclude Include="hittest.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
