@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include "game.h"
+#include "hittest.h"
 
 // Direction enum, player, and boss structs
 enum Direction { UP, DOWN, LEFT, RIGHT };
@@ -43,7 +44,7 @@ struct chocoshooter {
 
 // Initialize player instance
 struct chocoshooter chocoShooterInstance = {
-    .position = {100.0f, 100.0f},
+    .position = {1300.0f, 100.0f},
     .width = 200.0f,
     .height = 300.0f,
     .speed = 200.0f,
@@ -60,6 +61,7 @@ void takeDamage(struct chocoshooter* player, int damage) {
         if (player->health < 0) {
             player->health = 0;  // Ensure health doesn't go below zero
             printf("Choco Shooter has been defeated!\n");
+            
             // You can add code here to handle game-over or respawn logic
         }
         else {
@@ -120,10 +122,16 @@ void Game_Update(void) {
     if (CP_Input_KeyTriggered(KEY_H)) {  // Press 'H' to take 1 damage
         takeDamage(&chocoShooterInstance, 1);
     }
-    char healthDisplay[3];
-    sprintf_s(healthDisplay, "Health: %d", chocoShooterInstance.health);
-    CP_Settings_TextSize(30);
-    CP_Font_DrawText(healthDisplay, 50, 50);
+ 
+    printf("Health: %d", chocoShooterInstance.health);
+    
+    if (AreCirclesIntersecting(
+        chocoShooterInstance.position.x, chocoShooterInstance.position.y, chocoShooterInstance.width/2,
+        boss1instance.position.x, boss1instance.position.y, boss1instance.width/2)) {
+
+        // Apply damage if they are intersecting
+        takeDamage(&chocoShooterInstance, 1);
+    }
 
     // Boss follows player and changes direction
     CP_Vector directionToPlayer;
@@ -160,7 +168,7 @@ void Game_Update(void) {
     );
 
     // Draw boss with flipping
-    float bossDrawWidth = boss1instance.isFlipped ? -boss1instance.width : boss1instance.width;
+    float bossDrawWidth = boss1instance.isFlipped ? boss1instance.width : -boss1instance.width;
     if (levels() == 1) {
         CP_Image_Draw(
             boss1instance.image,
@@ -180,7 +188,7 @@ void Game_Exit(void) {
 
 int levels(void) {
     int lvl = 1;
-    int enemies = 5;
+    int enemies = 0;
     if (lvl == 1 && enemies == 0) {
         return 1;
     }
