@@ -34,7 +34,6 @@
     <ClInclude Include="hittest.h" />
     <ClInclude Include="mainmenu.h" />
     <ClInclude Include="player.h" />
-    <ClInclude Include="shapes.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
