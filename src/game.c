@@ -1,6 +1,7 @@
 #include "cprocessing.h"
 #include <stdio.h>
 #include <stdbool.h>
+#include "game.h"
 
 // Direction enum, player, and boss structs
 enum Direction { UP, DOWN, LEFT, RIGHT };
@@ -12,6 +13,7 @@ struct boss1 {
     float speed;
     CP_Image image;
     char imageTag[50];
+    int maxhealth;
     bool isFlipped; // Track if the boss should be facing left
 };
 
@@ -19,7 +21,8 @@ struct boss1 {
 struct boss1 boss1instance = {
     .height = 500.0f,
     .width = 500.0f,
-    .speed = 100.0f,
+    .speed = 80.0f,
+    .maxhealth =40,
     .position = {100.0f, 450.0f},
     .imageTag = "boss_lvl1.png",
     .isFlipped = false
@@ -34,6 +37,8 @@ struct chocoshooter {
     char imageTag[50];
     bool isFlipped;
     enum Direction lastDirection;
+    int health;
+    int maxhealth;
 };
 
 // Initialize player instance
@@ -42,10 +47,26 @@ struct chocoshooter chocoShooterInstance = {
     .width = 200.0f,
     .height = 300.0f,
     .speed = 200.0f,
+    .health = 3,
+    .maxhealth = 3,
     .imageTag = "choco shooter.png",
     .isFlipped = false,
     .lastDirection = RIGHT
 };
+
+void takeDamage(struct chocoshooter* player, int damage) {
+    if (player->health > 0) {
+        player->health -= damage;
+        if (player->health < 0) {
+            player->health = 0;  // Ensure health doesn't go below zero
+            printf("Choco Shooter has been defeated!\n");
+            // You can add code here to handle game-over or respawn logic
+        }
+        else {
+            printf("Choco Shooter took %d damage, health is now %d\n", damage, player->health);
+        }
+    }
+}
 
 void Game_Init(void) {
     CP_System_SetFrameRate(40);
@@ -95,6 +116,14 @@ void Game_Update(void) {
             break;
         }
     }
+
+    if (CP_Input_KeyTriggered(KEY_H)) {  // Press 'H' to take 1 damage
+        takeDamage(&chocoShooterInstance, 1);
+    }
+    char healthDisplay[3];
+    sprintf_s(healthDisplay, "Health: %d", chocoShooterInstance.health);
+    CP_Settings_TextSize(30);
+    CP_Font_DrawText(healthDisplay, 50, 50);
 
     // Boss follows player and changes direction
     CP_Vector directionToPlayer;
@@ -160,3 +189,6 @@ int levels(void) {
     }
     return 0;
 }
+
+
+

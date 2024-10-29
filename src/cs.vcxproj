@@ -26,6 +26,7 @@
     <ClCompile Include="player.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="game.h" />
     <ClInclude Include="hittest.h" />
     <ClInclude Include="mainmenu.h" />
     <ClInclude Include="player.h" />
