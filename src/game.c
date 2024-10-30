@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <math.h>
+#include <stdbool.h>
 #include "cprocessing.h"
 #include "mainmenu.h"
 
@@ -43,110 +44,6 @@ struct ChocoRoach {
 	enum EnemyState current_state;
 };
 
-struct ChocoRoach roachesArr[MAX_ENEMY_COUNT];
-float windowWidth, windowHeight;
-int roachesCnt;
-
-void game_init(void)
-{
-	// Get window width and height
-	windowWidth = CP_System_GetWindowWidth();
-	windowHeight = CP_System_GetWindowHeight();
-
-	// Define enemy spawn area
-	float spawnMinY = windowHeight / 10;
-	float spawnMaxY = windowHeight * 9 / 10;
-
-	// Define enemy count
-	roachesCnt = 4;
-
-	srand(time(NULL));
-	for (int i = 0; i < roachesCnt; i++) {
-		
-		// Define properties of enemy
-		struct ChocoRoach chocoRoach = {
-			.img = NULL,
-			.pos.x = -35.f,
-			.pos.y = rand_float(spawnMinY, spawnMaxY), // Generate random y position for enemies
-			.radius = 35.f,
-			.degree = 0.f,
-			.speed = 350.f,
-			.health = 100,
-			.dmg = 10,
-			.movement = MOVING_RIGHT,
-			.current_state = STATE_MOVING
-		};
-
-		// Store enemies in array
-		roachesArr[i] = chocoRoach;
-	}
-
-}
-
-void game_update(void)
-{
-	// Clear background with grey background colour
-	CP_Graphics_ClearBackground(CP_Color_Create(170, 170, 170, 255));
-
-	float dtime = CP_System_GetDt();
-
-	for (int i = 0; i < roachesCnt; i++) {
-
-		// Draw agent
-		float x = roachesArr[i].pos.x;
-		float y = roachesArr[i].pos.y;
-		float r = roachesArr[i].radius;
-		float d = roachesArr[i].degree;
-
-		// Draw circle
-		CP_Settings_Fill(CP_Color_Create(255, 0, 0, 255));
-		CP_Graphics_DrawCircle(x, y, r * 2.0f);
-
-		// Draw triangle 
-		CP_Settings_Fill(CP_Color_Create(255, 255, 255, 255));
-		CP_Graphics_DrawTriangleAdvanced(x + r, y, x - r * cos(0.9), y + r * sin(0.9), x - r * cos(0.9), y - r * sin(0.9), d);
-	}
-
-
-	// Enemies movement logic
-	for (int i = 0; i < roachesCnt; i++) {
-
-		// Update position of player and agents
-		switch (roachesArr[i].movement) {
-		case MOVING_UP:
-			roachesArr[i].pos.y -= (roachesArr[i].speed * dtime);
-			roachesArr[i].degree = 270.0f;
-			break;
-		case MOVING_DOWN:
-			roachesArr[i].pos.y += (roachesArr[i].speed * dtime);
-			roachesArr[i].degree = 90.0f;
-			break;
-		case MOVING_LEFT:
-			roachesArr[i].pos.x -= (roachesArr[i].speed * dtime);
-			roachesArr[i].degree = 180.0f;
-			break;
-		case MOVING_RIGHT:
-			roachesArr[i].pos.x += (roachesArr[i].speed * dtime);
-			roachesArr[i].degree = 0.0f;
-			break;
-		}
-	}
-
-	// Exit to Main Menu
-	/*if (CP_Input_KeyTriggered(KEY_Q)) {
-		CP_Engine_SetNextGameState(main_menu_init, main_menu_update, main_menu_exit);
-	}*/
-}
-
-void game_exit(void)
-{
-
-}
-#include "cprocessing.h"
-#include <stdio.h>
-#include <stdbool.h>
-#include "game.h"
-
 // Direction enum, player, and boss structs
 enum Direction { UP, DOWN, LEFT, RIGHT };
 
@@ -166,7 +63,7 @@ struct boss1 boss1instance = {
     .height = 500.0f,
     .width = 500.0f,
     .speed = 80.0f,
-    .maxhealth =40,
+    .maxhealth = 40,
     .position = {100.0f, 450.0f},
     .imageTag = "boss_lvl1.png",
     .isFlipped = false
@@ -212,15 +109,100 @@ void takeDamage(struct chocoshooter* player, int damage) {
     }
 }
 
-void Game_Init(void) {
+struct ChocoRoach roachesArr[MAX_ENEMY_COUNT];
+float windowWidth, windowHeight;
+int roachesCnt;
+
+void game_init(void)
+{
+// ZH:
+	// Get window width and height
+	windowWidth = CP_System_GetWindowWidth();
+	windowHeight = CP_System_GetWindowHeight();
+
+	// Define enemy spawn area
+	float spawnMinY = windowHeight / 10;
+	float spawnMaxY = windowHeight * 9 / 10;
+
+	// Define enemy count
+	roachesCnt = 4;
+
+	srand(time(NULL));
+	for (int i = 0; i < roachesCnt; i++) {
+		
+		// Define properties of enemy
+		struct ChocoRoach chocoRoach = {
+			.img = NULL,
+			.pos.x = -35.f,
+			.pos.y = rand_float(spawnMinY, spawnMaxY), // Generate random y position for enemies
+			.radius = 35.f,
+			.degree = 0.f,
+			.speed = 350.f,
+			.health = 100,
+			.dmg = 10,
+			.movement = MOVING_RIGHT,
+			.current_state = STATE_MOVING
+		};
+
+		// Store enemies in array
+		roachesArr[i] = chocoRoach;
+	}
+
+// DK:
     CP_System_SetFrameRate(40);
     chocoShooterInstance.image = CP_Image_Load("Assets/choco_shooter.png");
     boss1instance.image = CP_Image_Load("Assets/boss_lvl1.png");
 }
 
-void Game_Update(void) {
-    CP_Graphics_ClearBackground(CP_Color_Create(100, 100, 255, 255));
-    float dt = CP_System_GetDt();
+
+void game_update(void)
+{
+	// Clear background with grey background colour
+	CP_Graphics_ClearBackground(CP_Color_Create(170, 170, 170, 255));
+
+	float dt = CP_System_GetDt();
+
+	for (int i = 0; i < roachesCnt; i++) {
+
+		// Draw agent
+		float x = roachesArr[i].pos.x;
+		float y = roachesArr[i].pos.y;
+		float r = roachesArr[i].radius;
+		float d = roachesArr[i].degree;
+
+		// Draw circle
+		CP_Settings_Fill(CP_Color_Create(255, 0, 0, 255));
+		CP_Graphics_DrawCircle(x, y, r * 2.0f);
+
+		// Draw triangle 
+		CP_Settings_Fill(CP_Color_Create(255, 255, 255, 255));
+		CP_Graphics_DrawTriangleAdvanced(x + r, y, x - r * cos(0.9), y + r * sin(0.9), x - r * cos(0.9), y - r * sin(0.9), d);
+	}
+
+
+	// Enemies movement logic
+	for (int i = 0; i < roachesCnt; i++) {
+
+		// Update position of player and agents
+		switch (roachesArr[i].movement) {
+		case MOVING_UP:
+			roachesArr[i].pos.y -= (roachesArr[i].speed * dt);
+			roachesArr[i].degree = 270.0f;
+			break;
+		case MOVING_DOWN:
+			roachesArr[i].pos.y += (roachesArr[i].speed * dt);
+			roachesArr[i].degree = 90.0f;
+			break;
+		case MOVING_LEFT:
+			roachesArr[i].pos.x -= (roachesArr[i].speed * dt);
+			roachesArr[i].degree = 180.0f;
+			break;
+		case MOVING_RIGHT:
+			roachesArr[i].pos.x += (roachesArr[i].speed * dt);
+			roachesArr[i].degree = 0.0f;
+			break;
+		}
+	}
 
     // Player movement and setting lastDirection
     if (CP_Input_KeyDown(KEY_W)) {
@@ -315,12 +297,19 @@ void Game_Update(void) {
             255
         );
     }
+
+	// Exit to Main Menu
+	if (CP_Input_KeyTriggered(KEY_Q)) {
+		CP_Engine_SetNextGameState(main_menu_init, main_menu_update, main_menu_exit);
+	}
 }
 
-void Game_Exit(void) {
+void game_exit(void)
+{
     CP_Image_Free(&chocoShooterInstance.image);
     CP_Image_Free(&boss1instance.image);
 }
+
 
 int levels(void) {
     int lvl = 1;
