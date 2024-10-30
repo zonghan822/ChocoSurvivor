@@ -149,7 +149,6 @@ void game_init(void)
 	}
 
 // DK:
-    CP_System_SetFrameRate(40);
     chocoShooterInstance.image = CP_Image_Load("Assets/choco_shooter.png");
     boss1instance.image = CP_Image_Load("Assets/boss_lvl1.png");
 }
@@ -246,8 +245,8 @@ void game_update(void)
     if (CP_Input_KeyTriggered(KEY_H)) {  // Press 'H' to take 1 damage
         takeDamage(&chocoShooterInstance, 1);
     }
-    char healthDisplay[3];
-    sprintf_s(healthDisplay, "Health: %d", chocoShooterInstance.health);
+    char healthDisplay[256];
+    sprintf_s(healthDisplay, sizeof(healthDisplay), "Health: %d", chocoShooterInstance.health);
     CP_Settings_TextSize(30);
     CP_Font_DrawText(healthDisplay, 50, 50);
 
