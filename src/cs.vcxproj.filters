@@ -36,12 +36,6 @@
     <ClCompile Include="player.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="enemy.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="boss.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="hittest.h">
