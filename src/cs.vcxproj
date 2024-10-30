@@ -19,11 +19,21 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="boss.c" />
+    <ClCompile Include="enemy.c" />
+    <ClCompile Include="game.c" />
     <ClCompile Include="hittest.c" />
     <ClCompile Include="main.c" />
+    <ClCompile Include="mainmenu.c" />
+    <ClCompile Include="player.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="boss.h" />
+    <ClInclude Include="enemy.h" />
+    <ClInclude Include="game.h" />
     <ClInclude Include="hittest.h" />
+    <ClInclude Include="mainmenu.h" />
+    <ClInclude Include="player.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
