@@ -12,7 +12,7 @@ void main_menu_init(void);
 void main_menu_update(void);
 
 /************************************************************
-  * @brief The init function for main menu game state.
+  * @brief The exit function for main menu game state.
   *		   This function is called once on state exit.
 ************************************************************/
 void main_menu_exit(void);

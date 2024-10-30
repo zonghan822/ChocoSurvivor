@@ -1,7 +1,8 @@
 #include "cprocessing.h"
 #include "mainmenu.h"
 
-// Do we need to change window size?
+// Do we need to change window size? 
+// Keep 1600x900 for now, will change to fullscreen afterwards
 int main(void)
 {
 	CP_Engine_SetNextGameState(main_menu_init, main_menu_update, main_menu_exit);

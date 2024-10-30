@@ -1,6 +1,7 @@
 #include "mainmenu.h"
-#include "cprocessing.h"
+#include "game.h"
 #include "hittest.h"
+#include "cprocessing.h"
 #include <stdio.h>
 
 const float BUTTON_RECT_W = 300.0f,
@@ -59,8 +60,9 @@ void main_menu_update(void)
 			mouse_y = CP_Input_GetMouseWorldY();
 
 		// Play
-		if (IsRectClicked(g_play_rect_x, g_play_rect_y, BUTTON_RECT_W, BUTTON_RECT_H, mouse_x, mouse_y, CP_POSITION_CENTER))
-			printf("Clicked Play\n"); // Set game state here
+		if (IsRectClicked(g_play_rect_x, g_play_rect_y, BUTTON_RECT_W, BUTTON_RECT_H, mouse_x, mouse_y, CP_POSITION_CENTER)) 
+			//printf("Clicked Play\n"); // Set game state here
+			CP_Engine_SetNextGameState(game_init, game_update, game_exit);
 
 		// Options
 		else if (IsRectClicked(g_options_rect_x, g_options_rect_y, BUTTON_RECT_W, BUTTON_RECT_H, mouse_x, mouse_y, 0))
