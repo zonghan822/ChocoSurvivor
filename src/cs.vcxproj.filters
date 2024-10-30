@@ -36,6 +36,12 @@
     <ClCompile Include="player.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="enemy.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="boss.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="hittest.h">
@@ -45,12 +51,17 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="enemy.h">
+    <ClInclude Include="mainmenu.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="game.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="mainmenu.h">
+    <ClInclude Include="enemy.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="boss.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="player.h">
