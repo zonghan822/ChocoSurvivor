@@ -9,8 +9,8 @@ Team member:
 Things to discuss: (Week 9)
 1. Screen size?
 2. Main Menu hover effect?
-3. Naming convention (camelCase for variable, underscore for funct)
-4. Set framen rate?
+3. Naming convention (camelCase for variable, snake_case for funct, PascalCase for structs)
+4. Set frame rate?
 5. Place to initialise entity?
 6. git branch
 7. Usage of function to encapsulate (easier to merge change?)
