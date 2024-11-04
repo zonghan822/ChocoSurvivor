@@ -17,7 +17,7 @@ void render_enemies(struct ChocoRoach roaches[], int count) {
 
 		// Draw triangle 
 		CP_Settings_Fill(CP_Color_Create(255, 255, 255, 255));
-		CP_Graphics_DrawTriangleAdvanced(x + r, y, x - r * cos(0.9), y + r * sin(0.9), x - r * cos(0.9), y - r * sin(0.9), d);
+		CP_Graphics_DrawTriangleAdvanced(x + r, y, x - r * (float)cos(0.9), y + r * (float)sin(0.9), x - r * (float)cos(0.9), y - r * (float)sin(0.9), d);
 	}
 
 }

@@ -1,15 +1,12 @@
 #pragma once
 
+// Use bit-shift
 enum Movement {
-	STOP,
-	MOVING_RIGHT,
-	MOVING_DOWN,
-	MOVING_LEFT,
-	MOVING_UP,
-	MOVING_UP_LEFT,
-	MOVING_UP_RIGHT,
-	MOVING_DOWN_LEFT,
-	MOVING_DOWN_RIGHT
+	STOPPED = 0,
+	MOVING_UP = 1 << 0,
+	MOVING_RIGHT = 1 << 1,
+	MOVING_DOWN = 1 << 2,
+	MOVING_LEFT = 1 << 3
 };
 
 // return random double-precision floating-point values in range [m, n]

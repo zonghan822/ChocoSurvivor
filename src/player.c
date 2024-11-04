@@ -1,5 +1,6 @@
 #include "cprocessing.h"
 #include "player.h"
+#include <stdio.h>
 
 void takeDamage(struct ChocoShooter* player, int damage) {
     if (player->health > 0) {

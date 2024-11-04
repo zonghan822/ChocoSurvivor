@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <time.h>
 #include <stdbool.h>
+#include <stdlib.h>
+#include <math.h>
 
 #include "cprocessing.h"
 #include "utils.h"
@@ -10,21 +12,24 @@
 #include "boss.h"
 
 #define ARRAY_COUNT(x) (sizeof(x)/sizeof(x[0]))
-#define NULL ((void*) 0)
+//#define NULL ((void*)0)
 #define MAX_ENEMY_COUNT 100
 
 struct ChocoRoach roaches[MAX_ENEMY_COUNT];
 struct Boss boss1instance;
 struct ChocoShooter chocoShooterInstance;
 
-float windowWidth, windowHeight;
-int roachesCnt;
+int windowWidth, windowHeight, roachesCnt;
 
+bool isDashing = false;
+float dashProgress, lastDash;
+CP_Vector dashTo;
+const float DASH_COOLDOWN = 2.0, DASH_DISTANCE = 150.0, DASH_SPEED = 10.0;
 
-void game_init(void){
-
+void game_init(void)
+{
 	// Get window width and height
-	windowWidth = CP_System_GetWindowWidth();
+    windowWidth = CP_System_GetWindowWidth();
 	windowHeight = CP_System_GetWindowHeight();
 
 	// Define enemy spawn area
@@ -33,6 +38,10 @@ void game_init(void){
 
 	// Define enemy count
 	roachesCnt = 4;
+
+    // Initialize dash variables
+    dashProgress = 0.0;
+    lastDash = 2.1;
 
 	srand(time(NULL));
 	for (int i = 0; i < roachesCnt; i++) {
@@ -113,42 +122,114 @@ void game_update(void)
 	}
 
     // Player movement and setting movement
-    if (CP_Input_KeyDown(KEY_W)) {
-        chocoShooterInstance.pos.y -= chocoShooterInstance.speed * dt;
-        chocoShooterInstance.movement = MOVING_UP;
-    }
-    if (CP_Input_KeyDown(KEY_S)) {
-        chocoShooterInstance.pos.y += chocoShooterInstance.speed * dt;
-        chocoShooterInstance.movement = MOVING_DOWN;
-    }
-    if (CP_Input_KeyDown(KEY_A)) {
-        chocoShooterInstance.pos.x -= chocoShooterInstance.speed * dt;
-        chocoShooterInstance.isFlipped = true;
-        chocoShooterInstance.movement = MOVING_LEFT;
-    }
-    if (CP_Input_KeyDown(KEY_D)) {
-        chocoShooterInstance.pos.x += chocoShooterInstance.speed * dt;
-        chocoShooterInstance.isFlipped = false;
-        chocoShooterInstance.movement = MOVING_RIGHT;
-    }
+    chocoShooterInstance.movement = STOPPED;
+    if (CP_Input_KeyDown(KEY_W))
+        chocoShooterInstance.movement |= MOVING_UP;
+    if (CP_Input_KeyDown(KEY_S))
+        chocoShooterInstance.movement |= MOVING_DOWN;
+    if (CP_Input_KeyDown(KEY_A))
+        chocoShooterInstance.movement |= MOVING_LEFT;
+    if (CP_Input_KeyDown(KEY_D))
+        chocoShooterInstance.movement |= MOVING_RIGHT;
 
-    // Dash movement with spacebar
-    if (CP_Input_KeyTriggered(KEY_SPACE)) {
-        float dashDistance = 100.0f;
-        switch (chocoShooterInstance.movement) {
+    // W+S and A+D inputs should stop the character
+    // Clear both UP and DOWN bits
+    // Clear both LEFT and RIGHT bits
+    if ((chocoShooterInstance.movement & MOVING_UP) && (chocoShooterInstance.movement & MOVING_DOWN))
+        chocoShooterInstance.movement &= ~(MOVING_UP | MOVING_DOWN);
+    if ((chocoShooterInstance.movement & MOVING_LEFT) && (chocoShooterInstance.movement & MOVING_RIGHT))
+        chocoShooterInstance.movement &= ~(MOVING_LEFT | MOVING_RIGHT);
+
+    // So character's movement isn't "boosted" when mooving diagonally
+    float diagonalSpeed = chocoShooterInstance.speed / sqrt(2.0f);
+
+    switch (chocoShooterInstance.movement)
+    {
         case MOVING_UP:
-            chocoShooterInstance.pos.y -= dashDistance;
-            break;
-        case MOVING_DOWN:
-            chocoShooterInstance.pos.y += dashDistance;
-            break;
-        case MOVING_LEFT:
-            chocoShooterInstance.pos.x -= dashDistance;
+            chocoShooterInstance.pos.y -= chocoShooterInstance.speed * dt;
             break;
         case MOVING_RIGHT:
-            chocoShooterInstance.pos.x += dashDistance;
+            chocoShooterInstance.pos.x += chocoShooterInstance.speed * dt;
+            break;
+        case MOVING_DOWN:
+            chocoShooterInstance.pos.y += chocoShooterInstance.speed * dt;
+            break;
+        case MOVING_LEFT:
+            chocoShooterInstance.pos.x -= chocoShooterInstance.speed * dt;
+            break;
+        case MOVING_UP | MOVING_RIGHT:
+            chocoShooterInstance.pos.x += diagonalSpeed * dt;
+            chocoShooterInstance.pos.y -= diagonalSpeed * dt;
+            break;
+        case MOVING_UP | MOVING_LEFT:
+            chocoShooterInstance.pos.x -= diagonalSpeed * dt;
+            chocoShooterInstance.pos.y -= diagonalSpeed * dt;
+            break;
+        case MOVING_DOWN | MOVING_RIGHT:
+            chocoShooterInstance.pos.x += diagonalSpeed * dt;
+            chocoShooterInstance.pos.y += diagonalSpeed * dt;
+            break;
+        case MOVING_DOWN | MOVING_LEFT:
+            chocoShooterInstance.pos.x -= diagonalSpeed * dt;
+            chocoShooterInstance.pos.y += diagonalSpeed * dt;
+    }
+
+    if (lastDash < DASH_COOLDOWN)
+        lastDash += dt;
+
+    // Dash movement with spacebar
+    if (CP_Input_KeyTriggered(KEY_SPACE) && !isDashing && lastDash >= DASH_COOLDOWN)
+    {
+        dashTo = chocoShooterInstance.pos;
+        float diagonalDash = DASH_DISTANCE / sqrt(2.0);
+
+        switch (chocoShooterInstance.movement) {
+        case MOVING_UP:
+            dashTo.y -= DASH_DISTANCE;
+            break;
+        case MOVING_DOWN:
+            dashTo.y += DASH_DISTANCE;
+            break;
+        case MOVING_LEFT:
+            dashTo.x -= DASH_DISTANCE;
+            break;
+        case MOVING_RIGHT:
+            dashTo.x += DASH_DISTANCE;
+            break;
+        case MOVING_UP | MOVING_LEFT:
+            dashTo.y -= diagonalDash;
+            dashTo.x -= diagonalDash;
+            break;
+        case MOVING_UP | MOVING_RIGHT:
+            dashTo.x += diagonalDash;
+            dashTo.y -= diagonalDash;
+            break;
+        case MOVING_DOWN | MOVING_LEFT:
+            dashTo.x -= diagonalDash;
+            dashTo.y += diagonalDash;
+            break;
+        case MOVING_DOWN | MOVING_RIGHT:
+            dashTo.x += diagonalDash;
+            dashTo.y += diagonalDash;
             break;
         }
+
+        isDashing = TRUE;
+        dashProgress = 0.0;
+        lastDash = 0.0;
+    }
+
+    if (isDashing) 
+    {
+        dashProgress += DASH_SPEED * dt;
+
+        chocoShooterInstance.pos.x = CP_Math_LerpFloat(chocoShooterInstance.pos.x, dashTo.x, dashProgress);
+        chocoShooterInstance.pos.y = CP_Math_LerpFloat(chocoShooterInstance.pos.y, dashTo.y, dashProgress);
+
+        printf("%f, %f\n", chocoShooterInstance.pos.x, chocoShooterInstance.pos.y);
+
+        if (dashProgress >= 1.0f) 
+            isDashing = FALSE;
     }
 
     if (CP_Input_KeyTriggered(KEY_H)) {  // Press 'H' to take 1 damage
@@ -166,10 +247,10 @@ void game_update(void)
 
     // Check horizontal Movement to flip boss's image
     if (directionToPlayer.x < 0) {
-        boss1instance.isFlipped = true;  // Face MOVING_LEFT if player is to the MOVING_LEFT
+        boss1instance.isFlipped = TRUE;  // Face MOVING_LEFT if player is to the MOVING_LEFT
     }
     else {
-        boss1instance.isFlipped = false; // Face MOVING_RIGHT if player is to the MOVING_RIGHT
+        boss1instance.isFlipped = FALSE; // Face MOVING_RIGHT if player is to the MOVING_RIGHT
     }
 
     // Calculate distance and normalize Movement vector
