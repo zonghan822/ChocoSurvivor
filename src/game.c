@@ -10,6 +10,7 @@
 #include "player.h"
 #include "enemy.h"
 #include "boss.h"
+#include "tower.h"
 
 #define ARRAY_COUNT(x) (sizeof(x)/sizeof(x[0]))
 //#define NULL ((void*)0)
@@ -18,6 +19,7 @@
 struct ChocoRoach roaches[MAX_ENEMY_COUNT];
 struct Boss boss1instance;
 struct ChocoShooter chocoShooterInstance;
+struct DefenseTarget towerInstance;
 
 int windowWidth, windowHeight, roachesCnt;
 
@@ -33,8 +35,8 @@ void game_init(void)
 	windowHeight = CP_System_GetWindowHeight();
 
 	// Define enemy spawn area
-	float spawnMinY = windowHeight / 10;
-	float spawnMaxY = windowHeight * 9 / 10;
+    float spawnMinY = (float)windowHeight / 10.0;
+    float spawnMaxY = (float)windowHeight * 9.0 / 10.0;
 
 	// Define enemy count
 	roachesCnt = 4;
@@ -85,6 +87,12 @@ void game_init(void)
     chocoShooterInstance.img = CP_Image_Load("Assets/choco_shooter.png");
     chocoShooterInstance.isFlipped = false,
     chocoShooterInstance.movement = MOVING_RIGHT;
+
+    // Initialize tower instance
+    towerInstance.maxHealth = towerInstance.health = 3;
+    towerInstance.height = 400.0;
+    towerInstance.width = 150.0;
+    towerInstance.pos = CP_Vector_Set(900, 500);
 }
 
 
@@ -232,9 +240,23 @@ void game_update(void)
             isDashing = FALSE;
     }
 
+    // Testing player damage taken
     if (CP_Input_KeyTriggered(KEY_H)) {  // Press 'H' to take 1 damage
-        takeDamage(&chocoShooterInstance, 1);
+        if (!player_take_damage(&chocoShooterInstance, 1)) {
+            if (!tower_revive_player(&towerInstance, &chocoShooterInstance)) {
+                // Game over
+                printf("Game over\n");
+            }
+            else {
+                // Whatever we want to do after player is revived
+                printf("Revived\n");
+            }
+        }
+        else {
+            // Invincibility effect
+        }
     }
+
     char healthDisplay[256];
     sprintf_s(healthDisplay, sizeof(healthDisplay), "Health: %d", chocoShooterInstance.health);
     CP_Settings_TextSize(30);

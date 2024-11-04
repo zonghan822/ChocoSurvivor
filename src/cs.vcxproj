@@ -26,12 +26,14 @@
     <ClCompile Include="main.c" />
     <ClCompile Include="mainmenu.c" />
     <ClCompile Include="player.c" />
+    <ClCompile Include="tower.c" />
     <ClCompile Include="utils.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="boss.h" />
     <ClInclude Include="enemy.h" />
     <ClInclude Include="game.h" />
+    <ClInclude Include="tower.h" />
     <ClInclude Include="utils.h" />
     <ClInclude Include="hittest.h" />
     <ClInclude Include="mainmenu.h" />

@@ -15,4 +15,4 @@ struct ChocoShooter {
     int maxHealth;
 };
 
-void takeDamage(struct ChocoShooter* player, int damage);
+int player_take_damage(struct ChocoShooter* player, int damage);
