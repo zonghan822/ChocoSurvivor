@@ -1,6 +1,7 @@
 #include "tower.h"
 #include "player.h"
 #include "cprocessing.h"
+#include "utils.h"
 #include <stdio.h>
 
 // Returns 1 if still alive, 0 if not
@@ -19,4 +20,13 @@ int tower_revive_player(struct DefenseTarget* tower, struct ChocoShooter* player
 		return 1;
 	}
 	return 0; // game over
+}
+
+struct Rectangle get_tower_hitbox(struct DefenseTarget tower) {
+	struct Rectangle rect;
+	rect.height = tower.height;
+	rect.width = tower.width;
+	rect.pos = tower.pos;
+
+	return rect;
 }

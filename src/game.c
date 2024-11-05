@@ -11,6 +11,7 @@
 #include "enemy.h"
 #include "boss.h"
 #include "tower.h"
+#include "hittest.h"
 
 #define ARRAY_COUNT(x) (sizeof(x)/sizeof(x[0]))
 //#define NULL ((void*)0)
@@ -67,32 +68,34 @@ void game_init(void)
 	}
 
     // Initialize boss instance
-    boss1instance.height = 500.0f;
-    boss1instance.width = 500.0f;
     boss1instance.speed = 80.0f;
     boss1instance.maxHealth = 40;
     boss1instance.pos.x = 100.0f;
     boss1instance.pos.y = 450.0f;
     boss1instance.img = CP_Image_Load("Assets/boss_lvl1.png");
-    boss1instance.isFlipped = false;
+    boss1instance.isFlipped = FALSE;
+    boss1instance.width = 500.0f;
+    boss1instance.width = get_preserved_heightf((int)CP_Image_GetWidth(boss1instance.img),
+        (int)CP_Image_GetHeight(boss1instance.img), chocoShooterInstance.width);
 
     // Initialize player instance
-    chocoShooterInstance.pos.x = 100.0f;
-    chocoShooterInstance.pos.y = 100.0f;
-    chocoShooterInstance.width = 200.0f,
-    chocoShooterInstance.height = 300.0f,
+    chocoShooterInstance.hitbox.pos = chocoShooterInstance.pos = CP_Vector_Set(100.0f, 100.0f);
     chocoShooterInstance.speed = 200.0f,
     chocoShooterInstance.health = 3,
     chocoShooterInstance.maxHealth = 3,
     chocoShooterInstance.img = CP_Image_Load("Assets/choco_shooter.png");
-    chocoShooterInstance.isFlipped = false,
-    chocoShooterInstance.movement = MOVING_RIGHT;
+    chocoShooterInstance.isFlipped = FALSE,
+    chocoShooterInstance.movement = STOPPED;
+    chocoShooterInstance.hitbox.width = chocoShooterInstance.width = 200.0f;
+    chocoShooterInstance.hitbox.height = chocoShooterInstance.height = get_preserved_heightf((int)CP_Image_GetWidth(chocoShooterInstance.img),
+        (int)CP_Image_GetHeight(chocoShooterInstance.img), chocoShooterInstance.width);
+
 
     // Initialize tower instance
     towerInstance.maxHealth = towerInstance.health = 3;
-    towerInstance.height = 400.0;
+    towerInstance.height = 300.0;
     towerInstance.width = 150.0;
-    towerInstance.pos = CP_Vector_Set(900, 500);
+    towerInstance.pos = CP_Vector_Set(1500, 500);
 }
 
 
@@ -101,6 +104,10 @@ void game_update(void)
 	// Clear background with grey background colour
 	CP_Graphics_ClearBackground(CP_Color_Create(170, 170, 170, 255));
 
+    // Placeholder
+    CP_Settings_Fill(CP_Color_Create(255, 255, 255, 255));
+    CP_Graphics_DrawRect(towerInstance.pos.x, towerInstance.pos.y, towerInstance.width, towerInstance.height);
+    
 	float dt = CP_System_GetDt();
 
     render_enemies(roaches, roachesCnt);
@@ -234,28 +241,64 @@ void game_update(void)
         chocoShooterInstance.pos.x = CP_Math_LerpFloat(chocoShooterInstance.pos.x, dashTo.x, dashProgress);
         chocoShooterInstance.pos.y = CP_Math_LerpFloat(chocoShooterInstance.pos.y, dashTo.y, dashProgress);
 
-        printf("%f, %f\n", chocoShooterInstance.pos.x, chocoShooterInstance.pos.y);
-
         if (dashProgress >= 1.0f) 
             isDashing = FALSE;
     }
 
-    // Testing player damage taken
-    if (CP_Input_KeyTriggered(KEY_H)) {  // Press 'H' to take 1 damage
-        if (!player_take_damage(&chocoShooterInstance, 1)) {
-            if (!tower_revive_player(&towerInstance, &chocoShooterInstance)) {
-                // Game over
-                printf("Game over\n");
+    // TODO: Update hitbox of the enemies when proper graphic is added
+    // Collision
+    {
+        // With roaches
+        for (int i = 0; i < sizeof(roaches) / sizeof(roaches[0]); i++) {
+            struct ChocoRoach roach = roaches[i];
+            struct Circle hitbox; // PLACEHOLDER
+            hitbox.diameter = roach.radius * 2;
+            hitbox.pos = roach.pos;
+
+            // Player
+            if (are_circle_rect_intersecting(hitbox, chocoShooterInstance.hitbox)) {
+                if (!player_take_damage(&chocoShooterInstance, 1)) {
+                    if (!tower_revive_player(&towerInstance, &chocoShooterInstance)) {
+                        // Game over
+                        printf("Game over\n");
+                    }
+                    else {
+                        // Whatever we want to do after player is revived
+                        printf("Revived\n");
+                    }
+                }
+                else {
+                    // Invincibility effect
+                    break;
+                }
             }
-            else {
-                // Whatever we want to do after player is revived
-                printf("Revived\n");
+
+            // Tower
+            if (are_circle_rect_intersecting(hitbox, get_tower_hitbox(towerInstance))) {
+                // Clamp enemy pos
+                // clamp_player_pos(struct Rectangle* entity_hitbox, struct Rectangle obstacle);
+                if (!tower_take_damage(&towerInstance, 1)) {
+                    // Game over
+                    printf("Game over\n");
+                }
+                else {
+                    // Whatever we want to do after tower is damaged
+                }
             }
         }
-        else {
-            // Invincibility effect
+
+        // TODO: Add one for boss
+
+        // Tower collision with player (impassable)
+        if (are_rects_intersecting(chocoShooterInstance.hitbox, get_tower_hitbox(towerInstance)))
+        {
+            // Clamp player pos?
+            // clamp_player_pos(struct Rectangle* entity_hitbox, struct Rectangle obstacle);
         }
     }
+
+    // Update player hitbox
+    update_rect_hitbox(&chocoShooterInstance.hitbox, chocoShooterInstance.width / 1.2, chocoShooterInstance.height / 1.2, chocoShooterInstance.pos);
 
     char healthDisplay[256];
     sprintf_s(healthDisplay, sizeof(healthDisplay), "Health: %d", chocoShooterInstance.health);
