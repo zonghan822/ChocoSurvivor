@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="boss.c" />
+    <ClCompile Include="flicker.c" />
     <ClCompile Include="enemy.c" />
     <ClCompile Include="game.c" />
     <ClCompile Include="hittest.c" />
@@ -30,6 +31,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="boss.h" />
+    <ClInclude Include="flicker.h" />
     <ClInclude Include="enemy.h" />
     <ClInclude Include="game.h" />
     <ClInclude Include="utils.h" />

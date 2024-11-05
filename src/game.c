@@ -10,6 +10,7 @@
 #include "player.h"
 #include "enemy.h"
 #include "boss.h"
+#include "flicker.h"
 
 #define ARRAY_COUNT(x) (sizeof(x)/sizeof(x[0]))
 //#define NULL ((void*)0)
@@ -25,6 +26,10 @@ bool isDashing = false;
 float dashProgress, lastDash;
 CP_Vector dashTo;
 const float DASH_COOLDOWN = 2.0, DASH_DISTANCE = 150.0, DASH_SPEED = 10.0;
+CP_Image gameOverImage;
+
+
+
 
 void game_init(void)
 {
@@ -68,7 +73,7 @@ void game_init(void)
     boss1instance.height = 500.0f;
     boss1instance.width = 500.0f;
     boss1instance.speed = 80.0f;
-    boss1instance.maxHealth = 40;
+    boss1instance.maxHealth = 3;
     boss1instance.pos.x = 100.0f;
     boss1instance.pos.y = 450.0f;
     boss1instance.img = CP_Image_Load("Assets/boss_lvl1.png");
@@ -85,6 +90,12 @@ void game_init(void)
     chocoShooterInstance.img = CP_Image_Load("Assets/choco_shooter.png");
     chocoShooterInstance.isFlipped = false,
     chocoShooterInstance.movement = MOVING_RIGHT;
+
+    gameOverImage = CP_Image_Load("Assets/gg.png");
+
+    //set initial flickering states
+    playerFlickerState.isVisible = true;
+    bossFlickerState.isVisible = true;
 }
 
 
@@ -235,6 +246,14 @@ void game_update(void)
     if (CP_Input_KeyTriggered(KEY_H)) {  // Press 'H' to take 1 damage
         takeDamage(&chocoShooterInstance, 1);
     }
+    if (CP_Input_KeyTriggered(KEY_O)) {  // Press 'L' to take 1 damage
+        Damage(&boss1instance, 1);
+        printf("damage");
+    }
+
+    update_flicker(&playerFlickerState, dt);
+    update_flicker(&bossFlickerState, dt);
+
     char healthDisplay[256];
     sprintf_s(healthDisplay, sizeof(healthDisplay), "Health: %d", chocoShooterInstance.health);
     CP_Settings_TextSize(30);
@@ -264,19 +283,24 @@ void game_update(void)
     boss1instance.pos.y += directionToPlayer.y;
 
     // Draw player
-    float drawWidth = chocoShooterInstance.isFlipped ? -chocoShooterInstance.width : chocoShooterInstance.width;
-    CP_Image_Draw(
-        chocoShooterInstance.img,
-        chocoShooterInstance.pos.x,
-        chocoShooterInstance.pos.y,
-        drawWidth,
-        chocoShooterInstance.height,
-        255
-    );
+   
+  
+        // Draw the player if visible
+    if (is_entity_visible(&playerFlickerState)) {
+        float drawWidth = chocoShooterInstance.isFlipped ? -chocoShooterInstance.width : chocoShooterInstance.width;
+        CP_Image_Draw(
+            chocoShooterInstance.img,
+            chocoShooterInstance.pos.x,
+            chocoShooterInstance.pos.y,
+            drawWidth,
+            chocoShooterInstance.height,
+            255
+        );
+    }
 
-    // Draw boss with flipping
-    float bossDrawWidth = boss1instance.isFlipped ? boss1instance.width : -boss1instance.width;
-    if (levels() == 1) {
+    // Draw the boss if visible
+    if (is_entity_visible(&bossFlickerState)) {
+        float bossDrawWidth = boss1instance.isFlipped ? boss1instance.width : -boss1instance.width;
         CP_Image_Draw(
             boss1instance.img,
             boss1instance.pos.x,
@@ -285,6 +309,13 @@ void game_update(void)
             boss1instance.height,
             255
         );
+    }
+
+ if (chocoShooterInstance.health <= 0) {
+        // Draw the Game Over image in the center of the screen
+        float gameOverX = CP_System_GetWindowWidth() / 2;
+        float gameOverY = CP_System_GetWindowHeight() / 2;
+        CP_Image_Draw(gameOverImage, gameOverX, gameOverY, 1000, 600, 255); // Adjust size as needed
     }
 
 	// Exit to Main Menu
@@ -312,12 +343,12 @@ int levels(void) {
     return 0;
 }
 
-int flicker(int damage)
+
+
+int shooting_seq(void)
 {
-    if (damage == 1)
-    {
-
-    }
+    CP_Color color = CP_Color_Create(139, 69, 19, 255); // Brown color with full opacity
+    CP_Settings_Fill(color);
+     CP_Graphics_DrawCircle(100, 100, 50);
 }
-
 
