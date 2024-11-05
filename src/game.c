@@ -18,7 +18,7 @@
 #define MAX_ENEMY_COUNT 100
 
 struct ChocoRoach roaches[MAX_ENEMY_COUNT];
-struct Boss boss1instance;
+struct Boss bossInstance;
 struct ChocoShooter chocoShooterInstance;
 struct DefenseTarget towerInstance;
 
@@ -68,15 +68,20 @@ void game_init(void)
 	}
 
     // Initialize boss instance
-    boss1instance.speed = 80.0f;
-    boss1instance.maxHealth = 40;
-    boss1instance.pos.x = 100.0f;
-    boss1instance.pos.y = 450.0f;
-    boss1instance.img = CP_Image_Load("Assets/boss_lvl1.png");
-    boss1instance.isFlipped = FALSE;
-    boss1instance.width = 500.0f;
-    boss1instance.width = get_preserved_heightf((int)CP_Image_GetWidth(boss1instance.img),
-        (int)CP_Image_GetHeight(boss1instance.img), chocoShooterInstance.width);
+    bossInstance.speed = 80.0f;
+    bossInstance.maxHealth = 40;
+    bossInstance.pos.x = 100.0f;
+    bossInstance.pos.y = 450.0f;
+    bossInstance.img = CP_Image_Load("Assets/boss_lvl1.png");
+    bossInstance.isFlipped = FALSE;
+    bossInstance.width = 500.0f;
+    bossInstance.height = get_preserved_heightf((int)CP_Image_GetWidth(bossInstance.img),
+        (int)CP_Image_GetHeight(bossInstance.img), bossInstance.width);
+    bossInstance.attack = meleeAttack;
+    bossInstance.canAttack = canMeleeAttack;
+    bossInstance.hitbox.width = bossInstance.width;
+    bossInstance.hitbox.height = bossInstance.height;
+    bossInstance.hitbox.pos = bossInstance.pos;
 
     // Initialize player instance
     chocoShooterInstance.hitbox.pos = chocoShooterInstance.pos = CP_Vector_Set(100.0f, 100.0f);
@@ -89,7 +94,6 @@ void game_init(void)
     chocoShooterInstance.hitbox.width = chocoShooterInstance.width = 200.0f;
     chocoShooterInstance.hitbox.height = chocoShooterInstance.height = get_preserved_heightf((int)CP_Image_GetWidth(chocoShooterInstance.img),
         (int)CP_Image_GetHeight(chocoShooterInstance.img), chocoShooterInstance.width);
-
 
     // Initialize tower instance
     towerInstance.maxHealth = towerInstance.health = 3;
@@ -107,6 +111,7 @@ void game_update(void)
     // Placeholder
     CP_Settings_Fill(CP_Color_Create(255, 255, 255, 255));
     CP_Graphics_DrawRect(towerInstance.pos.x, towerInstance.pos.y, towerInstance.width, towerInstance.height);
+    CP_Graphics_DrawRect(bossInstance.hitbox.pos.x, bossInstance.hitbox.pos.y, bossInstance.hitbox.width, bossInstance.hitbox.height);
     
 	float dt = CP_System_GetDt();
 
@@ -249,7 +254,7 @@ void game_update(void)
     // Collision
     {
         // With roaches
-        for (int i = 0; i < sizeof(roaches) / sizeof(roaches[0]); i++) {
+        for (int i = 0; i < ARRAY_COUNT(roaches); i++) {
             struct ChocoRoach roach = roaches[i];
             struct Circle hitbox; // PLACEHOLDER
             hitbox.diameter = roach.radius * 2;
@@ -297,36 +302,36 @@ void game_update(void)
         }
     }
 
+    // Boss attack
+    if (bossInstance.canAttack(bossInstance, chocoShooterInstance)) {
+        bossInstance.attack(bossInstance, &chocoShooterInstance);
+    }
+
     // Update player hitbox
     update_rect_hitbox(&chocoShooterInstance.hitbox, chocoShooterInstance.width / 1.2, chocoShooterInstance.height / 1.2, chocoShooterInstance.pos);
 
-    char healthDisplay[256];
-    sprintf_s(healthDisplay, sizeof(healthDisplay), "Health: %d", chocoShooterInstance.health);
-    CP_Settings_TextSize(30);
-    CP_Font_DrawText(healthDisplay, 50, 50);
-
     // Boss follows player and changes Movement
     CP_Vector directionToPlayer;
-    directionToPlayer.x = chocoShooterInstance.pos.x - boss1instance.pos.x;
-    directionToPlayer.y = chocoShooterInstance.pos.y - boss1instance.pos.y;
+    directionToPlayer.x = chocoShooterInstance.pos.x - bossInstance.pos.x;
+    directionToPlayer.y = chocoShooterInstance.pos.y - bossInstance.pos.y;
 
     // Check horizontal Movement to flip boss's image
     if (directionToPlayer.x < 0) {
-        boss1instance.isFlipped = TRUE;  // Face MOVING_LEFT if player is to the MOVING_LEFT
+        bossInstance.isFlipped = TRUE;  // Face MOVING_LEFT if player is to the MOVING_LEFT
     }
     else {
-        boss1instance.isFlipped = FALSE; // Face MOVING_RIGHT if player is to the MOVING_RIGHT
+        bossInstance.isFlipped = FALSE; // Face MOVING_RIGHT if player is to the MOVING_RIGHT
     }
 
     // Calculate distance and normalize Movement vector
     float distance = CP_Vector_Length(directionToPlayer);
     if (distance != 0) {
-        directionToPlayer = CP_Vector_Scale(directionToPlayer, boss1instance.speed * dt / distance);
+        directionToPlayer = CP_Vector_Scale(directionToPlayer, bossInstance.speed * dt / distance);
     }
 
     // Update boss pos toward the player
-    boss1instance.pos.x += directionToPlayer.x;
-    boss1instance.pos.y += directionToPlayer.y;
+    bossInstance.pos.x += directionToPlayer.x;
+    bossInstance.pos.y += directionToPlayer.y;
 
     // Draw player
     float drawWidth = chocoShooterInstance.isFlipped ? -chocoShooterInstance.width : chocoShooterInstance.width;
@@ -340,14 +345,14 @@ void game_update(void)
     );
 
     // Draw boss with flipping
-    float bossDrawWidth = boss1instance.isFlipped ? -boss1instance.width : boss1instance.width;
+    float bossDrawWidth = bossInstance.isFlipped ? -bossInstance.width : bossInstance.width;
     if (levels() == 1) {
         CP_Image_Draw(
-            boss1instance.img,
-            boss1instance.pos.x,
-            boss1instance.pos.y,
+            bossInstance.img,
+            bossInstance.pos.x,
+            bossInstance.pos.y,
             bossDrawWidth,
-            boss1instance.height,
+            bossInstance.height,
             255
         );
     }
@@ -356,12 +361,29 @@ void game_update(void)
 	if (CP_Input_KeyTriggered(KEY_Q)) {
 		CP_Engine_SetNextGameState(main_menu_init, main_menu_update, main_menu_exit);
 	}
+
+    // Draw UI
+    {
+        // Health
+        char healthDisplay[256];
+        sprintf_s(healthDisplay, sizeof(healthDisplay), "Health: %d", chocoShooterInstance.health);
+        CP_Settings_TextSize(60);
+        CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255));
+        CP_Font_DrawText(healthDisplay, 135, 40);
+
+        // PLACEHOLDER
+        {
+            CP_Settings_TextSize(35);
+            CP_Font_DrawText("BOSS", bossInstance.hitbox.pos.x, bossInstance.hitbox.pos.y);
+            CP_Font_DrawText("TOWER", towerInstance.pos.x, towerInstance.pos.y);
+        }
+    }
 }
 
 void game_exit(void)
 {
     CP_Image_Free(&chocoShooterInstance.img);
-    CP_Image_Free(&boss1instance.img);
+    CP_Image_Free(&bossInstance.img);
 }
 
 
