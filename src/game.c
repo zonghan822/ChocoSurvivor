@@ -80,24 +80,83 @@ void Game_Update(void) {
     CP_Graphics_ClearBackground(CP_Color_Create(100, 100, 255, 255));
     float dt = CP_System_GetDt();
 
-    // Player movement and setting lastDirection
-    if (CP_Input_KeyDown(KEY_W)) {
-        chocoShooterInstance.position.y -= chocoShooterInstance.speed * dt;
-        chocoShooterInstance.lastDirection = UP;
-    }
-    if (CP_Input_KeyDown(KEY_S)) {
-        chocoShooterInstance.position.y += chocoShooterInstance.speed * dt;
-        chocoShooterInstance.lastDirection = DOWN;
-    }
-    if (CP_Input_KeyDown(KEY_A)) {
-        chocoShooterInstance.position.x -= chocoShooterInstance.speed * dt;
-        chocoShooterInstance.isFlipped = true;
-        chocoShooterInstance.lastDirection = LEFT;
-    }
-    if (CP_Input_KeyDown(KEY_D)) {
-        chocoShooterInstance.position.x += chocoShooterInstance.speed * dt;
-        chocoShooterInstance.isFlipped = false;
-        chocoShooterInstance.lastDirection = RIGHT;
+    render_enemies(roaches, roachesCnt);
+
+	// Enemies movement logic
+	for (int i = 0; i < roachesCnt; i++) {
+
+		// Update position of enemies
+		switch (roaches[i].movement) {
+		case MOVING_UP:
+			roaches[i].pos.y -= (roaches[i].speed * dt);
+			roaches[i].degree = 270.0f;
+			break;
+		case MOVING_DOWN:
+			roaches[i].pos.y += (roaches[i].speed * dt);
+			roaches[i].degree = 90.0f;
+			break;
+		case MOVING_LEFT:
+			roaches[i].pos.x -= (roaches[i].speed * dt);
+			roaches[i].degree = 180.0f;
+			break;
+		case MOVING_RIGHT:
+			roaches[i].pos.x += (roaches[i].speed * dt);
+			roaches[i].degree = 0.0f;
+			break;
+		}
+	}
+
+    // Player movement and setting movement
+    chocoShooterInstance.movement = STOPPED;
+    if (CP_Input_KeyDown(KEY_W))
+        chocoShooterInstance.movement |= MOVING_UP;
+    if (CP_Input_KeyDown(KEY_S))
+        chocoShooterInstance.movement |= MOVING_DOWN;
+    if (CP_Input_KeyDown(KEY_A))
+        chocoShooterInstance.movement |= MOVING_LEFT;
+    if (CP_Input_KeyDown(KEY_D))
+        chocoShooterInstance.movement |= MOVING_RIGHT;
+
+    // W+S and A+D inputs should stop the character
+    // Clear both UP and DOWN bits
+    // Clear both LEFT and RIGHT bits
+    if ((chocoShooterInstance.movement & MOVING_UP) && (chocoShooterInstance.movement & MOVING_DOWN))
+        chocoShooterInstance.movement &= ~(MOVING_UP | MOVING_DOWN);
+    if ((chocoShooterInstance.movement & MOVING_LEFT) && (chocoShooterInstance.movement & MOVING_RIGHT))
+        chocoShooterInstance.movement &= ~(MOVING_LEFT | MOVING_RIGHT);
+
+    // So character's movement isn't "boosted" when mooving diagonally
+    float diagonalSpeed = chocoShooterInstance.speed / sqrt(2.0f);
+
+    switch (chocoShooterInstance.movement)
+    {
+        case MOVING_UP:
+            chocoShooterInstance.pos.y -= chocoShooterInstance.speed * dt;
+            break;
+        case MOVING_RIGHT:
+            chocoShooterInstance.pos.x += chocoShooterInstance.speed * dt;
+            break;
+        case MOVING_DOWN:
+            chocoShooterInstance.pos.y += chocoShooterInstance.speed * dt;
+            break;
+        case MOVING_LEFT:
+            chocoShooterInstance.pos.x -= chocoShooterInstance.speed * dt;
+            break;
+        case MOVING_UP | MOVING_RIGHT:
+            chocoShooterInstance.pos.x += diagonalSpeed * dt;
+            chocoShooterInstance.pos.y -= diagonalSpeed * dt;
+            break;
+        case MOVING_UP | MOVING_LEFT:
+            chocoShooterInstance.pos.x -= diagonalSpeed * dt;
+            chocoShooterInstance.pos.y -= diagonalSpeed * dt;
+            break;
+        case MOVING_DOWN | MOVING_RIGHT:
+            chocoShooterInstance.pos.x += diagonalSpeed * dt;
+            chocoShooterInstance.pos.y += diagonalSpeed * dt;
+            break;
+        case MOVING_DOWN | MOVING_LEFT:
+            chocoShooterInstance.pos.x -= diagonalSpeed * dt;
+            chocoShooterInstance.pos.y += diagonalSpeed * dt;
     }
 
     // Dash movement with spacebar
@@ -186,6 +245,7 @@ void Game_Exit(void) {
     CP_Image_Free(&boss1instance.image);
 }
 
+
 int levels(void) {
     int lvl = 1;
     int enemies = 0;
@@ -198,5 +258,12 @@ int levels(void) {
     return 0;
 }
 
+int flicker(int damage)
+{
+    if (damage == 1)
+    {
+
+    }
+}
 
 
