@@ -9,18 +9,23 @@ const float BUTTON_RECT_W = 300.0f,
 	BUTTON_FONT_SIZE = 55.0f;
 
 float g_play_rect_x, g_play_rect_y, g_options_rect_x, g_options_rect_y, g_quit_rect_x, g_quit_rect_y;
+CP_Image chococursor;
+
 
 void main_menu_init(void)
+{
+	
+	chococursor = CP_Image_Load("Assets/cursor.png");
+	CP_System_ShowCursor(FALSE);
+		
+}
+
+void main_menu_update(void)
 {
 	CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_CENTER, CP_TEXT_ALIGN_V_MIDDLE);
 	CP_Settings_RectMode(CP_POSITION_CENTER);
 	CP_Settings_TextSize(BUTTON_FONT_SIZE);
 	CP_Font_Set(CP_Font_Load("Assets/Fonts/Oxanium/Oxanium-Variable.ttf"));
-
-	CP_Color bg = CP_Color_Create(128, 128, 128, 255);
-	CP_Color play_bg = CP_Color_Create(144, 238, 144, 255);
-	CP_Color other_bg = CP_Color_Create(169, 169, 169, 255);
-	CP_Graphics_ClearBackground(bg);
 
 	int window_w = CP_System_GetWindowWidth(),
 		window_h = CP_System_GetWindowHeight();
@@ -28,6 +33,11 @@ void main_menu_init(void)
 	float button_rect_x = window_w / 2.0f,
 		button_rect_y = window_h / 2.0f;
 
+	CP_Color bg = CP_Color_Create(128, 128, 128, 255);
+	CP_Color play_bg = CP_Color_Create(144, 238, 144, 255);
+	CP_Color other_bg = CP_Color_Create(169, 169, 169, 255);
+	CP_Graphics_ClearBackground(bg);
+	
 	// Play button
 	CP_Settings_Fill(play_bg);
 	g_play_rect_x = button_rect_x;
@@ -50,15 +60,16 @@ void main_menu_init(void)
 	CP_Font_DrawText("Play", g_play_rect_x, g_play_rect_y + 5.0f);
 	CP_Font_DrawText("Options", g_options_rect_x, g_options_rect_y + 5.0f);
 	CP_Font_DrawText("Quit", g_quit_rect_x, g_quit_rect_y + 5.0f);
-}
 
-void main_menu_update(void)
-{
+	
+
+	float mouse_x = CP_Input_GetMouseWorldX();
+	float mouse_y = CP_Input_GetMouseWorldY();
+	CP_Image_Draw(chococursor, mouse_x, mouse_y, 70, 50, 255);
 	if (CP_Input_MouseTriggered(MOUSE_BUTTON_LEFT))
 	{
-		float mouse_x = CP_Input_GetMouseWorldX(),
-			mouse_y = CP_Input_GetMouseWorldY();
-
+		
+		
 		// Play
 		if (IsRectClicked(g_play_rect_x, g_play_rect_y, BUTTON_RECT_W, BUTTON_RECT_H, mouse_x, mouse_y, CP_POSITION_CENTER)) 
 			//printf("Clicked Play\n"); // Set game state here

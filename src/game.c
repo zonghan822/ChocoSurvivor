@@ -27,7 +27,7 @@ float dashProgress, lastDash;
 CP_Vector dashTo;
 const float DASH_COOLDOWN = 2.0, DASH_DISTANCE = 150.0, DASH_SPEED = 10.0;
 CP_Image gameOverImage;
-
+CP_Image chococursor;
 
 
 
@@ -68,6 +68,8 @@ void game_init(void)
 		// Store enemies in array
 		roaches[i] = chocoRoach;
 	}
+    chococursor = CP_Image_Load("Assets/cursor.png");
+    CP_System_ShowCursor(FALSE);
 
     // Initialize boss instance
     boss1instance.height = 500.0f;
@@ -105,7 +107,6 @@ void game_update(void)
 	CP_Graphics_ClearBackground(CP_Color_Create(170, 170, 170, 255));
 
 	float dt = CP_System_GetDt();
-
     render_enemies(roaches, roachesCnt);
 
 	// Enemies movement logic
@@ -322,6 +323,9 @@ void game_update(void)
 	if (CP_Input_KeyTriggered(KEY_Q)) {
 		CP_Engine_SetNextGameState(main_menu_init, main_menu_update, main_menu_exit);
 	}
+    float mouse_x = CP_Input_GetMouseWorldX();
+    float mouse_y = CP_Input_GetMouseWorldY();
+    CP_Image_Draw(chococursor, mouse_x, mouse_y, 70, 50, 255);
 }
 
 void game_exit(void)
