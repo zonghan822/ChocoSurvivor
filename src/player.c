@@ -2,16 +2,15 @@
 #include "player.h"
 #include <stdio.h>
 
-void takeDamage(struct ChocoShooter* player, int damage) {
+// Returns 1 if still alive, 0 if not
+int player_take_damage(struct ChocoShooter* player, int damage) {
+    player->health = CP_Math_ClampInt(player->health - damage, 0, player->maxHealth);
+
     if (player->health > 0) {
-        player->health -= damage;
-        if (player->health < 0) {
-            player->health = 0;  // Ensure health doesn't go below zero
-            printf("Choco Shooter has been defeated!\n");
-            // You can add code here to handle game-over or respawn logic
-        }
-        else {
-            printf("Choco Shooter took %d damage, health is now %d\n", damage, player->health);
-        }
+        printf("Player took %d damage, health is now %d\n", damage, player->health);
+        return 1;
     }
+
+    printf("Choco Shooter has been defeated!\n");
+    return 0;
 }
