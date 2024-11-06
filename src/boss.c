@@ -3,14 +3,15 @@
 #include <stdio.h>
 
 void meleeAttack(struct Boss boss, struct ChocoShooter* player) {
-	printf("Melee attack\n");
+	// Add delay
 
-	// Knockback player
+	printf("Melee attack\n");
 
 	// Damage player
 	player_take_damage(player, 1);
 }
 
 int canMeleeAttack(struct Boss boss, struct ChocoShooter player) {
-	return CP_Vector_Distance(boss.hitbox.pos, player.hitbox.pos) < 125 + (boss.hitbox.width / 2) + (player.hitbox.width / 2);
+	float minDistance = 125 + (boss.hitbox.width / 2) + (player.hitbox.width / 2);
+	return CP_Vector_Distance(boss.hitbox.pos, player.hitbox.pos) <= minDistance;
 }

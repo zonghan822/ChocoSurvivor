@@ -256,9 +256,10 @@ void game_update(void)
         // With roaches
         for (int i = 0; i < ARRAY_COUNT(roaches); i++) {
             struct ChocoRoach roach = roaches[i];
-            struct Circle hitbox; // PLACEHOLDER
-            hitbox.diameter = roach.radius * 2;
-            hitbox.pos = roach.pos;
+            struct Circle hitbox = { // PLACEHOLDER
+                .diameter = roach.radius * 2,
+                .pos = roach.pos
+            };
 
             // Player
             if (are_circle_rect_intersecting(hitbox, chocoShooterInstance.hitbox)) {

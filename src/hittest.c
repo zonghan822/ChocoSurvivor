@@ -6,13 +6,13 @@ int is_rect_clicked(struct Rectangle rect, float click_x, float click_y) {
 	rect.pos.x -= (rect.width / 2);
 	rect.pos.y -= (rect.height / 2);
 
-	float x_startpoint = rect.pos.x,
-		x_endpoint = rect.pos.x + rect.width,
-		y_startpoint = rect.pos.y,
-		y_endpoint = rect.pos.y + rect.height;
+	float xStartpoint = rect.pos.x,
+		xEndpoint = rect.pos.x + rect.width,
+		yStartpoint = rect.pos.y,
+		yEndpoint = rect.pos.y + rect.height;
 
-	return click_x >= x_startpoint && click_x <= x_endpoint &&
-		click_y >= y_startpoint && click_y <= y_endpoint;
+	return click_x >= xStartpoint && click_x <= xEndpoint &&
+		click_y >= yStartpoint && click_y <= yEndpoint;
 }
 
 int is_circle_clicked(struct Circle circ, float click_x, float click_y) {
@@ -37,13 +37,13 @@ int are_rects_intersecting(struct Rectangle a, struct Rectangle b) {
 	b.pos.x -= (b.width / 2);
 	b.pos.y -= (b.height / 2);
 
-	float a_rx = a.pos.x + a.width, // rx = Right x
-		a_by = a.pos.y + a.height, // by = Bottom y
-		b_rx = b.pos.x + b.width,
-		b_by = b.pos.y + b.height;
+	float aRx = a.pos.x + a.width, // rx = Right x
+		aBy = a.pos.y + a.height, // by = Bottom y
+		bRx = b.pos.x + b.width,
+		bBy = b.pos.y + b.height;
 
 	// If all true, they are intersecting
-	return a.pos.x < b_rx && a_rx > b.pos.x && a.pos.y < b_by && a_by > b.pos.y;
+	return a.pos.x < bRx && aRx > b.pos.x && a.pos.y < bBy && aBy > b.pos.y;
 }
 
 int are_circle_rect_intersecting(struct Circle circ, struct Rectangle rect) {

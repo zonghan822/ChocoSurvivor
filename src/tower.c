@@ -23,10 +23,11 @@ int tower_revive_player(struct DefenseTarget* tower, struct ChocoShooter* player
 }
 
 struct Rectangle get_tower_hitbox(struct DefenseTarget tower) {
-	struct Rectangle rect;
-	rect.height = tower.height;
-	rect.width = tower.width;
-	rect.pos = tower.pos;
+	struct Rectangle rect = {
+		.height = tower.height,
+		.width = tower.width,
+		.pos = tower.pos
+	};
 
 	return rect;
 }
