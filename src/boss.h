@@ -15,5 +15,5 @@ struct Boss {
     struct Rectangle hitbox;
 };
 
-void meleeAttack(struct Boss, struct ChocoShooter*);
-int canMeleeAttack(struct Boss boss, struct ChocoShooter player);
+void melee_attack(struct Boss, struct ChocoShooter*);
+int can_melee_attack(struct Boss boss, struct ChocoShooter player);

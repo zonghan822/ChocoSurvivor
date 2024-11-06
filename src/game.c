@@ -70,21 +70,19 @@ void game_init(void)
     // Initialize boss instance
     bossInstance.speed = 80.0f;
     bossInstance.maxHealth = 40;
-    bossInstance.pos.x = 100.0f;
-    bossInstance.pos.y = 450.0f;
+    bossInstance.hitbox.pos = bossInstance.pos = CP_Vector_Set(100.0, 450.0);
     bossInstance.img = CP_Image_Load("Assets/boss_lvl1.png");
     bossInstance.isFlipped = FALSE;
     bossInstance.width = 500.0f;
     bossInstance.height = get_preserved_heightf((int)CP_Image_GetWidth(bossInstance.img),
         (int)CP_Image_GetHeight(bossInstance.img), bossInstance.width);
-    bossInstance.attack = meleeAttack;
-    bossInstance.canAttack = canMeleeAttack;
+    bossInstance.attack = melee_attack;
+    bossInstance.canAttack = can_melee_attack;
     bossInstance.hitbox.width = bossInstance.width;
     bossInstance.hitbox.height = bossInstance.height;
-    bossInstance.hitbox.pos = bossInstance.pos;
 
     // Initialize player instance
-    chocoShooterInstance.hitbox.pos = chocoShooterInstance.pos = CP_Vector_Set(100.0f, 100.0f);
+    chocoShooterInstance.hitbox.pos = chocoShooterInstance.pos = CP_Vector_Set(100.0, 100.0);
     chocoShooterInstance.speed = 200.0f,
     chocoShooterInstance.health = 3,
     chocoShooterInstance.maxHealth = 3,
@@ -308,13 +306,17 @@ void game_update(void)
         bossInstance.attack(bossInstance, &chocoShooterInstance);
     }
 
-    // Update player hitbox
-    update_rect_hitbox(&chocoShooterInstance.hitbox, chocoShooterInstance.width / 1.2, chocoShooterInstance.height / 1.2, chocoShooterInstance.pos);
+    // Update hitboxes
+    update_rect_hitbox(&chocoShooterInstance.hitbox, chocoShooterInstance.width / 1.2,
+        chocoShooterInstance.height / 1.2, chocoShooterInstance.pos); // Player
+    update_rect_hitbox(&bossInstance.hitbox, bossInstance.width, bossInstance.height, bossInstance.pos); // Boss
+    
 
     // Boss follows player and changes Movement
-    CP_Vector directionToPlayer;
-    directionToPlayer.x = chocoShooterInstance.pos.x - bossInstance.pos.x;
-    directionToPlayer.y = chocoShooterInstance.pos.y - bossInstance.pos.y;
+    CP_Vector directionToPlayer = {
+        .x = chocoShooterInstance.pos.x - bossInstance.pos.x,
+        .y = chocoShooterInstance.pos.y - bossInstance.pos.y
+    };
 
     // Check horizontal Movement to flip boss's image
     if (directionToPlayer.x < 0) {
