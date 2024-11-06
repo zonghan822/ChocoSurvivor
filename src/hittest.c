@@ -76,7 +76,7 @@ int is_rect_at_boundary(struct Rectangle rect, float screen_w, float screen_h) {
 }
 
 void update_rect_hitbox(struct Rectangle* rect, float resized_width, float resized_height, CP_Vector pos) {
-	rect->height = resized_height;
-	rect->width = resized_width;
+	rect->height = resized_height == 0.0f ? rect->height : resized_height;
+	rect->width = resized_width == 0.0f ? rect->width : resized_width;
 	rect->pos = pos;
 }

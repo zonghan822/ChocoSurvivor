@@ -1,5 +1,6 @@
 #include "mainmenu.h"
 #include "game.h"
+#include "level1.h"
 #include "hittest.h"
 #include "cprocessing.h"
 #include <stdio.h>
@@ -66,7 +67,7 @@ void main_menu_update(void)
 		// Play
 		if (is_rect_clicked(gPlayRect, mouse_x, mouse_y)) 
 			//printf("Clicked Play\n"); // Set game state here
-			CP_Engine_SetNextGameState(game_init, game_update, game_exit);
+			CP_Engine_SetNextGameState(level_one_init, level_one_update, level_one_exit);
 
 		// Options
 		else if (is_rect_clicked(gOptionsRect, mouse_x, mouse_y))

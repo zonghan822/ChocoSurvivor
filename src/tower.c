@@ -2,6 +2,7 @@
 #include "player.h"
 #include "cprocessing.h"
 #include "utils.h"
+#include "camera.h"
 #include <stdio.h>
 
 // Returns 1 if still alive, 0 if not
@@ -30,4 +31,15 @@ struct Rectangle get_tower_hitbox(struct DefenseTarget tower) {
 	};
 
 	return rect;
+}
+
+void render_tower(struct DefenseTarget tower, struct Camera cam) {
+	float x = tower.pos.x - cam.pos.x,
+		y = tower.pos.y - cam.pos.y;
+
+	// PLACEHOLDER
+	CP_Graphics_DrawRect(x, y, tower.width, tower.height);
+	CP_Settings_TextSize(30);
+	CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255));
+	CP_Font_DrawText("TOWER", x, y);
 }

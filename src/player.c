@@ -42,10 +42,13 @@ struct ChocoShooter init_player(CP_Vector pos, float speed, float maxHealth) {
         (int)CP_Image_GetHeight(player.img), player.width)
     };
 
+    player.hitbox.width /= 1.4f;
+    player.hitbox.height /= 1.4f;
+
     return player;
 }
 
-void move_player(struct ChocoShooter *player, float dt) {
+void move_player(struct ChocoShooter *player, float dt, float level_width, float level_height) {
     CP_Vector moveDirection = CP_Vector_Zero();
 
     // Player movement and setting movement
@@ -67,8 +70,7 @@ void move_player(struct ChocoShooter *player, float dt) {
     if ((player->movement & MOVING_LEFT) && (player->movement & MOVING_RIGHT))
         player->movement &= ~(MOVING_LEFT | MOVING_RIGHT);
 
-    switch (player->movement)
-    {
+    switch (player->movement) {
         case MOVING_UP:
             moveDirection.y -= 1.0f;
             break;
@@ -109,8 +111,7 @@ void move_player(struct ChocoShooter *player, float dt) {
         _lastDash += dt;
 
     // Dash movement with spacebar
-    if (CP_Input_KeyTriggered(KEY_SPACE) && !_isDashing && _lastDash >= DASH_COOLDOWN)
-    {
+    if (CP_Input_KeyTriggered(KEY_SPACE) && !_isDashing && _lastDash >= DASH_COOLDOWN) {
         _dashTo = player->pos;
         _isDashing = TRUE;
         _dashProgress = 0.0;
@@ -122,8 +123,7 @@ void move_player(struct ChocoShooter *player, float dt) {
         }
     }
 
-    if (_isDashing)
-    {
+    if (_isDashing) {
         _dashProgress += DASH_SPEED * dt;
 
         player->pos.x = CP_Math_LerpFloat(player->pos.x, _dashTo.x, _dashProgress);
@@ -132,4 +132,16 @@ void move_player(struct ChocoShooter *player, float dt) {
         if (_dashProgress >= 1.0f)
             _isDashing = FALSE;
     }
+
+    // Use hitbox instead because images can have whitespaces in them
+    // Add some padding
+    float halfWidth = (player->hitbox.width / 2.0f) + 5.0f,
+        halfHeight = (player->hitbox.height / 2.0f) + 5.0f;
+
+    player->pos.x = CP_Math_ClampFloat(player->pos.x, 0 + halfWidth, level_width - halfWidth);
+    player->pos.y = CP_Math_ClampFloat(player->pos.y, 0 + halfHeight, level_height - halfHeight);
+}
+
+void render_player(struct ChocoShooter player, float alpha) {
+    CP_Image_Draw(player.img, player.pos.x, player.pos.y, player.width, player.height, alpha);
 }

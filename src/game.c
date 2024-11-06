@@ -44,7 +44,7 @@ void game_init(void)
 
     // Initialize dash variables
     dashProgress = 0.0;
-    lastDash = 2.1;
+    lastDash = 2.1f;
 
 	srand(time(NULL));
 	for (int i = 0; i < roachesCnt; i++) {
@@ -83,9 +83,9 @@ void game_init(void)
 
     // Initialize player instance
     chocoShooterInstance.hitbox.pos = chocoShooterInstance.pos = CP_Vector_Set(100.0, 100.0);
-    chocoShooterInstance.speed = 200.0f,
-    chocoShooterInstance.health = 3,
-    chocoShooterInstance.maxHealth = 3,
+    chocoShooterInstance.speed = 200.0f;
+    chocoShooterInstance.health = 3;
+    chocoShooterInstance.maxHealth = 3;
     chocoShooterInstance.img = CP_Image_Load("Assets/choco_shooter.png");
     chocoShooterInstance.isFlipped = FALSE,
     chocoShooterInstance.movement = STOPPED;
