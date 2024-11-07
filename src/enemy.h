@@ -12,11 +12,10 @@ struct ChocoRoach {
 	CP_Vector pos;
 	float width;
 	float height;
-	float radius;
-	float degree;
 	float speed;
 	int health;
 	int dmg;
+
 	enum Movement movement;
 	enum EnemyState current_state;
 };

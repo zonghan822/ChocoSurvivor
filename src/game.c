@@ -12,7 +12,6 @@
 #include "boss.h"
 
 #define ARRAY_COUNT(x) (sizeof(x)/sizeof(x[0]))
-//#define NULL ((void*)0)
 #define MAX_ENEMY_COUNT 100
 
 struct ChocoRoach roaches[MAX_ENEMY_COUNT];
@@ -48,11 +47,11 @@ void game_init(void)
 		
 		// Define properties of enemy
 		struct ChocoRoach chocoRoach = {
-			.img = NULL,
+			.img = CP_Image_Load("Assets/choco_roach.png"),
 			.pos.x = -35.f,
 			.pos.y = rand_float(spawnMinY, spawnMaxY), // Generate random y pos for enemies
-			.radius = 35.f,
-			.degree = 0.f,
+			.width = 100.f,
+			.height = 150.f,
 			.speed = 350.f,
 			.health = 100,
 			.dmg = 10,
@@ -102,22 +101,33 @@ void game_update(void)
 
 		// Update position of enemies
 		switch (roaches[i].movement) {
-		case MOVING_UP:
-			roaches[i].pos.y -= (roaches[i].speed * dt);
-			roaches[i].degree = 270.0f;
-			break;
-		case MOVING_DOWN:
-			roaches[i].pos.y += (roaches[i].speed * dt);
-			roaches[i].degree = 90.0f;
-			break;
-		case MOVING_LEFT:
-			roaches[i].pos.x -= (roaches[i].speed * dt);
-			roaches[i].degree = 180.0f;
-			break;
-		case MOVING_RIGHT:
-			roaches[i].pos.x += (roaches[i].speed * dt);
-			roaches[i].degree = 0.0f;
-			break;
+        case MOVING_UP:
+            roaches[i].pos.y -= roaches[i].speed * dt;
+            break;
+        case MOVING_RIGHT:
+            roaches[i].pos.x += roaches[i].speed * dt;
+            break;
+        case MOVING_DOWN:
+            roaches[i].pos.y += roaches[i].speed * dt;
+            break;
+        case MOVING_LEFT:
+            roaches[i].pos.x -= roaches[i].speed * dt;
+            break;
+        case MOVING_UP | MOVING_RIGHT:
+            roaches[i].pos.x += get_diagonal_dist(roaches[i].speed * dt);
+            roaches[i].pos.y -= get_diagonal_dist(roaches[i].speed * dt);
+            break;
+        case MOVING_UP | MOVING_LEFT:
+            roaches[i].pos.x -= get_diagonal_dist(roaches[i].speed * dt);
+            roaches[i].pos.y -= get_diagonal_dist(roaches[i].speed * dt);
+            break;
+        case MOVING_DOWN | MOVING_RIGHT:
+            roaches[i].pos.x += get_diagonal_dist(roaches[i].speed * dt);
+            roaches[i].pos.y += get_diagonal_dist(roaches[i].speed * dt);
+            break;
+        case MOVING_DOWN | MOVING_LEFT:
+            roaches[i].pos.x -= get_diagonal_dist(roaches[i].speed * dt);
+            roaches[i].pos.y += get_diagonal_dist(roaches[i].speed * dt);
 		}
 	}
 
@@ -140,8 +150,6 @@ void game_update(void)
     if ((chocoShooterInstance.movement & MOVING_LEFT) && (chocoShooterInstance.movement & MOVING_RIGHT))
         chocoShooterInstance.movement &= ~(MOVING_LEFT | MOVING_RIGHT);
 
-    // So character's movement isn't "boosted" when mooving diagonally
-    float diagonalSpeed = chocoShooterInstance.speed / sqrt(2.0f);
 
     switch (chocoShooterInstance.movement)
     {
@@ -158,20 +166,20 @@ void game_update(void)
             chocoShooterInstance.pos.x -= chocoShooterInstance.speed * dt;
             break;
         case MOVING_UP | MOVING_RIGHT:
-            chocoShooterInstance.pos.x += diagonalSpeed * dt;
-            chocoShooterInstance.pos.y -= diagonalSpeed * dt;
+            chocoShooterInstance.pos.x += get_diagonal_dist(chocoShooterInstance.speed * dt);
+            chocoShooterInstance.pos.y -= get_diagonal_dist(chocoShooterInstance.speed * dt);
             break;
         case MOVING_UP | MOVING_LEFT:
-            chocoShooterInstance.pos.x -= diagonalSpeed * dt;
-            chocoShooterInstance.pos.y -= diagonalSpeed * dt;
+            chocoShooterInstance.pos.x -= get_diagonal_dist(chocoShooterInstance.speed * dt);
+            chocoShooterInstance.pos.y -= get_diagonal_dist(chocoShooterInstance.speed * dt);
             break;
         case MOVING_DOWN | MOVING_RIGHT:
-            chocoShooterInstance.pos.x += diagonalSpeed * dt;
-            chocoShooterInstance.pos.y += diagonalSpeed * dt;
+            chocoShooterInstance.pos.x += get_diagonal_dist(chocoShooterInstance.speed * dt);
+            chocoShooterInstance.pos.y += get_diagonal_dist(chocoShooterInstance.speed * dt);
             break;
         case MOVING_DOWN | MOVING_LEFT:
-            chocoShooterInstance.pos.x -= diagonalSpeed * dt;
-            chocoShooterInstance.pos.y += diagonalSpeed * dt;
+            chocoShooterInstance.pos.x -= get_diagonal_dist(chocoShooterInstance.speed * dt);
+            chocoShooterInstance.pos.y += get_diagonal_dist(chocoShooterInstance.speed * dt);
     }
 
     if (lastDash < DASH_COOLDOWN)
@@ -181,7 +189,6 @@ void game_update(void)
     if (CP_Input_KeyTriggered(KEY_SPACE) && !isDashing && lastDash >= DASH_COOLDOWN)
     {
         dashTo = chocoShooterInstance.pos;
-        float diagonalDash = DASH_DISTANCE / sqrt(2.0);
 
         switch (chocoShooterInstance.movement) {
         case MOVING_UP:
@@ -197,20 +204,20 @@ void game_update(void)
             dashTo.x += DASH_DISTANCE;
             break;
         case MOVING_UP | MOVING_LEFT:
-            dashTo.y -= diagonalDash;
-            dashTo.x -= diagonalDash;
+            dashTo.y -= get_diagonal_dist(DASH_DISTANCE);
+            dashTo.x -= get_diagonal_dist(DASH_DISTANCE);
             break;
         case MOVING_UP | MOVING_RIGHT:
-            dashTo.x += diagonalDash;
-            dashTo.y -= diagonalDash;
+            dashTo.x += get_diagonal_dist(DASH_DISTANCE);
+            dashTo.y -= get_diagonal_dist(DASH_DISTANCE);
             break;
         case MOVING_DOWN | MOVING_LEFT:
-            dashTo.x -= diagonalDash;
-            dashTo.y += diagonalDash;
+            dashTo.x -= get_diagonal_dist(DASH_DISTANCE);
+            dashTo.y += get_diagonal_dist(DASH_DISTANCE);
             break;
         case MOVING_DOWN | MOVING_RIGHT:
-            dashTo.x += diagonalDash;
-            dashTo.y += diagonalDash;
+            dashTo.x += get_diagonal_dist(DASH_DISTANCE);
+            dashTo.y += get_diagonal_dist(DASH_DISTANCE);
             break;
         }
 
@@ -232,10 +239,12 @@ void game_update(void)
             isDashing = FALSE;
     }
 
+
     if (CP_Input_KeyTriggered(KEY_H)) {  // Press 'H' to take 1 damage
         takeDamage(&chocoShooterInstance, 1);
     }
-    char healthDisplay[256];
+
+    char healthDisplay[100];
     sprintf_s(healthDisplay, sizeof(healthDisplay), "Health: %d", chocoShooterInstance.health);
     CP_Settings_TextSize(30);
     CP_Font_DrawText(healthDisplay, 50, 50);
@@ -297,6 +306,9 @@ void game_exit(void)
 {
     CP_Image_Free(&chocoShooterInstance.img);
     CP_Image_Free(&boss1instance.img);
+    for (int i = 0; i < roachesCnt; i++) {
+        CP_Image_Free(&roaches[i].img);
+    }
 }
 
 

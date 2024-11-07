@@ -5,19 +5,14 @@
 void render_enemies(struct ChocoRoach roaches[], int count) {
 	for (int i = 0; i < count; i++) {
 
-		// Draw enemies
-		float x = roaches[i].pos.x;
-		float y = roaches[i].pos.y;
-		float r = roaches[i].radius;
-		float d = roaches[i].degree;
-
-		// Draw circle
-		CP_Settings_Fill(CP_Color_Create(255, 0, 0, 255));
-		CP_Graphics_DrawCircle(x, y, r * 2.0f);
-
-		// Draw triangle 
-		CP_Settings_Fill(CP_Color_Create(255, 255, 255, 255));
-		CP_Graphics_DrawTriangleAdvanced(x + r, y, x - r * (float)cos(0.9), y + r * (float)sin(0.9), x - r * (float)cos(0.9), y - r * (float)sin(0.9), d);
+		CP_Image_Draw(
+			roaches[i].img,
+			roaches[i].pos.x,
+			roaches[i].pos.y,
+			roaches[i].width,
+			roaches[i].height,
+			255
+		);
 	}
 
 }
