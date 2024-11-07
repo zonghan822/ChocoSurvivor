@@ -97,7 +97,7 @@ void level_one_update(void) {
     update_rect_hitbox(&playerInstance.hitbox, 0.0f, 0.0f, playerInstance.pos); // Player
 
     render_tower(towerInstance, cam);
-    render_player(playerInstance, 255);
+    render_player(playerInstance, 255, cam);
     render_enemies(roaches, roachesMax);
 
     printf("%f, %f\n", playerInstance.pos.x, playerInstance.pos.y);

@@ -2,6 +2,7 @@
 #include "player.h"
 #include "utils.h"
 #include <stdio.h>
+#include "camera.h"
 
 #define DASH_COOLDOWN 2.0f
 #define DASH_DISTANCE 150.0f
@@ -138,10 +139,12 @@ void move_player(struct ChocoShooter *player, float dt, float level_width, float
     float halfWidth = (player->hitbox.width / 2.0f) + 5.0f,
         halfHeight = (player->hitbox.height / 2.0f) + 5.0f;
 
-    player->pos.x = CP_Math_ClampFloat(player->pos.x, 0 + halfWidth, level_width - halfWidth);
-    player->pos.y = CP_Math_ClampFloat(player->pos.y, 0 + halfHeight, level_height - halfHeight);
+    player->pos.x = CP_Math_ClampFloat(player->pos.x, halfWidth, level_width - halfWidth);
+    player->pos.y = CP_Math_ClampFloat(player->pos.y, halfHeight, level_height - halfHeight);
 }
 
-void render_player(struct ChocoShooter player, float alpha) {
-    CP_Image_Draw(player.img, player.pos.x, player.pos.y, player.width, player.height, alpha);
+void render_player(struct ChocoShooter player, float alpha, struct Camera cam) {
+    CP_Vector vec = get_cam_pos_rel(player.pos, cam);
+
+    CP_Image_Draw(player.img, vec.x, vec.y, player.width, player.height, alpha);
 }
