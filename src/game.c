@@ -6,11 +6,13 @@
 
 #include "cprocessing.h"
 #include "utils.h"
+#include "hittest.h"
 #include "mainmenu.h"
 #include "player.h"
 #include "enemy.h"
 #include "boss.h"
 
+#define IMAGE_POSITION CP_POSITION_CENTER
 #define ARRAY_COUNT(x) (sizeof(x)/sizeof(x[0]))
 #define MAX_ENEMY_COUNT 100
 
@@ -27,6 +29,9 @@ const float DASH_COOLDOWN = 2.0, DASH_DISTANCE = 150.0, DASH_SPEED = 10.0;
 
 void game_init(void)
 {
+    // Set to draw image from center
+    CP_Settings_ImageMode(IMAGE_POSITION);
+
 	// Get window width and height
     windowWidth = CP_System_GetWindowWidth();
 	windowHeight = CP_System_GetWindowHeight();
@@ -49,7 +54,7 @@ void game_init(void)
 		struct ChocoRoach chocoRoach = {
 			.img = CP_Image_Load("Assets/choco_roach.png"),
 			.pos.x = -35.f,
-			.pos.y = rand_float(spawnMinY, spawnMaxY), // Generate random y pos for enemies
+			.pos.y = CP_Random_RangeFloat(spawnMinY, spawnMaxY), // Generate random y pos for enemies
 			.width = 100.f,
 			.height = 150.f,
 			.speed = 350.f,
@@ -76,8 +81,8 @@ void game_init(void)
     // Initialize player instance
     chocoShooterInstance.pos.x = 100.0f;
     chocoShooterInstance.pos.y = 100.0f;
-    chocoShooterInstance.width = 200.0f,
-    chocoShooterInstance.height = 300.0f,
+    chocoShooterInstance.width = 100.0f,
+    chocoShooterInstance.height = 150.0f,
     chocoShooterInstance.speed = 200.0f,
     chocoShooterInstance.health = 3,
     chocoShooterInstance.maxHealth = 3,
@@ -93,94 +98,48 @@ void game_update(void)
 	CP_Graphics_ClearBackground(CP_Color_Create(170, 170, 170, 255));
 
 	float dt = CP_System_GetDt();
-
-    render_enemies(roaches, roachesCnt);
-
-	// Enemies movement logic
+    
+    // Chocoroaches (Enemies)
 	for (int i = 0; i < roachesCnt; i++) {
 
-		// Update position of enemies
-		switch (roaches[i].movement) {
-        case MOVING_UP:
-            roaches[i].pos.y -= roaches[i].speed * dt;
-            break;
-        case MOVING_RIGHT:
-            roaches[i].pos.x += roaches[i].speed * dt;
-            break;
-        case MOVING_DOWN:
-            roaches[i].pos.y += roaches[i].speed * dt;
-            break;
-        case MOVING_LEFT:
-            roaches[i].pos.x -= roaches[i].speed * dt;
-            break;
-        case MOVING_UP | MOVING_RIGHT:
-            roaches[i].pos.x += get_diagonal_dist(roaches[i].speed * dt);
-            roaches[i].pos.y -= get_diagonal_dist(roaches[i].speed * dt);
-            break;
-        case MOVING_UP | MOVING_LEFT:
-            roaches[i].pos.x -= get_diagonal_dist(roaches[i].speed * dt);
-            roaches[i].pos.y -= get_diagonal_dist(roaches[i].speed * dt);
-            break;
-        case MOVING_DOWN | MOVING_RIGHT:
-            roaches[i].pos.x += get_diagonal_dist(roaches[i].speed * dt);
-            roaches[i].pos.y += get_diagonal_dist(roaches[i].speed * dt);
-            break;
-        case MOVING_DOWN | MOVING_LEFT:
-            roaches[i].pos.x -= get_diagonal_dist(roaches[i].speed * dt);
-            roaches[i].pos.y += get_diagonal_dist(roaches[i].speed * dt);
-		}
+        // Enemy movement logic and attacking logic
+        // Check enemy near with player
+        if (AreRectsIntersecting(roaches[i].pos.x, roaches[i].pos.y, roaches[i].width * 2.f, roaches[i].height * 2.f, IMAGE_POSITION,
+            chocoShooterInstance.pos.x, chocoShooterInstance.pos.y, chocoShooterInstance.width * 2.f, chocoShooterInstance.height * 2.f, IMAGE_POSITION)) {
+            
+            if (AreRectsIntersecting(roaches[i].pos.x, roaches[i].pos.y, roaches[i].width, roaches[i].height, IMAGE_POSITION,
+                chocoShooterInstance.pos.x, chocoShooterInstance.pos.y, chocoShooterInstance.width, chocoShooterInstance.height, IMAGE_POSITION)) {
+                printf("Intersecting...\n");
+                // Stop movement of enemy when collide
+                roaches[i].movement = STOPPED;
+
+                // Attack goes here...
+
+            }
+            else { 
+                printf("Chasing...\n");
+                chase_player(&roaches[i], chocoShooterInstance);
+            }
+        }
+        else {
+            printf("Far away from player...\n");
+            roaches[i].movement = STOPPED;
+        }
+
+		// Update position of enemy
+        update_pos_enemy(&roaches[i], dt);
+
+        // Draw enemy instance
+        render_enemy(roaches[i]);
+		
 	}
 
-    // Player movement and setting movement
-    chocoShooterInstance.movement = STOPPED;
-    if (CP_Input_KeyDown(KEY_W))
-        chocoShooterInstance.movement |= MOVING_UP;
-    if (CP_Input_KeyDown(KEY_S))
-        chocoShooterInstance.movement |= MOVING_DOWN;
-    if (CP_Input_KeyDown(KEY_A))
-        chocoShooterInstance.movement |= MOVING_LEFT;
-    if (CP_Input_KeyDown(KEY_D))
-        chocoShooterInstance.movement |= MOVING_RIGHT;
+    // Control and move player with key WASD
+    move_player(&chocoShooterInstance);
 
-    // W+S and A+D inputs should stop the character
-    // Clear both UP and DOWN bits
-    // Clear both LEFT and RIGHT bits
-    if ((chocoShooterInstance.movement & MOVING_UP) && (chocoShooterInstance.movement & MOVING_DOWN))
-        chocoShooterInstance.movement &= ~(MOVING_UP | MOVING_DOWN);
-    if ((chocoShooterInstance.movement & MOVING_LEFT) && (chocoShooterInstance.movement & MOVING_RIGHT))
-        chocoShooterInstance.movement &= ~(MOVING_LEFT | MOVING_RIGHT);
+    // Update position of player
+    update_pos_player(&chocoShooterInstance, dt);
 
-
-    switch (chocoShooterInstance.movement)
-    {
-        case MOVING_UP:
-            chocoShooterInstance.pos.y -= chocoShooterInstance.speed * dt;
-            break;
-        case MOVING_RIGHT:
-            chocoShooterInstance.pos.x += chocoShooterInstance.speed * dt;
-            break;
-        case MOVING_DOWN:
-            chocoShooterInstance.pos.y += chocoShooterInstance.speed * dt;
-            break;
-        case MOVING_LEFT:
-            chocoShooterInstance.pos.x -= chocoShooterInstance.speed * dt;
-            break;
-        case MOVING_UP | MOVING_RIGHT:
-            chocoShooterInstance.pos.x += get_diagonal_dist(chocoShooterInstance.speed * dt);
-            chocoShooterInstance.pos.y -= get_diagonal_dist(chocoShooterInstance.speed * dt);
-            break;
-        case MOVING_UP | MOVING_LEFT:
-            chocoShooterInstance.pos.x -= get_diagonal_dist(chocoShooterInstance.speed * dt);
-            chocoShooterInstance.pos.y -= get_diagonal_dist(chocoShooterInstance.speed * dt);
-            break;
-        case MOVING_DOWN | MOVING_RIGHT:
-            chocoShooterInstance.pos.x += get_diagonal_dist(chocoShooterInstance.speed * dt);
-            chocoShooterInstance.pos.y += get_diagonal_dist(chocoShooterInstance.speed * dt);
-            break;
-        case MOVING_DOWN | MOVING_LEFT:
-            chocoShooterInstance.pos.x -= get_diagonal_dist(chocoShooterInstance.speed * dt);
-            chocoShooterInstance.pos.y += get_diagonal_dist(chocoShooterInstance.speed * dt);
-    }
 
     if (lastDash < DASH_COOLDOWN)
         lastDash += dt;

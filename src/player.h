@@ -16,3 +16,5 @@ struct ChocoShooter {
 };
 
 void takeDamage(struct ChocoShooter* player, int damage);
+void move_player(struct ChocoShooter* player);
+void update_pos_player(struct ChocoShooter* player, float dt);

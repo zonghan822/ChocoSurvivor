@@ -1,6 +1,7 @@
 #pragma once
 #include "cprocessing.h"
 #include "utils.h"
+#include "player.h"
 
 enum EnemyState {
 	STATE_MOVING,
@@ -15,9 +16,11 @@ struct ChocoRoach {
 	float speed;
 	int health;
 	int dmg;
-
 	enum Movement movement;
 	enum EnemyState current_state;
 };
 
-void render_enemies(struct ChocoRoach roaches[], int count);
+
+void render_enemy(struct ChocoRoach roach);
+void update_pos_enemy(struct ChocoRoach *roach, float dt);
+void chase_player(struct ChocoRoach* roach, struct ChocoShooter player);
