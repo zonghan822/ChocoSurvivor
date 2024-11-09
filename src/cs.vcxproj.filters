@@ -25,6 +25,15 @@
     <ClCompile Include="utils.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="tower.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="camera.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="level1.c">
+      <Filter>Source Files\Levels</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="utils.h">
@@ -48,6 +57,15 @@
     <ClInclude Include="hittest.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="tower.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="camera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="level1.h">
+      <Filter>Header Files\Levels</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Header Files">
@@ -55,6 +73,12 @@
     </Filter>
     <Filter Include="Source Files">
       <UniqueIdentifier>{fd1f12e3-cc7f-43bc-8206-bab02239aaea}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Levels">
+      <UniqueIdentifier>{16481b76-a6eb-4097-bbb2-ceba1372dcc1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Levels">
+      <UniqueIdentifier>{fe7f65a1-1918-40cf-adf6-460bd9cd3c4f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

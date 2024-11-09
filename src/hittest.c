@@ -2,86 +2,81 @@
 #include <math.h>
 #include <cprocessing.h>
 
-int IsRectClicked(float rect_x, float rect_y, float rect_w, float rect_h, float click_x, float click_y, CP_POSITION_MODE rect_mode)
-{
-	rect_x = rect_mode == CP_POSITION_CENTER ? rect_x - (rect_w / 2) : rect_x;
-	rect_y = rect_mode == CP_POSITION_CENTER ? rect_y - (rect_h / 2) : rect_y;
+int is_rect_clicked(struct Rectangle rect, float click_x, float click_y) {
+	rect.pos.x -= (rect.width / 2);
+	rect.pos.y -= (rect.height / 2);
 
-	float x_startpoint = rect_x,
-		x_endpoint = rect_x + rect_w,
-		y_startpoint = rect_y,
-		y_endpoint = rect_y + rect_h;
+	float xStartpoint = rect.pos.x,
+		xEndpoint = rect.pos.x + rect.width,
+		yStartpoint = rect.pos.y,
+		yEndpoint = rect.pos.y + rect.height;
 
-	return click_x >= x_startpoint && click_x <= x_endpoint &&
-		click_y >= y_startpoint && click_y <= y_endpoint;
+	return click_x >= xStartpoint && click_x <= xEndpoint &&
+		click_y >= yStartpoint && click_y <= yEndpoint;
 }
 
-int IsCircleClicked(float circle_x, float circle_y, float radius, float click_x, float click_y)
-{
-	float dx = click_x - circle_x,
-		dy = click_y - circle_y,
-		distance = (dx * dx) + (dy * dy);
+int is_circle_clicked(struct Circle circ, float click_x, float click_y) {
+	float dx = click_x - circ.pos.x,
+		dy = click_y - circ.pos.y,
+		distance = (dx * dx) + (dy * dy),
+		radius = circ.diameter / 2.0;
 
 	return distance <= (radius * radius);
 }
 
-int AreCirclesIntersecting(float c1_x, float c1_y, float r1, float c2_x, float c2_y, float r2)
-{
-	CP_Vector c1_vec = CP_Vector_Set(c1_x, c1_y),
-		c2_vec = CP_Vector_Set(c2_x, c2_y);
-	float distance = CP_Vector_Distance(c1_vec, c2_vec);
-
+int are_circles_intersecting(struct Circle a, struct Circle b) {
+	float distance = CP_Vector_Distance(a.pos, b.pos),
+		r1 = a.diameter / 2.0,
+		r2 = b.diameter / 2.0;
 	return distance < r1 + r2;
 }
 
-int AreRectsIntersecting(float rect1_x, float rect1_y, float rect1_w, float rect1_h, CP_POSITION_MODE rect1_mode,
-	float rect2_x, float rect2_y, float rect2_w, float rect2_h, CP_POSITION_MODE rect2_mode)
-{
-	rect1_x = rect1_mode == CP_POSITION_CENTER ? rect1_x - (rect1_w / 2) : rect1_x;
-	rect1_y = rect1_mode == CP_POSITION_CENTER ? rect1_y - (rect1_y / 2) : rect1_y;
-	rect2_x = rect2_mode == CP_POSITION_CENTER ? rect2_x - (rect2_w / 2) : rect2_x;
-	rect2_y = rect2_mode == CP_POSITION_CENTER ? rect2_x - (rect2_y / 2) : rect2_y;
+int are_rects_intersecting(struct Rectangle a, struct Rectangle b) {
+	a.pos.x -= (a.width / 2);
+	a.pos.y -= (a.height / 2);
+	b.pos.x -= (b.width / 2);
+	b.pos.y -= (b.height / 2);
 
-	float rect1_rx = rect1_x + rect1_w, // rx = Right x
-		rect1_by = rect1_y + rect1_h, // by = Bottom y
-		rect2_rx = rect2_x + rect2_w,
-		rect2_by = rect2_y + rect2_h;
+	float aRx = a.pos.x + a.width, // rx = Right x
+		aBy = a.pos.y + a.height, // by = Bottom y
+		bRx = b.pos.x + b.width,
+		bBy = b.pos.y + b.height;
 
 	// If all true, they are intersecting
-	return rect1_x < rect2_rx && rect1_rx > rect2_x && rect1_y < rect2_by && rect1_by > rect2_y;
+	return a.pos.x < bRx && aRx > b.pos.x && a.pos.y < bBy && aBy > b.pos.y;
 }
 
-int AreCircleRectIntersecting(float circle_x, float circle_y, float radius, float rect_x, float rect_y, float rect_w, float rect_h, CP_POSITION_MODE rect_mode)
-{
-	rect_x = rect_mode == CP_POSITION_CENTER ? rect_x - (rect_w / 2) : rect_x;
-	rect_y = rect_mode == CP_POSITION_CENTER ? rect_y - (rect_h / 2) : rect_y;
+int are_circle_rect_intersecting(struct Circle circ, struct Rectangle rect) {
+	rect.pos.x -= (rect.width / 2);
+	rect.pos.y -= (rect.height / 2);
 
-	// Calculate the horizontal and vertical distances between the circle's center and the rectangle's center
-	float dist_x = fabsf(circle_x - rect_x - rect_w / 2),
-		dist_y = fabsf(circle_y - rect_y - rect_h / 2);
+	float radius = circ.diameter / 2.0,
+		nearestX = CP_Math_ClampFloat(circ.pos.x, rect.pos.x, rect.pos.x + rect.width),
+		nearestY = CP_Math_ClampFloat(circ.pos.y, rect.pos.y, rect.pos.y + rect.height);
 
-	// Check if the distances exceed the rectangle's half-width/height + circle's radius
-	if (dist_x > (rect_w / 2 + radius) || dist_y > (rect_h / 2 + radius))
-		return 0;
+	CP_Vector direction = CP_Vector_Subtract(circ.pos, CP_Vector_Set(nearestX, nearestY));
+	
+	// Penetration depth
+	float magnitude = CP_Vector_Length(direction),
+		pDepth = radius - magnitude;
 
-	// Check the corner case for collision
-	float dx = dist_x - rect_w / 2,
-		dy = dist_y - rect_h / 2,
-		dist = (dx * dx) + (dy * dy); // Same as IsCircleClicked()
-
-	// Also: if the distances are within the rectangle's half-width/height, there's a collision
-	return dist_x <= (rect_w / 2) || dist_y <= (rect_h / 2) || (dist <= (radius * radius));
+	return pDepth > 0;
 }
 
-int IsCircleAtBoundary(float circle_x, float circle_y, float radius, float screen_w, float screen_h)
-{
-	return circle_x + radius <= 0 || circle_y + radius <= 0 || circle_x + radius >= screen_w || circle_y + radius >= screen_h;
+int is_circle_at_boundary(struct Circle circ, float screen_w, float screen_h) {
+	float radius = circ.diameter / 2.0;
+	return circ.pos.x + radius <= 0 || circ.pos.y + radius <= 0 || circ.pos.x + radius >= screen_w || circ.pos.y + radius >= screen_h;
 }
 
-int IsRectAtBoundary(float rect_x, float rect_y, float rect_w, float rect_h, float screen_w, float screen_h, CP_POSITION_MODE rect_mode)
-{
-	rect_x = rect_mode == CP_POSITION_CENTER ? rect_x - (rect_w / 2) : rect_x;
-	rect_y = rect_mode == CP_POSITION_CENTER ? rect_y - (rect_y / 2) : rect_y;
+int is_rect_at_boundary(struct Rectangle rect, float screen_w, float screen_h) {
+	rect.pos.x -= (rect.width / 2);
+	rect.pos.y -= (rect.height / 2);
 
-	return rect_x <= 0 || rect_y <= 0 || rect_x + rect_w >= screen_w || rect_y + rect_h >= screen_h;
+	return rect.pos.x <= 0 || rect.pos.y <= 0 || rect.pos.x + rect.width >= screen_w || rect.pos.y + rect.height >= screen_h;
+}
+
+void update_rect_hitbox(struct Rectangle* rect, float resized_width, float resized_height, CP_Vector pos) {
+	rect->height = resized_height == 0.0f ? rect->height : resized_height;
+	rect->width = resized_width == 0.0f ? rect->width : resized_width;
+	rect->pos = pos;
 }

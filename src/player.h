@@ -5,16 +5,19 @@
 
 struct ChocoShooter {
     CP_Vector pos;
-    float width;
-    float height;
+    float width, height;
     float speed;
     CP_Image img;
-    bool isFlipped;
+    BOOL isFlipped;
     enum Movement movement;
-    int health;
-    int maxHealth;
+    int health, maxHealth;
+    struct Rectangle hitbox;
 };
 
-void takeDamage(struct ChocoShooter* player, int damage);
-void move_player(struct ChocoShooter* player);
-void update_pos_player(struct ChocoShooter* player, float dt);
+int player_take_damage(struct ChocoShooter* player, int damage);
+
+struct ChocoShooter init_player(CP_Vector pos, float speed, float maxHealth);
+
+void move_player(struct ChocoShooter* player, float dt, float level_width, float level_height);
+
+void render_player(struct ChocoShooter player, float alpha, struct Camera cam);
