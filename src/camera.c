@@ -5,8 +5,8 @@
 void update_camera(struct Camera* camera, struct ChocoShooter player, float level_width, float level_height) {
 
 	// Update width and height in case of resolution change
-	camera->width = CP_System_GetWindowWidth();
-	camera->height = CP_System_GetWindowHeight();
+	camera->width = (float)CP_System_GetWindowWidth();
+	camera->height = (float)CP_System_GetWindowHeight();
 
 	float halfWidth = camera->width / 2,
 		halfHeight = camera->height / 2;
