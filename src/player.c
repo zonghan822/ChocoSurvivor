@@ -135,14 +135,6 @@ void move_player(struct ChocoShooter *player, float dt) {
         if (_dashProgress >= 1.0f)
             _isDashing = FALSE;
     }
-
-    //// Use hitbox instead because images can have whitespaces in them
-    //// Add some padding
-    //float halfWidth = (player->hitbox.width / 2.0f) + 5.0f,
-    //    halfHeight = (player->hitbox.height / 2.0f) + 5.0f;
-
-    //player->pos.x = CP_Math_ClampFloat(player->pos.x, halfWidth, level_width - halfWidth);
-    //player->pos.y = CP_Math_ClampFloat(player->pos.y, halfHeight, level_height - halfHeight);
 }
 
 void render_player(struct ChocoShooter player, float alpha, struct Camera cam) {
@@ -194,52 +186,54 @@ void shoot_bullet(struct ChocoShooter* player, struct Bullet* bullet) {
 void update_pos_bullet(struct Bullet* bullet, float dt) {
 
     if (bullet->isShooting) {
-
-        switch (bullet->movement) {
-        case MOVING_UP:
-            bullet->pos.y -= bullet->speed * dt;
-            bullet->shootRange -= bullet->speed * dt;
-            break;
-        case MOVING_RIGHT:
-            bullet->pos.x += bullet->speed * dt;
-            bullet->shootRange -= bullet->speed * dt;
-            break;
-        case MOVING_DOWN:
-            bullet->pos.y += bullet->speed * dt;
-            bullet->shootRange -= bullet->speed * dt;
-            break;
-        case MOVING_LEFT:
-            bullet->pos.x -= bullet->speed * dt;
-            bullet->shootRange -= bullet->speed * dt;
-            break;
-        case MOVING_UP | MOVING_RIGHT:
-            bullet->pos.x += get_diagonal_dist(bullet->speed * dt);
-            bullet->pos.y -= get_diagonal_dist(bullet->speed * dt);
-            bullet->shootRange -= get_diagonal_dist(bullet->speed * dt);
-            break;
-        case MOVING_UP | MOVING_LEFT:
-            bullet->pos.x -= get_diagonal_dist(bullet->speed * dt);
-            bullet->pos.y -= get_diagonal_dist(bullet->speed * dt);
-            bullet->shootRange -= get_diagonal_dist(bullet->speed * dt);
-            break;
-        case MOVING_DOWN | MOVING_RIGHT:
-            bullet->pos.x += get_diagonal_dist(bullet->speed * dt);
-            bullet->pos.y += get_diagonal_dist(bullet->speed * dt);
-            bullet->shootRange -= get_diagonal_dist(bullet->speed * dt);
-            break;
-        case MOVING_DOWN | MOVING_LEFT:
-            bullet->pos.x -= get_diagonal_dist(bullet->speed * dt);
-            bullet->pos.y += get_diagonal_dist(bullet->speed * dt);
-            bullet->shootRange -= get_diagonal_dist(bullet->speed * dt);
+        if (bullet->shootRange > 0) {
+            switch (bullet->movement) {
+            case MOVING_UP:
+                bullet->pos.y -= bullet->speed * dt;
+                bullet->shootRange -= bullet->speed * dt;
+                break;
+            case MOVING_RIGHT:
+                bullet->pos.x += bullet->speed * dt;
+                bullet->shootRange -= bullet->speed * dt;
+                break;
+            case MOVING_DOWN:
+                bullet->pos.y += bullet->speed * dt;
+                bullet->shootRange -= bullet->speed * dt;
+                break;
+            case MOVING_LEFT:
+                bullet->pos.x -= bullet->speed * dt;
+                bullet->shootRange -= bullet->speed * dt;
+                break;
+            case MOVING_UP | MOVING_RIGHT:
+                bullet->pos.x += get_diagonal_dist(bullet->speed * dt);
+                bullet->pos.y -= get_diagonal_dist(bullet->speed * dt);
+                bullet->shootRange -= get_diagonal_dist(bullet->speed * dt);
+                break;
+            case MOVING_UP | MOVING_LEFT:
+                bullet->pos.x -= get_diagonal_dist(bullet->speed * dt);
+                bullet->pos.y -= get_diagonal_dist(bullet->speed * dt);
+                bullet->shootRange -= get_diagonal_dist(bullet->speed * dt);
+                break;
+            case MOVING_DOWN | MOVING_RIGHT:
+                bullet->pos.x += get_diagonal_dist(bullet->speed * dt);
+                bullet->pos.y += get_diagonal_dist(bullet->speed * dt);
+                bullet->shootRange -= get_diagonal_dist(bullet->speed * dt);
+                break;
+            case MOVING_DOWN | MOVING_LEFT:
+                bullet->pos.x -= get_diagonal_dist(bullet->speed * dt);
+                bullet->pos.y += get_diagonal_dist(bullet->speed * dt);
+                bullet->shootRange -= get_diagonal_dist(bullet->speed * dt);
+            }
         }
-    }
-
-    if (bullet->shootRange <= 0) {
-        bullet->isShooting = FALSE;
+        else {
+            bullet->isShooting = FALSE;
+        }
     }
 }
 
 void render_bullet(struct Bullet bullet, struct Camera cam) {
-    CP_Vector vec = get_cam_pos_rel(bullet.pos, cam);
-    CP_Graphics_DrawCircle(vec.x, vec.y, bullet.diameter);
+    if (bullet.isShooting) {
+        CP_Vector vec = get_cam_pos_rel(bullet.pos, cam);
+        CP_Graphics_DrawCircle(vec.x, vec.y, bullet.diameter);
+    } 
 }
