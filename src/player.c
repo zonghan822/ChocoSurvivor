@@ -40,8 +40,8 @@ struct ChocoShooter init_player(CP_Vector pos, float speed, float maxHealth) {
         .isFlipped = FALSE,
         .movement = STOPPED,
         .hitbox.width = player.width = 120.0,
-        .hitbox.height = player.height = get_preserved_heightf((int)CP_Image_GetWidth(player.img),
-            (int)CP_Image_GetHeight(player.img), player.width)
+        .hitbox.height = player.height = get_preserved_heightf((float)CP_Image_GetWidth(player.img),
+            (float)CP_Image_GetHeight(player.img), player.width)
     };
 
     player.hitbox.width /= 1.4f;

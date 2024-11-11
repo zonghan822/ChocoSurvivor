@@ -1,10 +1,15 @@
 #pragma once
 #include "cprocessing.h"
 #include "utils.h"
-#include "camera.h"
+#include "player.h"
+
+#define ENEMY_HITBOX_OFFSET_X(enemyWidth) (- enemyWidth / 33.f)
+#define ENEMY_HITBOX_OFFSET_Y(enemyHeight) (- 8.f / 77.f * enemyHeight)
 
 enum EnemyState {
 	STATE_MOVING,
+	STATE_CHASE_PLAYER,
+	STATE_DETOUR,
 	STATE_ATTACKING
 };
 
@@ -13,13 +18,16 @@ struct ChocoRoach {
 	CP_Vector pos;
 	float width;
 	float height;
-	float radius;
-	float degree;
 	float speed;
 	int health;
+	int maxHealth;
 	int dmg;
 	enum Movement movement;
-	enum EnemyState current_state;
+	enum EnemyState currentState;
+	struct Rectangle hitbox;
 };
 
-void render_enemies(struct ChocoRoach roaches[], int count, struct Camera cam);
+struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float speed, int maxHealth, int dmg);
+void render_enemy(struct ChocoRoach roach, struct Camera cam);
+void update_pos_enemy(struct ChocoRoach *roach, float dt);
+void chase_player(struct ChocoRoach* roach, struct ChocoShooter player);

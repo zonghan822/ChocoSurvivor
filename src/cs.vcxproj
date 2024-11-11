@@ -22,7 +22,6 @@
     <ClCompile Include="boss.c" />
     <ClCompile Include="camera.c" />
     <ClCompile Include="enemy.c" />
-    <ClCompile Include="game.c" />
     <ClCompile Include="hittest.c" />
     <ClCompile Include="level1.c" />
     <ClCompile Include="main.c" />
@@ -35,7 +34,6 @@
     <ClInclude Include="boss.h" />
     <ClInclude Include="camera.h" />
     <ClInclude Include="enemy.h" />
-    <ClInclude Include="game.h" />
     <ClInclude Include="level1.h" />
     <ClInclude Include="tower.h" />
     <ClInclude Include="utils.h" />

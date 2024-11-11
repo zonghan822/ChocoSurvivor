@@ -14,7 +14,7 @@
 #define ARRAY_COUNT(x) (sizeof(x)/sizeof(x[0]))
 #define MAX_ENEMY_COUNT 100
 
-const float LEVEL_WIDTH = 3000.0f,
+const float LEVEL_WIDTH = 2000.0f,
     LEVEL_HEIGHT = 900.0f;
 CP_Image levelBg;
 
@@ -31,6 +31,7 @@ enum SpawnWave {
     WAVE_3
 };
 enum SpawnWave currentWave = WAVE_0;
+char isWaveStart = 0;
 // ************************************* //
 
 unsigned short int roachesMax = 0;
@@ -61,14 +62,13 @@ void level_one_init(void) {
     towerInstance.pos = CP_Vector_Set(LEVEL_WIDTH / 1.03, LEVEL_HEIGHT / 2);
     worldClips[0] = get_tower_hitbox(towerInstance);
 
-    playerInstance = init_player(CP_Vector_Set(towerInstance.pos.x / 1.05, towerInstance.pos.y), 155.0f, 3);
+    playerInstance = init_player(CP_Vector_Set(towerInstance.pos.x / 1.05, towerInstance.pos.y), 350.0f, 3);
 
     roachesMax = 40;
-    spawnDelay = 10.0f; // Give player some buffer
+    spawnDelay = 5.0f; // Give player some buffer
 
-    // Define enemy spawn area
-    spawnMinY = LEVEL_HEIGHT / 10.0;
-    spawnMaxY = LEVEL_HEIGHT * 9.0 / 10.0;
+    currentWave = WAVE_0;
+    isWaveStart = 1;
 }
 
 void level_one_update(void) {
@@ -77,33 +77,81 @@ void level_one_update(void) {
         relBgVec = get_cam_pos_rel(bgVec, cam);
     CP_Image_Draw(levelBg, relBgVec.x, relBgVec.y, LEVEL_WIDTH, LEVEL_HEIGHT, 255);
     float dt = CP_System_GetDt();
-    
-    if (spawnTime < spawnDelay) {
-        spawnTime += dt;
+
+    // Init enemy when wave start
+    if (isWaveStart) {
+        float enemySpeed = 0.f;
+        int enemyMaxHealth = 0, enemyDmg = 0;
+
+        switch (currentWave) {
+        case WAVE_0:
+            enemySpeed = 200.f;
+            enemyMaxHealth = 100;
+            enemyDmg = 20;
+            roachesMax = 20;
+            break;
+        case WAVE_1:
+            enemySpeed = 200.f;
+            enemyMaxHealth = 100;
+            enemyDmg = 20;
+            roachesMax = 40;
+            break;
+        case WAVE_2:
+            enemySpeed = 200.f;
+            enemyMaxHealth = 100;
+            enemyDmg = 20;
+            roachesMax = 40;
+            break;
+        case WAVE_3:
+            enemySpeed = 200.f;
+            enemyMaxHealth = 100;
+            enemyDmg = 20;
+            roachesMax = 40;
+            break;
+        }
+
+        for (int i = 0; i < roachesMax; i++) {
+            // Store enemies in array
+            roaches[i] = init_enemy(LEVEL_HEIGHT * 1/5, LEVEL_HEIGHT * 4/5, enemySpeed, enemyMaxHealth, enemyDmg);
+        }
+        isWaveStart = 0;
     }
 
-    if (spawnTime >= spawnDelay) {
-        // PLACEHOLDER
-        spawnDelay = 1.3f;
-
-        srand(time(NULL));
+    // Enemy spawning
+    if (spawnTime < spawnDelay) {
+        spawnTime += dt;
+    } else {
         for (int i = 0; i < roachesMax; i++) {
-            if (roaches[i].health > 0) continue;
-            struct ChocoRoach chocoRoach = {
-                .img = NULL,
-                .pos.x = -35.f,
-                .pos.y = rand_float(spawnMinY, spawnMaxY), // Generate random y pos for enemies
-                .radius = 35.f,
-                .degree = 0.f,
-                .speed = 90.f,
-                .health = 100,
-                .dmg = 10,
-                .movement = MOVING_RIGHT,
-                .current_state = STATE_MOVING
-            };
+            // Enemy movement logic and attacking logic
+            
+            struct Circle radarRoach = {.pos = roaches[i].pos, .diameter = 5 * roaches[i].width};
+            
+            // Check enemy near with player
+            if (are_circle_rect_intersecting(radarRoach, playerInstance.hitbox)) {
+                
+                // When collide...
+                if (are_rects_intersecting(roaches[i].hitbox, playerInstance.hitbox)) {
+                    printf("Intersecting...\n");
+                    // Stop movement of enemy
+                    roaches[i].movement = STOPPED;
 
-            // Store enemies in array
-            roaches[i] = chocoRoach;
+                    // Attack goes here...
+                    roaches[i].currentState = STATE_ATTACKING;
+                }
+                else {
+                    // Chase player
+                    printf("Chasing...\n");
+                    chase_player(&roaches[i], playerInstance);
+                }
+            }
+            else {
+                printf("Far away from player...\n");
+                roaches[i].movement = MOVING_RIGHT;
+            }
+
+            // Update position of enemy
+            update_pos_enemy(&roaches[i], dt);
+
         }
     }
 
@@ -144,7 +192,13 @@ void level_one_update(void) {
 
     render_tower(towerInstance, cam);
     render_player(playerInstance, 255, cam);
-    render_enemies(roaches, roachesMax, cam);
+    
+    for (int i = 0; i < roachesMax; i++) {
+        CP_Vector hitboxPos = { roaches[i].pos.x + ENEMY_HITBOX_OFFSET_X(roaches[i].width), roaches[i].pos.y + ENEMY_HITBOX_OFFSET_Y(roaches[i].height) };
+        update_rect_hitbox(&roaches[i].hitbox, 0.0f, 0.0f, hitboxPos); // Player
+        // Draw enemy instance
+        render_enemy(roaches[i], cam);
+    }
 
     // TODO: Update hitbox of the enemies when proper graphic is added
     // Collision
