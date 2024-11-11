@@ -13,56 +13,57 @@
 
 #define ARRAY_COUNT(x) (sizeof(x)/sizeof(x[0]))
 #define MAX_ENEMY_COUNT 100
+#define LEVEL_WIDTH 2000.0f
+#define LEVEL_HEIGHT 900.0f
 
-const float LEVEL_WIDTH = 2000.0f,
-    LEVEL_HEIGHT = 900.0f;
 CP_Image levelBg;
 
-#pragma region Enemy Properties
 // ************************************* //
 // *         Spawn Properties          * //
 // ************************************* //
-float spawnMinY = 0.0f, spawnMaxY = 0.0f;
-float spawnDelay = 0.0f, spawnTime = 0.0f;
+static float spawnMinY = 0.0f, spawnMaxY = 0.0f;
+static float spawnDelay = 0.0f, spawnTime = 0.0f;
 enum SpawnWave {
     WAVE_0,
     WAVE_1,
     WAVE_2,
     WAVE_3
 };
-enum SpawnWave currentWave = WAVE_0;
-char isWaveStart = 0;
+static enum SpawnWave currentWave = WAVE_0;
+static char isWaveStart = 0;
+
 // ************************************* //
+// *         Enemy Properties          * //
+// ************************************* //
+static unsigned short int roachesMax = 0;
+static struct ChocoRoach roaches[MAX_ENEMY_COUNT];
 
-unsigned short int roachesMax = 0;
-struct ChocoRoach roaches[MAX_ENEMY_COUNT];
-#pragma endregion
-
-#pragma region Player Properties
+// ************************************* //
+// *        Player Properties          * //
+// ************************************* //
 struct ChocoShooter playerInstance;
 struct DefenseTarget towerInstance;
 struct Camera cam;
-#pragma endregion
 
-#pragma region Obstacle (Clips) Properties
+// ************************************* //
+// *         Obstacles / Clips         * //
+// ************************************* //
 struct Rectangle worldClips[1];
-struct Rectangle playerClips[100];
-struct Rectangle enemyClips[100];
-
+struct Rectangle playerClips[1];
+struct Rectangle enemyClips[1];
 struct Rectangle playerBarricades[10];
-#pragma endregion
 
 void level_one_init(void) {
-    levelBg = CP_Image_Load("Assets/Levels/level1_placeholder.png");
+    levelBg = CP_Image_Load("Assets/Levels/level1.png");
     cam = init_camera(playerInstance, (float)CP_System_GetWindowWidth(), (float)CP_System_GetWindowHeight());
 
     towerInstance.maxHealth = towerInstance.health = 3;
     towerInstance.height = 300.0;
     towerInstance.width = 150.0;
-    towerInstance.pos = CP_Vector_Set(LEVEL_WIDTH / 1.03, LEVEL_HEIGHT / 2);
+    towerInstance.pos = CP_Vector_Set(LEVEL_WIDTH / 1.05, LEVEL_HEIGHT / 2);
     worldClips[0] = get_tower_hitbox(towerInstance);
 
-    playerInstance = init_player(CP_Vector_Set(towerInstance.pos.x / 1.05, towerInstance.pos.y), 350.0f, 3);
+    playerInstance = init_player(CP_Vector_Set(towerInstance.pos.x / 1.05, towerInstance.pos.y), 200.0f, 3);
 
     roachesMax = 40;
     spawnDelay = 5.0f; // Give player some buffer
@@ -85,25 +86,25 @@ void level_one_update(void) {
 
         switch (currentWave) {
         case WAVE_0:
-            enemySpeed = 200.f;
+            enemySpeed = 100.f;
             enemyMaxHealth = 100;
             enemyDmg = 20;
             roachesMax = 20;
             break;
         case WAVE_1:
-            enemySpeed = 200.f;
+            enemySpeed = 100.f;
             enemyMaxHealth = 100;
             enemyDmg = 20;
             roachesMax = 40;
             break;
         case WAVE_2:
-            enemySpeed = 200.f;
+            enemySpeed = 100.f;
             enemyMaxHealth = 100;
             enemyDmg = 20;
             roachesMax = 40;
             break;
         case WAVE_3:
-            enemySpeed = 200.f;
+            enemySpeed = 100.f;
             enemyMaxHealth = 100;
             enemyDmg = 20;
             roachesMax = 40;
@@ -120,7 +121,8 @@ void level_one_update(void) {
     // Enemy spawning
     if (spawnTime < spawnDelay) {
         spawnTime += dt;
-    } else {
+    } 
+    else {
         for (int i = 0; i < roachesMax; i++) {
             // Enemy movement logic and attacking logic
             
@@ -151,12 +153,10 @@ void level_one_update(void) {
 
             // Update position of enemy
             update_pos_enemy(&roaches[i], dt);
-
         }
     }
     
     move_player(&playerInstance, dt, LEVEL_WIDTH, LEVEL_HEIGHT);
-    // Move enemies here
     update_camera(&cam, playerInstance, LEVEL_WIDTH, LEVEL_HEIGHT);
     update_rect_hitbox(&playerInstance.hitbox, 0.0f, 0.0f, playerInstance.pos); // Player
 
@@ -203,4 +203,10 @@ void level_one_update(void) {
 void level_one_exit(void) {
     CP_Image_Free(&playerInstance.img);
     CP_Image_Free(&levelBg);
+
+    for (int i = 0; i < roachesMax; i++) {
+        struct ChocoRoach roach = roaches[i];
+        if (roach.img != NULL)
+            CP_Image_Free(&roach.img);
+    }
 }
