@@ -41,6 +41,8 @@ struct DefenseTarget towerInstance;
 struct Camera cam;
 enum BulletType bulletType = NORMAL_BULLET;
 float bulletSpeed = 0.f, bulletDiameter = 0.f;
+float lastShotTime = 0;
+enum Movement bulletMovement = STOPPED;
 #pragma endregion
 
 void level_one_init(void) {
@@ -58,6 +60,8 @@ void level_one_init(void) {
     bulletType = NORMAL_BULLET;
     bulletSpeed = 1000.f;
     bulletDiameter = 20.f;
+    lastShotTime = 1/playerInstance.fireRate;
+    bulletMovement = MOVING_LEFT;
 
     spawnDelay = 5.0f; // Give player some buffer
     currentWave = WAVE_0;
@@ -147,10 +151,14 @@ void level_one_update(void) {
         }
     }
 
-    if (CP_Input_MouseTriggered(MOUSE_BUTTON_LEFT)) {
-        printf("Shoot Bullet!!!\n");
-        struct Bullet bullet = init_bullet(bulletType, bulletSpeed, bulletDiameter, 0);
-        shoot_bullet(&playerInstance, &bullet);
+    lastShotTime += dt;
+    bulletMovement = (playerInstance.movement == STOPPED) ? bulletMovement: playerInstance.movement;
+    if (CP_Input_MouseDown(MOUSE_BUTTON_LEFT)) {
+        if (lastShotTime >= (1 / playerInstance.fireRate)) {
+            struct Bullet bullet = init_bullet(bulletType, bulletSpeed, bulletDiameter, 0, bulletMovement);
+            shoot_bullet(&playerInstance, &bullet);
+            lastShotTime = 0;
+        }
     }
     
     move_player(&playerInstance, dt);

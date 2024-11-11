@@ -28,12 +28,12 @@ struct ChocoShooter {
     float width, height;
     float speed;
     CP_Image img;
-    BOOL isFlipped;
     enum Movement movement;
     int health, maxHealth;
     struct Rectangle hitbox;
-    float fire_rate;
+    float fireRate;
     struct Bullet bullets[MAX_BULLET_COUNT];
+    int atk;
 };
 
 int player_take_damage(struct ChocoShooter* player, int damage);
@@ -42,7 +42,7 @@ void move_player(struct ChocoShooter* player, float dt);
 void render_player(struct ChocoShooter player, float alpha, struct Camera cam);
 
 
-struct Bullet init_bullet(enum BulletType bulletType, float bulletSpeed, float bulletDiameter, int dmg);
+struct Bullet init_bullet(enum BulletType bulletType, float bulletSpeed, float bulletDiameter, int dmg, enum Movement movement);
 void shoot_bullet(struct ChocoShooter *player, struct Bullet *bullet);
 void update_pos_bullet(struct Bullet* bullet, float dt);
 void render_bullet(struct Bullet bullet, struct Camera cam);

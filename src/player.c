@@ -36,13 +36,13 @@ struct ChocoShooter init_player(CP_Vector pos, float speed, float maxHealth) {
         .speed = speed,
         .health = player.maxHealth = maxHealth,
         .img = CP_Image_Load("Assets/choco_shooter.png"),
-        .isFlipped = FALSE,
         .movement = STOPPED,
         .hitbox.width = player.width = 120.0,
         .hitbox.height = player.height = get_preserved_heightf((float)CP_Image_GetWidth(player.img),
         (float)CP_Image_GetHeight(player.img), player.width),
-        .fire_rate = 0.5f,
-        .bullets[0].isShooting = FALSE
+        .fireRate = 5.f,
+        .bullets[0].isShooting = FALSE,
+        .atk = 30
     };
 
     player.hitbox.width /= 1.4f;
@@ -142,7 +142,7 @@ void render_player(struct ChocoShooter player, float alpha, struct Camera cam) {
     CP_Image_Draw(player.img, vec.x, vec.y, player.width, player.height, alpha);
 }
 
-struct Bullet init_bullet(enum BulletType bulletType, float bulletSpeed, float bulletDiameter, int dmg) {
+struct Bullet init_bullet(enum BulletType bulletType, float bulletSpeed, float bulletDiameter, int dmg, enum Movement movement) {
     struct Bullet bullet = {
         .isShooting = TRUE,
         .shootRange = 1000.f,
@@ -150,13 +150,12 @@ struct Bullet init_bullet(enum BulletType bulletType, float bulletSpeed, float b
         .speed = bulletSpeed,
         .diameter = bulletDiameter,
         .dmg = dmg,
-        .movement = MOVING_LEFT
+        .movement = movement
     };
     return bullet;
 }
 
 void shoot_bullet(struct ChocoShooter* player, struct Bullet* bullet) {
-    bullet->movement = (player->movement != STOPPED) ? player->movement : bullet->movement;
     bullet->pos.x = (bullet->movement & MOVING_LEFT) ? player->pos.x - (player->width / 2) : player->pos.x + (player->width / 2);
     bullet->pos.y = player->pos.y;
 
