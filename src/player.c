@@ -4,9 +4,9 @@
 #include <stdio.h>
 #include "camera.h"
 
-#define DASH_COOLDOWN 2.0f
+#define DASH_COOLDOWN 1.0f
 #define DASH_DISTANCE 150.0f
-#define DASH_SPEED 10.0f
+#define DASH_SPEED 20.0f
 
 BOOL _isDashing = FALSE;
 float _dashProgress, _lastDash;
@@ -40,7 +40,9 @@ struct ChocoShooter init_player(CP_Vector pos, float speed, float maxHealth) {
         .movement = STOPPED,
         .hitbox.width = player.width = 120.0,
         .hitbox.height = player.height = get_preserved_heightf((float)CP_Image_GetWidth(player.img),
-        (float)CP_Image_GetHeight(player.img), player.width)
+        (float)CP_Image_GetHeight(player.img), player.width),
+        .fire_rate = 0.5f,
+        .bullets[0].isShooting = FALSE
     };
 
     player.hitbox.width /= 1.4f;
@@ -49,7 +51,7 @@ struct ChocoShooter init_player(CP_Vector pos, float speed, float maxHealth) {
     return player;
 }
 
-void move_player(struct ChocoShooter *player, float dt, float level_width, float level_height) {
+void move_player(struct ChocoShooter *player, float dt) {
     CP_Vector moveDirection = CP_Vector_Zero();
 
     // Player movement and setting movement
@@ -134,17 +136,110 @@ void move_player(struct ChocoShooter *player, float dt, float level_width, float
             _isDashing = FALSE;
     }
 
-    // Use hitbox instead because images can have whitespaces in them
-    // Add some padding
-    float halfWidth = (player->hitbox.width / 2.0f) + 5.0f,
-        halfHeight = (player->hitbox.height / 2.0f) + 5.0f;
+    //// Use hitbox instead because images can have whitespaces in them
+    //// Add some padding
+    //float halfWidth = (player->hitbox.width / 2.0f) + 5.0f,
+    //    halfHeight = (player->hitbox.height / 2.0f) + 5.0f;
 
-    player->pos.x = CP_Math_ClampFloat(player->pos.x, halfWidth, level_width - halfWidth);
-    player->pos.y = CP_Math_ClampFloat(player->pos.y, halfHeight, level_height - halfHeight);
+    //player->pos.x = CP_Math_ClampFloat(player->pos.x, halfWidth, level_width - halfWidth);
+    //player->pos.y = CP_Math_ClampFloat(player->pos.y, halfHeight, level_height - halfHeight);
 }
 
 void render_player(struct ChocoShooter player, float alpha, struct Camera cam) {
     CP_Vector vec = get_cam_pos_rel(player.pos, cam);
-
     CP_Image_Draw(player.img, vec.x, vec.y, player.width, player.height, alpha);
+}
+
+struct Bullet init_bullet(enum BulletType bulletType, float bulletSpeed, float bulletDiameter, int dmg) {
+    struct Bullet bullet = {
+        .isShooting = TRUE,
+        .shootRange = 1000.f,
+        .bulletType = bulletType,
+        .speed = bulletSpeed,
+        .diameter = bulletDiameter,
+        .dmg = dmg,
+        .movement = MOVING_LEFT
+    };
+    return bullet;
+}
+
+void shoot_bullet(struct ChocoShooter* player, struct Bullet* bullet) {
+    bullet->movement = (player->movement != STOPPED) ? player->movement : bullet->movement;
+    bullet->pos.x = (bullet->movement & MOVING_LEFT) ? player->pos.x - (player->width / 2) : player->pos.x + (player->width / 2);
+    bullet->pos.y = player->pos.y;
+
+    int bulletCount = 0;
+    for (int i = 0; (player->bullets[i].isShooting || player->bullets[i + 1].isShooting); i++) {
+        
+        // pop first index if finish shooting
+        if (!(player->bullets[i].isShooting) && (player->bullets[i + 1].isShooting)) {
+            struct Bullet temp = player->bullets[i];
+            player->bullets[i] = player->bullets[i + 1];
+            player->bullets[i + 1] = temp;
+        }
+        bulletCount++;
+        if (i + 2 == MAX_BULLET_COUNT) {
+            bulletCount = player->bullets[i + 1].isShooting ? bulletCount + 1 : bulletCount;
+            break;
+        }   
+    }
+    if (bulletCount < MAX_BULLET_COUNT) {
+        player->bullets[bulletCount] = *bullet;
+    }
+    for (int i = 0; i < MAX_BULLET_COUNT; i++) {
+        printf("Bullet %d: %d\n", i, player->bullets[i].isShooting);
+    }
+}
+
+void update_pos_bullet(struct Bullet* bullet, float dt) {
+
+    if (bullet->isShooting) {
+
+        switch (bullet->movement) {
+        case MOVING_UP:
+            bullet->pos.y -= bullet->speed * dt;
+            bullet->shootRange -= bullet->speed * dt;
+            break;
+        case MOVING_RIGHT:
+            bullet->pos.x += bullet->speed * dt;
+            bullet->shootRange -= bullet->speed * dt;
+            break;
+        case MOVING_DOWN:
+            bullet->pos.y += bullet->speed * dt;
+            bullet->shootRange -= bullet->speed * dt;
+            break;
+        case MOVING_LEFT:
+            bullet->pos.x -= bullet->speed * dt;
+            bullet->shootRange -= bullet->speed * dt;
+            break;
+        case MOVING_UP | MOVING_RIGHT:
+            bullet->pos.x += get_diagonal_dist(bullet->speed * dt);
+            bullet->pos.y -= get_diagonal_dist(bullet->speed * dt);
+            bullet->shootRange -= get_diagonal_dist(bullet->speed * dt);
+            break;
+        case MOVING_UP | MOVING_LEFT:
+            bullet->pos.x -= get_diagonal_dist(bullet->speed * dt);
+            bullet->pos.y -= get_diagonal_dist(bullet->speed * dt);
+            bullet->shootRange -= get_diagonal_dist(bullet->speed * dt);
+            break;
+        case MOVING_DOWN | MOVING_RIGHT:
+            bullet->pos.x += get_diagonal_dist(bullet->speed * dt);
+            bullet->pos.y += get_diagonal_dist(bullet->speed * dt);
+            bullet->shootRange -= get_diagonal_dist(bullet->speed * dt);
+            break;
+        case MOVING_DOWN | MOVING_LEFT:
+            bullet->pos.x -= get_diagonal_dist(bullet->speed * dt);
+            bullet->pos.y += get_diagonal_dist(bullet->speed * dt);
+            bullet->shootRange -= get_diagonal_dist(bullet->speed * dt);
+        }
+    }
+
+    if (bullet->shootRange <= 0) {
+        bullet->isShooting = FALSE;
+    }
+}
+
+void render_bullet(struct Bullet bullet, struct Camera cam) {
+    CP_Vector vec = get_cam_pos_rel(bullet.pos, cam);
+    CP_Graphics_DrawCircle(vec.x, vec.y, bullet.diameter);
 }

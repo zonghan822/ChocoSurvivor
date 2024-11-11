@@ -24,7 +24,7 @@ struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float speed, int 
             .hitbox.pos.x = chocoRoach.pos.x + ENEMY_HITBOX_OFFSET_X(chocoRoach.width),
             .hitbox.pos.y = chocoRoach.pos.y + ENEMY_HITBOX_OFFSET_Y(chocoRoach.height),
             .hitbox.width = 0.8 * chocoRoach.width,
-            .hitbox.height = 0.75 * chocoRoach.height
+            .hitbox.height = 0.75 * chocoRoach.height,
     };
     return chocoRoach;
 }
@@ -74,7 +74,7 @@ void update_pos_enemy(struct ChocoRoach *roach, float dt) {
 }
 
 
-void chase_player(struct ChocoRoach* roach, struct ChocoShooter player) {
+void enemy_chase_player(struct ChocoRoach* roach, struct ChocoShooter player) {
     roach->movement = STOPPED;
     // chase player 
     float enemyMinX = roach->hitbox.pos.x - (roach->hitbox.width / 2),
@@ -93,5 +93,27 @@ void chase_player(struct ChocoRoach* roach, struct ChocoShooter player) {
     if (enemyMinX > playerMaxX) // Player is at the left of enemy 
         roach->movement |= MOVING_LEFT;
     if (enemyMaxX < playerMinX) // Player is at the right of enemy 
+        roach->movement |= MOVING_RIGHT;
+}
+
+
+void enemy_move_to_tower(struct ChocoRoach* roach, struct DefenseTarget tower) {
+    roach->movement = STOPPED;
+    float enemyMinX = roach->hitbox.pos.x - (roach->hitbox.width / 2),
+        enemyMaxX = roach->hitbox.pos.x + (roach->hitbox.width / 2),
+        enemyMinY = roach->hitbox.pos.y - (roach->hitbox.height / 2),
+        enemyMaxY = roach->hitbox.pos.y + (roach->hitbox.height / 2),
+        towerMinX = tower.pos.x - (tower.width / 2),
+        towerMaxX = tower.pos.x + (tower.width / 2),
+        towerMinY = tower.pos.y - (tower.height / 2),
+        towerMaxY = tower.pos.y + (tower.height / 2);
+
+    if (enemyMinY > towerMaxY) // Tower is above enemy
+        roach->movement |= MOVING_UP;
+    if (enemyMaxY < towerMinY) // Tower is below enemy
+        roach->movement |= MOVING_DOWN;
+    if (enemyMinX > towerMaxX) // Tower is at the left of enemy 
+        roach->movement |= MOVING_LEFT;
+    if (enemyMaxX < towerMinX) // Tower is at the right of enemy 
         roach->movement |= MOVING_RIGHT;
 }

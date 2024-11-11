@@ -3,6 +3,26 @@
 #include "cprocessing.h"
 #include "utils.h"
 
+#define MAX_BULLET_COUNT 10
+
+enum BulletType {
+    NORMAL_BULLET,
+    EXPOLSIVE_BULLET,
+    ADHESIVE_BULLET,
+    HEAL_BULLET
+};
+
+struct Bullet {
+    CP_Vector pos;
+    enum BulletType bulletType;
+    float speed;
+    BOOL isShooting;
+    float shootRange;
+    float diameter;
+    int dmg;
+    enum Movement movement;
+};
+
 struct ChocoShooter {
     CP_Vector pos;
     float width, height;
@@ -12,12 +32,17 @@ struct ChocoShooter {
     enum Movement movement;
     int health, maxHealth;
     struct Rectangle hitbox;
+    float fire_rate;
+    struct Bullet bullets[MAX_BULLET_COUNT];
 };
 
 int player_take_damage(struct ChocoShooter* player, int damage);
-
 struct ChocoShooter init_player(CP_Vector pos, float speed, float maxHealth);
-
-void move_player(struct ChocoShooter* player, float dt, float level_width, float level_height);
-
+void move_player(struct ChocoShooter* player, float dt);
 void render_player(struct ChocoShooter player, float alpha, struct Camera cam);
+
+
+struct Bullet init_bullet(enum BulletType bulletType, float bulletSpeed, float bulletDiameter, int dmg);
+void shoot_bullet(struct ChocoShooter *player, struct Bullet *bullet);
+void update_pos_bullet(struct Bullet* bullet, float dt);
+void render_bullet(struct Bullet bullet, struct Camera cam);
