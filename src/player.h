@@ -12,7 +12,9 @@ struct ChocoShooter {
     bool isFlipped;
     enum Movement movement;
     int health;
-    int maxHealth;
+    int shield;
+    int attackPower;   
+    int attackSpeed;
 };
 
 void takeDamage(struct ChocoShooter* player, int damage);

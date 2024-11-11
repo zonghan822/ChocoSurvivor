@@ -21,7 +21,6 @@ struct Boss boss1instance;
 struct ChocoShooter chocoShooterInstance;
 
 int windowWidth, windowHeight, roachesCnt;
-
 bool isDashing = false;
 float dashProgress, lastDash;
 CP_Vector dashTo;
@@ -75,9 +74,10 @@ void game_init(void)
     boss1instance.height = 500.0f;
     boss1instance.width = 500.0f;
     boss1instance.speed = 80.0f;
-    boss1instance.maxHealth = 3;
+    boss1instance.maxHealth = 20;
     boss1instance.pos.x = 100.0f;
     boss1instance.pos.y = 450.0f;
+    boss1instance.attackPower = 5;
     boss1instance.img = CP_Image_Load("Assets/boss_lvl1.png");
     boss1instance.isFlipped = false;
 
@@ -85,10 +85,12 @@ void game_init(void)
     chocoShooterInstance.pos.x = 100.0f;
     chocoShooterInstance.pos.y = 100.0f;
     chocoShooterInstance.width = 200.0f,
-    chocoShooterInstance.height = 300.0f,
-    chocoShooterInstance.speed = 200.0f,
-    chocoShooterInstance.health = 3,
-    chocoShooterInstance.maxHealth = 3,
+        chocoShooterInstance.height = 300.0f;
+        chocoShooterInstance.speed = 200.0f;
+        chocoShooterInstance.health = 20;
+        chocoShooterInstance.shield = 1;
+        chocoShooterInstance.attackPower = 5;
+    chocoShooterInstance.attackSpeed = 5;
     chocoShooterInstance.img = CP_Image_Load("Assets/choco_shooter.png");
     chocoShooterInstance.isFlipped = false,
     chocoShooterInstance.movement = MOVING_RIGHT;
@@ -245,13 +247,33 @@ void game_update(void)
     }
 
     if (CP_Input_KeyTriggered(KEY_H)) {  // Press 'H' to take 1 damage
-        takeDamage(&chocoShooterInstance, 1);
+        takeDamage(&chocoShooterInstance, boss1instance.attackPower);
     }
-    if (CP_Input_KeyTriggered(KEY_O)) {  // Press 'L' to take 1 damage
-        Damage(&boss1instance, 1);
-        printf("damage");
+    if (CP_Input_KeyTriggered(KEY_G)) {  // Press 'L' to take 1 damage
+        Damage(&boss1instance, chocoShooterInstance.attackPower);
+    }
+    // Check if 'G' key is pressed to fill the buff meter
+    if (CP_Input_KeyTriggered(KEY_O)) {
+        update_buff_meter(&chocoShooterInstance, dt);
     }
 
+    // Buff meter drawing logic
+    float meterX = CP_System_GetWindowWidth() - 150;
+    float meterY = CP_System_GetWindowHeight() - 50;
+    float meterWidth = 100;
+    float meterHeight = 20;
+
+    // Draw the empty part of the meter (white)
+    CP_Settings_RectMode(CP_POSITION_CORNER);
+    CP_Settings_Fill(CP_Color_Create(255, 255, 255, 255));
+    CP_Graphics_DrawRect(meterX, meterY, meterWidth, meterHeight);
+
+    // Draw the filled part of the meter (blue)
+    float fillWidth = get_buff_meter_fill();
+    CP_Settings_Fill(CP_Color_Create(0, 0, 255, 255));
+    CP_Graphics_DrawRect(meterX, meterY, fillWidth, meterHeight);
+
+    
     update_flicker(&playerFlickerState, dt);
     update_flicker(&bossFlickerState, dt);
 

@@ -10,6 +10,7 @@ struct Boss {
     float speed;
     CP_Image img;
     int maxHealth;
+    int attackPower;
     bool isFlipped; // Track if the boss should be facing left
 };
 

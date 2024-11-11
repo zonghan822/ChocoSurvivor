@@ -34,6 +34,7 @@
     <ClInclude Include="flicker.h" />
     <ClInclude Include="enemy.h" />
     <ClInclude Include="game.h" />
+    <ClInclude Include="pewpew.h" />
     <ClInclude Include="utils.h" />
     <ClInclude Include="hittest.h" />
     <ClInclude Include="mainmenu.h" />
