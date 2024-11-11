@@ -2,6 +2,8 @@
 #include "cprocessing.h"
 #include <stdbool.h>
 
+#define ARRAY_COUNT(x) (sizeof(x)/sizeof(x[0]))
+
 // Use bit-shift
 enum Movement {
 	STOPPED = 0,
