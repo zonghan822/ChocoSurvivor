@@ -8,10 +8,8 @@ void render_enemies(struct ChocoRoach roaches[], int count, struct Camera cam) {
 		CP_Vector vec = get_cam_pos_rel(roaches[i].pos, cam);
 
 		// Draw enemies
-		float x = roaches[i].pos.x;
-		float y = roaches[i].pos.y;
-		float r = roaches[i].radius;
-		float d = roaches[i].degree;
+		float r = roaches[i].radius,
+			d = roaches[i].degree;
 
 		// Draw circle
 		CP_Settings_Fill(CP_Color_Create(255, 0, 0, 255));
@@ -19,7 +17,7 @@ void render_enemies(struct ChocoRoach roaches[], int count, struct Camera cam) {
 
 		// Draw triangle 
 		CP_Settings_Fill(CP_Color_Create(255, 255, 255, 255));
-		CP_Graphics_DrawTriangleAdvanced(vec.x + r, vec.y, vec.x - r * (float)cos(0.9), vec.y + r * (float)sin(0.9), vec.x - r * (float)cos(0.9), vec.y - r * (float)sin(0.9), d);
+		CP_Graphics_DrawTriangleAdvanced(vec.x + r, vec.y, vec.x - r * (float)cos(0.9),
+			vec.y + r * (float)sin(0.9), vec.x - r * (float)cos(0.9), vec.y - r * (float)sin(0.9), d);
 	}
-
 }

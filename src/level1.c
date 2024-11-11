@@ -43,8 +43,11 @@ struct DefenseTarget towerInstance;
 struct Camera cam;
 #pragma endregion
 
-#pragma region Obstacle Properties
-const struct Rectangle WORLD_OBSTACLES[100];
+#pragma region Obstacle (Clips) Properties
+struct Rectangle worldClips[1];
+struct Rectangle playerClips[100];
+struct Rectangle enemyClips[100];
+
 struct Rectangle playerBarricades[10];
 #pragma endregion
 
@@ -52,12 +55,13 @@ void level_one_init(void) {
     levelBg = CP_Image_Load("Assets/Levels/level1_placeholder.png");
     cam = init_camera(playerInstance, (float)CP_System_GetWindowWidth(), (float)CP_System_GetWindowHeight());
 
-    playerInstance = init_player(CP_Vector_Set(300.0f, 500.0f), 155.0f, 3);
-
     towerInstance.maxHealth = towerInstance.health = 3;
     towerInstance.height = 300.0;
     towerInstance.width = 150.0;
     towerInstance.pos = CP_Vector_Set(LEVEL_WIDTH / 1.03, LEVEL_HEIGHT / 2);
+    worldClips[0] = get_tower_hitbox(towerInstance);
+
+    playerInstance = init_player(CP_Vector_Set(towerInstance.pos.x / 1.05, towerInstance.pos.y), 155.0f, 3);
 
     roachesMax = 40;
     spawnDelay = 10.0f; // Give player some buffer
@@ -128,8 +132,15 @@ void level_one_update(void) {
     }
     
     move_player(&playerInstance, dt, LEVEL_WIDTH, LEVEL_HEIGHT);
+    // Move enemies here
     update_camera(&cam, playerInstance, LEVEL_WIDTH, LEVEL_HEIGHT);
     update_rect_hitbox(&playerInstance.hitbox, 0.0f, 0.0f, playerInstance.pos); // Player
+
+    for (int i = 0; i < sizeof(worldClips); i++) {
+        struct Rectangle worldClip = worldClips[i];
+        if (are_rects_intersecting(playerInstance.hitbox, worldClip))
+            clamp_pos_clip_rel(&playerInstance.pos, playerInstance.hitbox, worldClip);
+    }
 
     render_tower(towerInstance, cam);
     render_player(playerInstance, 255, cam);
@@ -177,15 +188,6 @@ void level_one_update(void) {
                 }
             }
         }
-
-        // TODO: Add one for boss
-
-        // Tower collision with player (impassable)
-        if (are_rects_intersecting(playerInstance.hitbox, get_tower_hitbox(towerInstance)))
-        {
-            // Clamp player pos?
-            // clamp_player_pos(struct Rectangle* entity_hitbox, struct Rectangle obstacle);
-        }
     }
 
     // Render UI
@@ -200,6 +202,8 @@ void level_one_update(void) {
         float playerHalfHeight = playerInstance.height / 2,
             healthX = playerVec.x,
             healthY = (playerVec.y - playerHalfHeight) - 15.0f;
+        CP_Settings_TextSize(25);
+        CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255));
         CP_Font_DrawText(healthStr, healthX, healthY);
 
         // Wave
