@@ -25,7 +25,7 @@ int player_take_damage(struct ChocoShooter* player, int damage) {
     return 0;
 }
 
-struct ChocoShooter init_player(CP_Vector pos, float speed, float maxHealth) {
+struct ChocoShooter init_player(CP_Vector pos, float speed, float maxHealth, int atk) {
     _isDashing = FALSE;
     _dashProgress = 0.0;
     _lastDash = 2.1;
@@ -40,7 +40,7 @@ struct ChocoShooter init_player(CP_Vector pos, float speed, float maxHealth) {
         .hitbox.width = player.width = 120.0,
         .hitbox.height = player.height = get_preserved_heightf((float)CP_Image_GetWidth(player.img),
         (float)CP_Image_GetHeight(player.img), player.width),
-        .fireRate = 5.f,
+        .fireRate = 20.f,
         .bullets[0].isShooting = FALSE,
         .atk = 30
     };

@@ -19,8 +19,8 @@ struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float speed, int 
             .health = maxHealth,
             .maxHealth = maxHealth,
             .dmg = dmg,
-            .movement = MOVING_RIGHT,
-            .currentState = STATE_MOVING,
+            .movement = STOPPED,
+            .currentState = STATE_IDLE,
             .hitbox.pos.x = chocoRoach.pos.x + ENEMY_HITBOX_OFFSET_X(chocoRoach.width),
             .hitbox.pos.y = chocoRoach.pos.y + ENEMY_HITBOX_OFFSET_Y(chocoRoach.height),
             .hitbox.width = 0.8 * chocoRoach.width,
@@ -29,17 +29,6 @@ struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float speed, int 
     return chocoRoach;
 }
 
-void render_enemy(struct ChocoRoach roach, struct Camera cam) {
-    CP_Vector vec = get_cam_pos_rel(roach.pos, cam);
-	CP_Image_Draw(
-		roach.img,
-		vec.x,
-		vec.y,
-        roach.width,
-        roach.height,
-		255
-	);
-}
 
 void update_pos_enemy(struct ChocoRoach *roach, float dt) {
     switch (roach->movement) {
@@ -116,4 +105,68 @@ void enemy_move_to_tower(struct ChocoRoach* roach, struct DefenseTarget tower) {
         roach->movement |= MOVING_LEFT;
     if (enemyMaxX < towerMinX) // Tower is at the right of enemy 
         roach->movement |= MOVING_RIGHT;
+}
+
+void render_enemy_health_bar(struct ChocoRoach* roach) {
+    // Set position of health bar
+    float health_bar_x = roach->pos.x;
+    float health_bar_y = (roach->pos.y) + (roach->height / 2) + 10.f;
+    float health_bar_w = roach->width * 0.8;
+    float health_bar_h = 20.f;
+
+    // Draw health bar rect
+    CP_Settings_Fill(CP_Color_Create(255, 0, 0, 255));
+    CP_Graphics_DrawRect(health_bar_x, health_bar_y, health_bar_w, health_bar_h);
+
+    // Compute position and width for health bar gap rect
+    float health_gap_x = health_bar_x + (roach->health / roach->maxHealth) * health_bar_w;
+    float health_gap_w = health_bar_w * (1.f - (roach->health / roach->maxHealth));
+
+    // Draw health bar gap
+    CP_Settings_Fill(CP_Color_Create(160, 0, 0, 255));
+    CP_Graphics_DrawRect(health_gap_x, health_bar_y, health_gap_w, health_bar_h);
+}
+
+
+void render_enemies(struct ChocoRoach* roaches, struct Camera cam, int size) {
+    for (int i = 0; i < size; i++) {
+        if (roaches[i].currentState != STATE_DIED) {
+            CP_Vector vec = get_cam_pos_rel(roaches[i].pos, cam);
+            CP_Image_Draw(
+                roaches[i].img,
+                vec.x,
+                vec.y,
+                roaches[i].width,
+                roaches[i].height,
+                255
+            );
+        }   
+    }
+}
+
+int comp(const void* a, const void* b)
+{
+    if (!(((struct ChocoRoach*)a)->currentState) && !(((struct ChocoRoach*)b)->currentState))
+        return 0;
+    if (!(((struct ChocoRoach*)a)->currentState))
+        return 1;
+    if (!(((struct ChocoRoach*)b)->currentState))
+        return -1;
+    if (((struct ChocoRoach*)a)->pos.y == ((struct ChocoRoach*)b)->pos.y)
+        return ((struct ChocoRoach*)a)->pos.x - ((struct ChocoRoach*)b)->pos.x;
+    return ((struct ChocoRoach*)a)->pos.y - ((struct ChocoRoach*)b)->pos.y;
+}
+
+void sort_enemies(struct ChocoRoach* roaches, int size) {
+    qsort(roaches, size, sizeof(struct ChocoRoach), comp);
+    for (int i = 0; i < size; i++) {
+        printf("Enemy %d: %d\n", i, roaches[i].currentState);
+    }
+}
+
+void enemy_take_damage(struct ChocoRoach* roach, int dmg) {
+    roach->health = CP_Math_ClampInt(roach->health - dmg, 0, roach->maxHealth);
+    if (roach->health <= 0) {
+        roach->currentState = STATE_DIED;
+    }
 }

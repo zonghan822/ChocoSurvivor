@@ -37,7 +37,7 @@ struct ChocoShooter {
 };
 
 int player_take_damage(struct ChocoShooter* player, int damage);
-struct ChocoShooter init_player(CP_Vector pos, float speed, float maxHealth);
+struct ChocoShooter init_player(CP_Vector pos, float speed, float maxHealth, int atk);
 void move_player(struct ChocoShooter* player, float dt);
 void render_player(struct ChocoShooter player, float alpha, struct Camera cam);
 

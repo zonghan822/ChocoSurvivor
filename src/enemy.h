@@ -5,14 +5,17 @@
 #include "player.h"
 #include "tower.h"
 
+#define MAX_ENEMY_COUNT 100
 #define ENEMY_HITBOX_OFFSET_X(enemyWidth) (- 1 / 33.f * enemyWidth)
 #define ENEMY_HITBOX_OFFSET_Y(enemyHeight) (- 8.f / 77.f * enemyHeight)
 
 enum EnemyState {
+	STATE_DIED = 0,
 	STATE_MOVING,
 	STATE_CHASE_PLAYER,
 	STATE_DETOUR,
-	STATE_ATTACKING
+	STATE_ATTACKING,
+	STATE_IDLE
 };
 
 struct ChocoRoach {
@@ -29,8 +32,14 @@ struct ChocoRoach {
 	struct Rectangle hitbox;
 };
 
+// Takes in single enemy
 struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float speed, int maxHealth, int dmg);
-void render_enemy(struct ChocoRoach roach, struct Camera cam);
 void update_pos_enemy(struct ChocoRoach *roach, float dt);
 void enemy_chase_player(struct ChocoRoach* roach, struct ChocoShooter player);
 void enemy_move_to_tower(struct ChocoRoach* roach, struct DefenseTarget tower);
+void render_enemy_health_bar(struct ChocoRoach* roach);
+void enemy_take_damage(struct ChocoRoach* roach, int dmg);
+
+// Takes in array of enemies
+void render_enemies(struct ChocoRoach* roachesArr, struct Camera cam, int size);
+void sort_enemies(struct ChocoRoach* roachesArr, int size);

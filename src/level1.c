@@ -10,8 +10,6 @@
 #include "hittest.h"
 #include "enemy.h"
 
-#define MAX_ENEMY_COUNT 100
-
 const float LEVEL_WIDTH = 2000.0f,
     LEVEL_HEIGHT = 1200.0f; 
 
@@ -31,8 +29,10 @@ enum SpawnWave {
 char isWaveStart = 0;
 // ************************************* //
 
-struct ChocoRoach roaches[MAX_ENEMY_COUNT];
+struct ChocoRoach roaches[MAX_ENEMY_COUNT] = { 0 };
 enum SpawnWave currentWave = WAVE_0;
+char isDisplayHealthBar = 0;
+float healthBarDisplayTime = 2.f;
 #pragma endregion
 
 #pragma region Player Properties
@@ -49,7 +49,7 @@ void level_one_init(void) {
 
     cam = init_camera(playerInstance, (float)CP_System_GetWindowWidth(), (float)CP_System_GetWindowHeight());
 
-    playerInstance = init_player(CP_Vector_Set(300, 500), 350.0f, 3);
+    playerInstance = init_player(CP_Vector_Set(300, 500), 350.0f, 3, 30);
 
     towerInstance.maxHealth = towerInstance.health = 3;
     towerInstance.height = 300.0;
@@ -59,7 +59,6 @@ void level_one_init(void) {
     bulletType = NORMAL_BULLET;
     bulletSpeed = 1000.f;
     bulletDiameter = 20.f;
-    lastShotTime = 1/playerInstance.fireRate;
 
     spawnDelay = 5.0f; // Give player some buffer
     currentWave = WAVE_0;
@@ -80,7 +79,7 @@ void level_one_update(void) {
             enemySpeed = 150.f;
             enemyMaxHealth = 100;
             enemyDmg = 20;
-            roachesMax = 40;
+            roachesMax = 20;
             break;
         case WAVE_1:
             enemySpeed = 200.f;
@@ -118,34 +117,23 @@ void level_one_update(void) {
         CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_CENTER, CP_TEXT_ALIGN_V_MIDDLE);
         CP_Font_DrawText(buffer, (float)CP_System_GetWindowWidth() / 2, (float)CP_System_GetWindowHeight() * 1/5);
         spawnTime += dt;
-
+        lastShotTime = 0; // disable shooting
     } else {
-        for (int i = 0; i < roachesMax; i++) {
-            // Enemy movement logic and attacking logic
-            
-            struct Circle radarRoach = {.pos = roaches[i].pos, .diameter = 5 * roaches[i].width};
-            
-            // Check enemy near with player
-            if (are_circle_rect_intersecting(radarRoach, playerInstance.hitbox)) {
-                
-                // When collide...
-                if (are_rects_intersecting(roaches[i].hitbox, playerInstance.hitbox)) {
-                    // Stop movement of enemy
-                    roaches[i].movement = STOPPED;
+        for (int i = 0; roaches[i].currentState; i++) {
 
-                    // Attack goes here...
+            // Enemy movement logic and attacking logic
+            struct Circle radarRoach = {.pos = roaches[i].pos, .diameter = 5 * roaches[i].width}; // define enemy radar
+            if (are_circle_rect_intersecting(radarRoach, playerInstance.hitbox)) { // Check enemy near with player
+                if (are_rects_intersecting(roaches[i].hitbox, playerInstance.hitbox)) { // When collide...
                     roaches[i].currentState = STATE_ATTACKING;
                 }
                 else {
-                    enemy_chase_player(&roaches[i], playerInstance);
+                    roaches[i].currentState = STATE_CHASE_PLAYER;
                 }
             }
             else {
-                // priority to move to defense target
-                enemy_move_to_tower(&roaches[i], towerInstance);
+                roaches[i].currentState = STATE_MOVING; // Move to defense target
             }
-            // Update position of enemy
-            update_pos_enemy(&roaches[i], dt);
         }
     }
 
@@ -155,7 +143,7 @@ void level_one_update(void) {
             float mouse_x = CP_Input_GetMouseWorldX(),
                 mouse_y = CP_Input_GetMouseWorldY();
             CP_Vector bulletDirection = CP_Vector_Subtract(CP_Vector_Set(mouse_x, mouse_y), get_cam_pos_rel(playerInstance.pos, cam));
-            struct Bullet bullet = init_bullet(bulletType, bulletSpeed, bulletDiameter, 0, bulletDirection);
+            struct Bullet bullet = init_bullet(bulletType, bulletSpeed, bulletDiameter, playerInstance.atk, bulletDirection);
             shoot_bullet(&playerInstance, &bullet);
             lastShotTime = 0;
         }
@@ -164,10 +152,10 @@ void level_one_update(void) {
     move_player(&playerInstance, dt);
     update_camera(&cam, playerInstance, LEVEL_WIDTH, LEVEL_HEIGHT);
     
+    render_tower(towerInstance, cam);
+
     update_rect_hitbox(&playerInstance.hitbox, 0.0f, 0.0f, playerInstance.pos); // Update hitbox of player
     render_player(playerInstance, 255, cam);
-
-    render_tower(towerInstance, cam);
 
     for (int i = 0; i < MAX_BULLET_COUNT; i++) {
         update_pos_bullet(&playerInstance.bullets[i], dt);
@@ -175,16 +163,46 @@ void level_one_update(void) {
     }
 
     for (int i = 0; i < roachesMax; i++) {
-        CP_Vector hitboxPos = { roaches[i].pos.x + ENEMY_HITBOX_OFFSET_X(roaches[i].width), roaches[i].pos.y + ENEMY_HITBOX_OFFSET_Y(roaches[i].height) };
         
-        update_rect_hitbox(&roaches[i].hitbox, 0.0f, 0.0f, hitboxPos); // Update hitbox of enemy
-        // Some code here...    // Sort enemy based on pos asc
-        render_enemy(roaches[i], cam); // Draw enemy instance
+        if (roaches[i].currentState) { // if enemy is alive
+
+            switch (roaches[i].currentState) {
+            case STATE_MOVING:
+                enemy_move_to_tower(&roaches[i], towerInstance);
+                break;
+            case STATE_CHASE_PLAYER:
+                enemy_chase_player(&roaches[i], playerInstance);
+                break;
+            case STATE_ATTACKING:
+                roaches[i].movement = STOPPED;
+                // more code here..
+                break;
+            case STATE_DETOUR:
+                // A* Pathfinding here...
+                break;
+            case STATE_IDLE:
+                roaches[i].movement = STOPPED;
+                break;
+            }
+            update_pos_enemy(&roaches[i], dt); // Update position of enemy
+
+            CP_Vector hitboxPos = { roaches[i].pos.x + ENEMY_HITBOX_OFFSET_X(roaches[i].width), roaches[i].pos.y + ENEMY_HITBOX_OFFSET_Y(roaches[i].height) };
+            update_rect_hitbox(&roaches[i].hitbox, 0.0f, 0.0f, hitboxPos); // Update hitbox of enemy
+        
+            for (int j = 0; j < MAX_BULLET_COUNT; j++) {
+                if (playerInstance.bullets[j].isShooting) {
+                    struct Circle bullet = { .pos = playerInstance.bullets[j].pos, .diameter = playerInstance.bullets[j].diameter };
+                    if (are_circle_rect_intersecting(bullet, roaches[i].hitbox)) {
+                        enemy_take_damage(&roaches[i], playerInstance.bullets[j].dmg);
+                        playerInstance.bullets[j].isShooting = FALSE;
+                        isDisplayHealthBar = 1;
+                    }
+                }
+            }
+        } // can use else statement here for dying animation...
     }
-
-    //printf("%f, %f\n", playerInstance.pos.x, playerInstance.pos.y);
-    //printf("Tower: %f, %f | Should render when: %f, %f\n", towerInstance.pos.x, towerInstance.pos.y, towerInstance.pos.x - cam.pos.x, towerInstance.pos.y - cam.pos.y);
-
+    sort_enemies(roaches, roachesMax); // Sort enemy based on pos asc
+    render_enemies(roaches, cam, roachesMax); // Draw enemies instances
 }
 
 void level_one_exit(void) {
