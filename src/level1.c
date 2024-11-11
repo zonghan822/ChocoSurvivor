@@ -154,30 +154,6 @@ void level_one_update(void) {
 
         }
     }
-
-    // Enemies movement logic
-    for (int i = 0; i < roachesMax; i++) {
-
-        // Update position of enemies
-        switch (roaches[i].movement) {
-        case MOVING_UP:
-            roaches[i].pos.y -= (roaches[i].speed * dt);
-            roaches[i].degree = 270.0f;
-            break;
-        case MOVING_DOWN:
-            roaches[i].pos.y += (roaches[i].speed * dt);
-            roaches[i].degree = 90.0f;
-            break;
-        case MOVING_LEFT:
-            roaches[i].pos.x -= (roaches[i].speed * dt);
-            roaches[i].degree = 180.0f;
-            break;
-        case MOVING_RIGHT:
-            roaches[i].pos.x += (roaches[i].speed * dt);
-            roaches[i].degree = 0.0f;
-            break;
-        }
-    }
     
     move_player(&playerInstance, dt, LEVEL_WIDTH, LEVEL_HEIGHT);
     // Move enemies here
@@ -195,53 +171,9 @@ void level_one_update(void) {
     
     for (int i = 0; i < roachesMax; i++) {
         CP_Vector hitboxPos = { roaches[i].pos.x + ENEMY_HITBOX_OFFSET_X(roaches[i].width), roaches[i].pos.y + ENEMY_HITBOX_OFFSET_Y(roaches[i].height) };
-        update_rect_hitbox(&roaches[i].hitbox, 0.0f, 0.0f, hitboxPos); // Player
+        update_rect_hitbox(&roaches[i].hitbox, 0.0f, 0.0f, hitboxPos);
         // Draw enemy instance
         render_enemy(roaches[i], cam);
-    }
-
-    // TODO: Update hitbox of the enemies when proper graphic is added
-    // Collision
-    {
-        // With roaches
-        for (int i = 0; i < ARRAY_COUNT(roaches); i++) {
-            struct ChocoRoach roach = roaches[i];
-            struct Circle hitbox = { // PLACEHOLDER
-                .diameter = roach.radius * 2,
-                .pos = roach.pos
-            };
-
-            // Player
-            if (are_circle_rect_intersecting(hitbox, playerInstance.hitbox)) {
-                if (!player_take_damage(&playerInstance, 1)) {
-                    if (!tower_revive_player(&towerInstance, &playerInstance)) {
-                        // Game over
-                        printf("Game over\n");
-                    }
-                    else {
-                        // Whatever we want to do after player is revived
-                        printf("Revived\n");
-                    }
-                }
-                else {
-                    // Invincibility effect
-                    break;
-                }
-            }
-
-            // Tower
-            if (are_circle_rect_intersecting(hitbox, get_tower_hitbox(towerInstance))) {
-                // Clamp enemy pos
-                // clamp_player_pos(struct Rectangle* entity_hitbox, struct Rectangle obstacle);
-                if (!tower_take_damage(&towerInstance, 1)) {
-                    // Game over
-                    printf("Game over\n");
-                }
-                else {
-                    // Whatever we want to do after tower is damaged
-                }
-            }
-        }
     }
 
     // Render UI
