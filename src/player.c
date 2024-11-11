@@ -142,7 +142,7 @@ void render_player(struct ChocoShooter player, float alpha, struct Camera cam) {
     CP_Image_Draw(player.img, vec.x, vec.y, player.width, player.height, alpha);
 }
 
-struct Bullet init_bullet(enum BulletType bulletType, float bulletSpeed, float bulletDiameter, int dmg, enum Movement movement) {
+struct Bullet init_bullet(enum BulletType bulletType, float bulletSpeed, float bulletDiameter, int dmg, CP_Vector bulletDirection) {
     struct Bullet bullet = {
         .isShooting = TRUE,
         .shootRange = 1000.f,
@@ -150,13 +150,13 @@ struct Bullet init_bullet(enum BulletType bulletType, float bulletSpeed, float b
         .speed = bulletSpeed,
         .diameter = bulletDiameter,
         .dmg = dmg,
-        .movement = movement
+        .shootDirection = bulletDirection
     };
     return bullet;
 }
 
 void shoot_bullet(struct ChocoShooter* player, struct Bullet* bullet) {
-    bullet->pos.x = (bullet->movement & MOVING_LEFT) ? player->pos.x - (player->width / 2) : player->pos.x + (player->width / 2);
+    bullet->pos.x = (bullet->shootDirection.x < 0) ? player->pos.x - (player->width / 2) : player->pos.x + (player->width / 2);
     bullet->pos.y = player->pos.y;
 
     int bulletCount = 0;
@@ -186,43 +186,10 @@ void update_pos_bullet(struct Bullet* bullet, float dt) {
 
     if (bullet->isShooting) {
         if (bullet->shootRange > 0) {
-            switch (bullet->movement) {
-            case MOVING_UP:
-                bullet->pos.y -= bullet->speed * dt;
-                bullet->shootRange -= bullet->speed * dt;
-                break;
-            case MOVING_RIGHT:
-                bullet->pos.x += bullet->speed * dt;
-                bullet->shootRange -= bullet->speed * dt;
-                break;
-            case MOVING_DOWN:
-                bullet->pos.y += bullet->speed * dt;
-                bullet->shootRange -= bullet->speed * dt;
-                break;
-            case MOVING_LEFT:
-                bullet->pos.x -= bullet->speed * dt;
-                bullet->shootRange -= bullet->speed * dt;
-                break;
-            case MOVING_UP | MOVING_RIGHT:
-                bullet->pos.x += get_diagonal_dist(bullet->speed * dt);
-                bullet->pos.y -= get_diagonal_dist(bullet->speed * dt);
-                bullet->shootRange -= get_diagonal_dist(bullet->speed * dt);
-                break;
-            case MOVING_UP | MOVING_LEFT:
-                bullet->pos.x -= get_diagonal_dist(bullet->speed * dt);
-                bullet->pos.y -= get_diagonal_dist(bullet->speed * dt);
-                bullet->shootRange -= get_diagonal_dist(bullet->speed * dt);
-                break;
-            case MOVING_DOWN | MOVING_RIGHT:
-                bullet->pos.x += get_diagonal_dist(bullet->speed * dt);
-                bullet->pos.y += get_diagonal_dist(bullet->speed * dt);
-                bullet->shootRange -= get_diagonal_dist(bullet->speed * dt);
-                break;
-            case MOVING_DOWN | MOVING_LEFT:
-                bullet->pos.x -= get_diagonal_dist(bullet->speed * dt);
-                bullet->pos.y += get_diagonal_dist(bullet->speed * dt);
-                bullet->shootRange -= get_diagonal_dist(bullet->speed * dt);
-            }
+            bullet->shootDirection = CP_Vector_Normalize(bullet->shootDirection);
+            bullet->pos.x += bullet->shootDirection.x * bullet->speed * dt;
+            bullet->pos.y += bullet->shootDirection.y * bullet->speed * dt;
+            bullet->shootRange -= bullet->speed * dt;
         }
         else {
             bullet->isShooting = FALSE;

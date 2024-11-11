@@ -20,7 +20,7 @@ struct Bullet {
     float shootRange;
     float diameter;
     int dmg;
-    enum Movement movement;
+    CP_Vector shootDirection;
 };
 
 struct ChocoShooter {
@@ -42,7 +42,7 @@ void move_player(struct ChocoShooter* player, float dt);
 void render_player(struct ChocoShooter player, float alpha, struct Camera cam);
 
 
-struct Bullet init_bullet(enum BulletType bulletType, float bulletSpeed, float bulletDiameter, int dmg, enum Movement movement);
+struct Bullet init_bullet(enum BulletType bulletType, float bulletSpeed, float bulletDiameter, int dmg, CP_Vector bulletDirection);
 void shoot_bullet(struct ChocoShooter *player, struct Bullet *bullet);
 void update_pos_bullet(struct Bullet* bullet, float dt);
 void render_bullet(struct Bullet bullet, struct Camera cam);
