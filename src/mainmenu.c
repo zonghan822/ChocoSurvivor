@@ -5,13 +5,11 @@
 #include "cprocessing.h"
 #include <stdio.h>
 
-struct Rectangle gPlayRect, gOptionsRect, gQuitRect;
+struct Rectangle playRect, optionsRect, quitRect;
 
-void main_menu_init(void)
-{
+void main_menu_init(void) {
 	CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_CENTER, CP_TEXT_ALIGN_V_MIDDLE);
 	CP_Settings_RectMode(CP_POSITION_CENTER);
-	CP_Settings_TextSize(55.0f);
 	CP_Font_Set(CP_Font_Load("Assets/Fonts/Oxanium/Oxanium-Variable.ttf"));
 
 	CP_Color bg = CP_Color_Create(128, 128, 128, 255);
@@ -29,59 +27,62 @@ void main_menu_init(void)
 
 	// Play button
 	CP_Settings_Fill(playBg);
-	gPlayRect.pos.x = buttonRectX;
-	gPlayRect.pos.y = buttonRectY - (buttonRectHeight * 2.0f);
-	gPlayRect.width = buttonRectWidth;
-	gPlayRect.height = buttonRectHeight;
-	CP_Graphics_DrawRect(gPlayRect.pos.x, gPlayRect.pos.y, gPlayRect.width, gPlayRect.height);
+	playRect.pos.x = buttonRectX;
+	playRect.pos.y = buttonRectY - (buttonRectHeight * 2.0f);
+	playRect.width = buttonRectWidth;
+	playRect.height = buttonRectHeight;
+	CP_Graphics_DrawRect(playRect.pos.x, playRect.pos.y, playRect.width, playRect.height);
 
 	// Options button
 	CP_Settings_Fill(otherBg);
-	gOptionsRect.pos.x = buttonRectX;
-	gOptionsRect.pos.y = buttonRectY;
-	gOptionsRect.width = buttonRectWidth;
-	gOptionsRect.height = buttonRectHeight;
-	CP_Graphics_DrawRect(gOptionsRect.pos.x, gOptionsRect.pos.y, gOptionsRect.width, gOptionsRect.height);
+	optionsRect.pos.x = buttonRectX;
+	optionsRect.pos.y = buttonRectY;
+	optionsRect.width = buttonRectWidth;
+	optionsRect.height = buttonRectHeight;
+	CP_Graphics_DrawRect(optionsRect.pos.x, optionsRect.pos.y, optionsRect.width, optionsRect.height);
 
 	// Quit button
-	gQuitRect.pos.x = buttonRectX;
-	gQuitRect.pos.y = buttonRectY + (buttonRectHeight * 2.0f);
-	gQuitRect.width = buttonRectWidth;
-	gQuitRect.height = buttonRectHeight;
-	CP_Graphics_DrawRect(gQuitRect.pos.x, gQuitRect.pos.y, gQuitRect.width, gQuitRect.height);
+	quitRect.pos.x = buttonRectX;
+	quitRect.pos.y = buttonRectY + (buttonRectHeight * 2.0f);
+	quitRect.width = buttonRectWidth;
+	quitRect.height = buttonRectHeight;
+	CP_Graphics_DrawRect(quitRect.pos.x, quitRect.pos.y, quitRect.width, quitRect.height);
 
 	// Text
 	CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255));
-	CP_Font_DrawText("Play", gPlayRect.pos.x, gPlayRect.pos.y + 5.0f);
-	CP_Font_DrawText("Options", gOptionsRect.pos.x, gOptionsRect.pos.y + 5.0f);
-	CP_Font_DrawText("Quit", gQuitRect.pos.x, gQuitRect.pos.y + 5.0f);
+
+	CP_Settings_TextSize(125.0f);
+	CP_Font_DrawText("CHOCO SURVIVOR", buttonRectX, windowHeight / 6.5f);
+
+	CP_Settings_TextSize(55.0f);
+	CP_Font_DrawText("Play", playRect.pos.x, playRect.pos.y + 5.0f);
+	CP_Font_DrawText("Options", optionsRect.pos.x, optionsRect.pos.y + 5.0f);
+	CP_Font_DrawText("Quit", quitRect.pos.x, quitRect.pos.y + 5.0f);
 }
 
-void main_menu_update(void)
-{
+void main_menu_update(void) {
 	if (CP_Input_MouseTriggered(MOUSE_BUTTON_LEFT))
 	{
 		float mouse_x = CP_Input_GetMouseWorldX(),
 			mouse_y = CP_Input_GetMouseWorldY();
 
 		// Play
-		if (is_rect_clicked(gPlayRect, mouse_x, mouse_y)) 
+		if (is_rect_clicked(playRect, mouse_x, mouse_y)) 
 			//printf("Clicked Play\n"); // Set game state here
 			CP_Engine_SetNextGameState(level_one_init, level_one_update, level_one_exit);
 
 		// Options
-		else if (is_rect_clicked(gOptionsRect, mouse_x, mouse_y))
+		else if (is_rect_clicked(optionsRect, mouse_x, mouse_y))
 			printf("Clicked Options\n"); // Set option state here
 
 		// Maybe Credits?
 
 		// Quit
-		else if (is_rect_clicked(gQuitRect, mouse_x, mouse_y))
+		else if (is_rect_clicked(quitRect, mouse_x, mouse_y))
 			CP_Engine_Terminate();
 	}
 }
 
-void main_menu_exit(void)
-{
+void main_menu_exit(void) {
 
 }

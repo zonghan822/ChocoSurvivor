@@ -8,6 +8,7 @@
 #define DASH_DISTANCE 150.0f
 #define DASH_SPEED 10.0f
 
+// Private variables
 BOOL _isDashing = FALSE;
 float _dashProgress, _lastDash;
 CP_Vector _dashTo;
@@ -40,7 +41,7 @@ struct ChocoShooter init_player(CP_Vector pos, float speed, float maxHealth) {
         .movement = STOPPED,
         .hitbox.width = player.width = 120.0,
         .hitbox.height = player.height = get_preserved_heightf((int)CP_Image_GetWidth(player.img),
-        (int)CP_Image_GetHeight(player.img), player.width)
+            (int)CP_Image_GetHeight(player.img), player.width)
     };
 
     player.hitbox.width /= 1.4f;
@@ -112,7 +113,7 @@ void move_player(struct ChocoShooter *player, float dt, float level_width, float
         _lastDash += dt;
 
     // Dash movement with spacebar
-    if (CP_Input_KeyTriggered(KEY_SPACE) && !_isDashing && _lastDash >= DASH_COOLDOWN) {
+    if (CP_Input_KeyDown(KEY_SPACE) && !_isDashing && _lastDash >= DASH_COOLDOWN) {
         _dashTo = player->pos;
         _isDashing = TRUE;
         _dashProgress = 0.0;
@@ -130,7 +131,7 @@ void move_player(struct ChocoShooter *player, float dt, float level_width, float
         player->pos.x = CP_Math_LerpFloat(player->pos.x, _dashTo.x, _dashProgress);
         player->pos.y = CP_Math_LerpFloat(player->pos.y, _dashTo.y, _dashProgress);
 
-        if (_dashProgress >= 1.0f)
+        if (_dashProgress >= 1.5f)
             _isDashing = FALSE;
     }
 

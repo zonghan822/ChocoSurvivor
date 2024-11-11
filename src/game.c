@@ -113,7 +113,7 @@ void game_update(void)
     
 	float dt = CP_System_GetDt();
 
-    render_enemies(roaches, roachesCnt);
+    //render_enemies(roaches, roachesCnt);
 
 	// Enemies movement logic
 	for (int i = 0; i < roachesCnt; i++) {

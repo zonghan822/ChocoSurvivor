@@ -37,6 +37,7 @@ void render_tower(struct DefenseTarget tower, struct Camera cam) {
 	CP_Vector vec = get_cam_pos_rel(tower.pos, cam);
 
 	// PLACEHOLDER
+	CP_Settings_Fill(CP_Color_Create(255, 255, 255, 255));
 	CP_Graphics_DrawRect(vec.x, vec.y, tower.width, tower.height);
 	CP_Settings_TextSize(30);
 	CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255));
