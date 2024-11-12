@@ -31,8 +31,7 @@ char isWaveStart = 0;
 
 struct ChocoRoach roaches[MAX_ENEMY_COUNT] = { 0 };
 enum SpawnWave currentWave = WAVE_0;
-char isDisplayHealthBar = 0;
-float healthBarDisplayTime = 2.f;
+float healthBarDisplayTime = 0.f;
 #pragma endregion
 
 #pragma region Player Properties
@@ -49,7 +48,7 @@ void level_one_init(void) {
 
     cam = init_camera(playerInstance, (float)CP_System_GetWindowWidth(), (float)CP_System_GetWindowHeight());
 
-    playerInstance = init_player(CP_Vector_Set(300, 500), 350.0f, 3, 30);
+    playerInstance = init_player(CP_Vector_Set(300, 500), 350.0f, 100, 30, 10.f);
 
     towerInstance.maxHealth = towerInstance.health = 3;
     towerInstance.height = 300.0;
@@ -139,7 +138,7 @@ void level_one_update(void) {
 
     lastShotTime += dt;
     if (CP_Input_MouseDown(MOUSE_BUTTON_LEFT)) {
-        if (lastShotTime >= (1 / playerInstance.fireRate)) {
+        if (lastShotTime >= (1 / playerInstance.fireRate)) { // control fire rate
             float mouse_x = CP_Input_GetMouseWorldX(),
                 mouse_y = CP_Input_GetMouseWorldY();
             CP_Vector bulletDirection = CP_Vector_Subtract(CP_Vector_Set(mouse_x, mouse_y), get_cam_pos_rel(playerInstance.pos, cam));
@@ -195,14 +194,26 @@ void level_one_update(void) {
                     if (are_circle_rect_intersecting(bullet, roaches[i].hitbox)) {
                         enemy_take_damage(&roaches[i], playerInstance.bullets[j].dmg);
                         playerInstance.bullets[j].isShooting = FALSE;
-                        isDisplayHealthBar = 1;
                     }
                 }
             }
-        } // can use else statement here for dying animation...
+        } 
+        // can use else statement here for dying animation...
     }
     sort_enemies(roaches, roachesMax); // Sort enemy based on pos asc
     render_enemies(roaches, cam, roachesMax); // Draw enemies instances
+    for (int i = 0; roaches[i].currentState; i++) {
+        if (roaches[i].isTakingDamage) {
+            if (healthBarDisplayTime < ENEMY_HEALTHBAR_DISPLAY_TIME) {
+                render_enemy_health_bar(&roaches[i], cam);
+                healthBarDisplayTime += dt;
+            }
+            else {
+                healthBarDisplayTime = 0;
+                roaches[i].isTakingDamage = FALSE;
+            }
+        }
+    }
 }
 
 void level_one_exit(void) {

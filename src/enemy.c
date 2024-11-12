@@ -1,5 +1,6 @@
 #include <math.h>
 #include <time.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include "cprocessing.h"
 #include "enemy.h"
@@ -107,26 +108,28 @@ void enemy_move_to_tower(struct ChocoRoach* roach, struct DefenseTarget tower) {
         roach->movement |= MOVING_RIGHT;
 }
 
-void render_enemy_health_bar(struct ChocoRoach* roach) {
+void render_enemy_health_bar(struct ChocoRoach* roach, struct Camera cam) {
+    // get relative position after camera transformation
+    CP_Vector vec = get_cam_pos_rel(roach->pos, cam);
+
     // Set position of health bar
-    float health_bar_x = roach->pos.x;
-    float health_bar_y = (roach->pos.y) + (roach->height / 2) + 10.f;
+    float health_bar_x = vec.x;
+    float health_bar_y = (vec.y) - (roach->height / 2) - 10.f;
     float health_bar_w = roach->width * 0.8;
-    float health_bar_h = 20.f;
+    float health_bar_h = 15.f;
 
     // Draw health bar rect
     CP_Settings_Fill(CP_Color_Create(255, 0, 0, 255));
     CP_Graphics_DrawRect(health_bar_x, health_bar_y, health_bar_w, health_bar_h);
 
     // Compute position and width for health bar gap rect
-    float health_gap_x = health_bar_x + (roach->health / roach->maxHealth) * health_bar_w;
-    float health_gap_w = health_bar_w * (1.f - (roach->health / roach->maxHealth));
+    float health_gap_x = health_bar_x + ((float)(roach->health) / (float)(roach->maxHealth)) * health_bar_w;
+    float health_gap_w = health_bar_w * (1.f - ((float)(roach->health) / (float)(roach->maxHealth)));
 
     // Draw health bar gap
-    CP_Settings_Fill(CP_Color_Create(160, 0, 0, 255));
+    CP_Settings_Fill(CP_Color_Create(100, 100, 100, 255));
     CP_Graphics_DrawRect(health_gap_x, health_bar_y, health_gap_w, health_bar_h);
 }
-
 
 void render_enemies(struct ChocoRoach* roaches, struct Camera cam, int size) {
     for (int i = 0; i < size; i++) {
@@ -144,10 +147,10 @@ void render_enemies(struct ChocoRoach* roaches, struct Camera cam, int size) {
     }
 }
 
-int comp(const void* a, const void* b)
+int _comp(const void* a, const void* b)
 {
     if (!(((struct ChocoRoach*)a)->currentState) && !(((struct ChocoRoach*)b)->currentState))
-        return 0;
+        return -1;
     if (!(((struct ChocoRoach*)a)->currentState))
         return 1;
     if (!(((struct ChocoRoach*)b)->currentState))
@@ -158,14 +161,12 @@ int comp(const void* a, const void* b)
 }
 
 void sort_enemies(struct ChocoRoach* roaches, int size) {
-    qsort(roaches, size, sizeof(struct ChocoRoach), comp);
-    for (int i = 0; i < size; i++) {
-        printf("Enemy %d: %d\n", i, roaches[i].currentState);
-    }
+    qsort(roaches, size, sizeof(struct ChocoRoach), _comp);
 }
 
 void enemy_take_damage(struct ChocoRoach* roach, int dmg) {
     roach->health = CP_Math_ClampInt(roach->health - dmg, 0, roach->maxHealth);
+    roach->isTakingDamage = TRUE;
     if (roach->health <= 0) {
         roach->currentState = STATE_DIED;
     }
