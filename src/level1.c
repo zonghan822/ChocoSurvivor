@@ -264,8 +264,8 @@ void level_one_update(void) {
     float barrier_butt_y = windowHeight - 100.0f;
 
     //create barrier picking button
-    CP_Settings_Fill(CP_Color_Create(0, 0, 255, 255));
-    CP_Graphics_DrawRect(barrier_butt_x, barrier_butt_y, barrier_rect_W, barrier_rect_H);
+    //CP_Settings_Fill(CP_Color_Create(0, 0, 255, 255));
+    //CP_Graphics_DrawRect(barrier_butt_x, barrier_butt_y, barrier_rect_W, barrier_rect_H);
     CP_Vector mousePosition(mouse_x, mouse_y);
     
 
@@ -295,6 +295,7 @@ void level_one_update(void) {
                 barriers[barrierCount].height = barrierHeight;
                 barrierCount++;
                 currentState = BARRIER_IDLE;  // Return to idle to place another barrier
+                printf("%d", barrierCount);
             }
         }
         break;
