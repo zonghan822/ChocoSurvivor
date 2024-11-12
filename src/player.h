@@ -31,9 +31,10 @@ struct ChocoShooter {
     enum Movement movement;
     int health, maxHealth;
     struct Rectangle hitbox;
-    float fireRate;
     struct Bullet bullets[MAX_BULLET_COUNT];
-    int atk;
+    int attackPower;   
+    float attackSpeed;
+    int shield;
 };
 
 int player_take_damage(struct ChocoShooter* player, int damage);

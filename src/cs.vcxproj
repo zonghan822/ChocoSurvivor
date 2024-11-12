@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClCompile Include="boss.c" />
     <ClCompile Include="camera.c" />
+    <ClCompile Include="flicker.c" />
     <ClCompile Include="enemy.c" />
     <ClCompile Include="hittest.c" />
     <ClCompile Include="level1.c" />
@@ -36,6 +37,9 @@
     <ClInclude Include="enemy.h" />
     <ClInclude Include="level1.h" />
     <ClInclude Include="tower.h" />
+    <ClInclude Include="flicker.h" />
+    <ClInclude Include="enemy.h" />
+    <ClInclude Include="pewpew.h" />
     <ClInclude Include="utils.h" />
     <ClInclude Include="hittest.h" />
     <ClInclude Include="mainmenu.h" />
