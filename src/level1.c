@@ -11,6 +11,7 @@
 #include "camera.h"
 #include "hittest.h"
 #include "flicker.h"
+#include "barrier.h"
 
 const float LEVEL_WIDTH = 2000.0f,
     LEVEL_HEIGHT = 1200.0f; 
@@ -46,6 +47,13 @@ enum BulletType bulletType = NORMAL_BULLET;
 float bulletSpeed = 0.f, bulletDiameter = 0.f;
 float lastShotTime = 0;
 #pragma endregion
+//barrierinthemakings
+enum BarrierState currentState = BARRIER_IDLE;
+CP_Vector previewPosition;
+CP_Vector finalPosition;
+float barrierWidth = 50.0f;
+float barrierHeight = 100.0f;
+const float barrier_rect_W = 50.0f, barrier_rect_H = 50.0f;
 
 void level_one_init(void) {
     
@@ -248,8 +256,61 @@ void level_one_update(void) {
 
     float mouse_x = CP_Input_GetMouseWorldX();
     float mouse_y = CP_Input_GetMouseWorldY();
+    
+
+    int windowWidth = CP_System_GetWindowWidth();
+    int windowHeight = CP_System_GetWindowHeight();
+    float barrier_butt_x = windowWidth - 1450.0f;
+    float barrier_butt_y = windowHeight - 100.0f;
+
+    //create barrier picking button
+    CP_Settings_Fill(CP_Color_Create(0, 0, 255, 255));
+    CP_Graphics_DrawRect(barrier_butt_x, barrier_butt_y, barrier_rect_W, barrier_rect_H);
+    CP_Vector mousePosition(mouse_x, mouse_y);
+    
+
+
+    switch (currentState) {
+    case BARRIER_IDLE:
+        // Start preview mode with a key press, if we haven't reached max barriers
+        if (barrierCount < MAX_BARRIERS && CP_Input_KeyTriggered(KEY_P)) {
+            currentState = BARRIER_PREVIEW;
+        }
+        break;
+
+    case BARRIER_PREVIEW:
+        // Update the preview position to follow the mouse
+        previewPosition = CP_Vector_Set(mouse_x, mouse_y);
+
+        // Draw translucent preview rectangle
+        CP_Settings_Fill(CP_Color_Create(0, 0, 255, 128)); // Semi-transparent blue
+        CP_Graphics_DrawRect(previewPosition.x, previewPosition.y, barrierWidth, barrierHeight);
+
+        // Place the barrier on mouse click
+        if (CP_Input_MouseTriggered(MOUSE_BUTTON_LEFT)) {
+            if (barrierCount < MAX_BARRIERS) {
+                // Store the barrier in the array
+                barriers[barrierCount].position = previewPosition;
+                barriers[barrierCount].width = barrierWidth;
+                barriers[barrierCount].height = barrierHeight;
+                barrierCount++;
+                currentState = BARRIER_IDLE;  // Return to idle to place another barrier
+            }
+        }
+        break;
+
+    }
+
+    // Draw all placed barriers
+    for (int i = 0; i < barrierCount; i++) {
+        CP_Settings_Fill(CP_Color_Create(0, 0, 255, 255)); // Solid blue
+        CP_Graphics_DrawRect(barriers[i].position.x, barriers[i].position.y, barriers[i].width, barriers[i].height);
+    }
     CP_Image_Draw(chococursor, mouse_x, mouse_y, 70, 50, 255);
 }
+
+
+
 
 void level_one_exit(void) {
 
