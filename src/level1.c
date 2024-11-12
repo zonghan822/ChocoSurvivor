@@ -47,6 +47,7 @@ enum BulletType bulletType = NORMAL_BULLET;
 float bulletSpeed = 0.f, bulletDiameter = 0.f;
 float lastShotTime = 0;
 #pragma endregion
+
 //barrierinthemakings
 enum BarrierState currentState = BARRIER_IDLE;
 CP_Vector previewPosition;
@@ -266,47 +267,51 @@ void level_one_update(void) {
     //create barrier picking button
     //CP_Settings_Fill(CP_Color_Create(0, 0, 255, 255));
     //CP_Graphics_DrawRect(barrier_butt_x, barrier_butt_y, barrier_rect_W, barrier_rect_H);
-    CP_Vector mousePosition(mouse_x, mouse_y);
     
+    CP_Vector previewPosition = CP_Vector_Set(mouse_x, mouse_y);  // Set preview position to mouse coordinates
+ 
 
 
     switch (currentState) {
     case BARRIER_IDLE:
-        // Start preview mode with a key press, if we haven't reached max barriers
-        if (barrierCount < MAX_BARRIERS && CP_Input_KeyTriggered(KEY_P)) {
+        // Start preview mode with a key press if we haven't reached max barriers
+        if (get_barrier_count() < MAX_BARRIERS && CP_Input_KeyTriggered(KEY_P)) {
             currentState = BARRIER_PREVIEW;
         }
         break;
 
     case BARRIER_PREVIEW:
-        // Update the preview position to follow the mouse
-        previewPosition = CP_Vector_Set(mouse_x, mouse_y);
-
-        // Draw translucent preview rectangle
-        CP_Settings_Fill(CP_Color_Create(0, 0, 255, 128)); // Semi-transparent blue
+        // Draw the preview barrier at the current mouse position
+        CP_Settings_Fill(CP_Color_Create(0, 0, 255, 128));
         CP_Graphics_DrawRect(previewPosition.x, previewPosition.y, barrierWidth, barrierHeight);
 
-        // Place the barrier on mouse click
         if (CP_Input_MouseTriggered(MOUSE_BUTTON_LEFT)) {
-            if (barrierCount < MAX_BARRIERS) {
-                // Store the barrier in the array
-                barriers[barrierCount].position = previewPosition;
-                barriers[barrierCount].width = barrierWidth;
-                barriers[barrierCount].height = barrierHeight;
-                barrierCount++;
-                currentState = BARRIER_IDLE;  // Return to idle to place another barrier
-                printf("%d", barrierCount);
+            int barrierIndex = get_barrier_count();
+            if (barrierIndex < MAX_BARRIERS) {
+                // Set the barrier properties
+                set_barrier_properties(barrierIndex, previewPosition, barrierWidth, barrierHeight, BARRIER_INITIAL_HEALTH);
+                increment_barrier_count();
+                currentState = BARRIER_IDLE;
             }
         }
         break;
+    }
 
+    // Damage the first active barrier when pressing 'B'
+    if (CP_Input_KeyTriggered(KEY_B)) {
+        takeDamage(1);
     }
 
     // Draw all placed barriers
-    for (int i = 0; i < barrierCount; i++) {
-        CP_Settings_Fill(CP_Color_Create(0, 0, 255, 255)); // Solid blue
-        CP_Graphics_DrawRect(barriers[i].position.x, barriers[i].position.y, barriers[i].width, barriers[i].height);
+    struct Barrier* barriers = get_barriers();
+    for (int i = 0; i < get_barrier_count(); i++) {
+        if (barriers[i].health > 0) {
+            CP_Settings_Fill(CP_Color_Create(0, 0, 255, 255));
+            CP_Graphics_DrawRect(barriers[i].position.x, barriers[i].position.y, barriers[i].width, barriers[i].height);
+        }
     }
+
+
     CP_Image_Draw(chococursor, mouse_x, mouse_y, 70, 50, 255);
 }
 
