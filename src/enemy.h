@@ -35,7 +35,7 @@ struct ChocoRoach {
 };
 
 // Takes in single enemy
-struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float speed, int maxHealth, int dmg);
+struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth, float speed, int maxHealth, int dmg);
 void update_pos_enemy(struct ChocoRoach *roach, float dt);
 void enemy_chase_player(struct ChocoRoach* roach, struct ChocoShooter player);
 void enemy_move_to_tower(struct ChocoRoach* roach, struct DefenseTarget tower);

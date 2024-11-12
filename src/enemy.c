@@ -6,7 +6,7 @@
 #include "enemy.h"
 #include "camera.h"
 
-struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float speed, int maxHealth, int dmg) {
+struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth, float speed, int maxHealth, int dmg) {
 
     srand((unsigned int)time(NULL));
     struct ChocoRoach chocoRoach = {
@@ -14,7 +14,7 @@ struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float speed, int 
             .width = 70.f,
             .height = get_preserved_heightf((float)CP_Image_GetWidth(chocoRoach.img),
                 (float)CP_Image_GetHeight(chocoRoach.img), chocoRoach.width),
-            .pos.x = -chocoRoach.width,
+            .pos.x = CP_Random_RangeFloat(-chocoRoach.width-spawnWidth, -chocoRoach.width),
             .pos.y = CP_Random_RangeFloat(spawnMinY, spawnMaxY), // Generate random y pos for enemies
             .speed = speed,
             .health = maxHealth,

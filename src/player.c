@@ -177,9 +177,6 @@ void shoot_bullet(struct ChocoShooter* player, struct Bullet* bullet) {
     if (bulletCount < MAX_BULLET_COUNT) {
         player->bullets[bulletCount] = *bullet;
     }
-    for (int i = 0; i < MAX_BULLET_COUNT; i++) {
-        printf("Bullet %d: %d\n", i, player->bullets[i].isShooting);
-    }
 }
 
 void update_pos_bullet(struct Bullet* bullet, float dt) {

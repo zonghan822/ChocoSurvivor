@@ -102,7 +102,7 @@ void level_one_update(void) {
 
         for (int i = 0; i < roachesMax; i++) {
             // Store enemies in array
-            roaches[i] = init_enemy(LEVEL_HEIGHT * 1/5, LEVEL_HEIGHT * 4/5, enemySpeed, enemyMaxHealth, enemyDmg);
+            roaches[i] = init_enemy(LEVEL_HEIGHT * 1/5, LEVEL_HEIGHT * 4/5, 200.f, enemySpeed, enemyMaxHealth, enemyDmg);
         }
         isWaveStart = 0;
     }
