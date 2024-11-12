@@ -20,7 +20,7 @@ struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth,
             .health = maxHealth,
             .maxHealth = maxHealth,
             .dmg = dmg,
-            .movement = STOPPED,
+            .moveDirection = CP_Vector_Zero(),
             .currentState = STATE_IDLE,
             .hitbox.pos.x = chocoRoach.pos.x + ENEMY_HITBOX_OFFSET_X(chocoRoach.width),
             .hitbox.pos.y = chocoRoach.pos.y + ENEMY_HITBOX_OFFSET_Y(chocoRoach.height),
@@ -30,82 +30,85 @@ struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth,
     return chocoRoach;
 }
 
+//void update_pos_enemy(struct ChocoRoach *roach, float dt) {
+//    switch (roach->movement) {
+//    case MOVING_UP:
+//        roach->pos.y -= roach->speed * dt;
+//        break;
+//    case MOVING_RIGHT:
+//        roach->pos.x += roach->speed * dt;
+//        break;
+//    case MOVING_DOWN:
+//        roach->pos.y += roach->speed * dt;
+//        break;
+//    case MOVING_LEFT:
+//        roach->pos.x -= roach->speed * dt;
+//        break;
+//    case MOVING_UP | MOVING_RIGHT:
+//        roach->pos.x += get_diagonal_dist(roach->speed * dt);
+//        roach->pos.y -= get_diagonal_dist(roach->speed * dt);
+//        break;
+//    case MOVING_UP | MOVING_LEFT:
+//        roach->pos.x -= get_diagonal_dist(roach->speed * dt);
+//        roach->pos.y -= get_diagonal_dist(roach->speed * dt);
+//        break;
+//    case MOVING_DOWN | MOVING_RIGHT:
+//        roach->pos.x += get_diagonal_dist(roach->speed * dt);
+//        roach->pos.y += get_diagonal_dist(roach->speed * dt);
+//        break;
+//    case MOVING_DOWN | MOVING_LEFT:
+//        roach->pos.x -= get_diagonal_dist(roach->speed * dt);
+//        roach->pos.y += get_diagonal_dist(roach->speed * dt);
+//    }
+//}
 
-void update_pos_enemy(struct ChocoRoach *roach, float dt) {
-    switch (roach->movement) {
-    case MOVING_UP:
-        roach->pos.y -= roach->speed * dt;
-        break;
-    case MOVING_RIGHT:
-        roach->pos.x += roach->speed * dt;
-        break;
-    case MOVING_DOWN:
-        roach->pos.y += roach->speed * dt;
-        break;
-    case MOVING_LEFT:
-        roach->pos.x -= roach->speed * dt;
-        break;
-    case MOVING_UP | MOVING_RIGHT:
-        roach->pos.x += get_diagonal_dist(roach->speed * dt);
-        roach->pos.y -= get_diagonal_dist(roach->speed * dt);
-        break;
-    case MOVING_UP | MOVING_LEFT:
-        roach->pos.x -= get_diagonal_dist(roach->speed * dt);
-        roach->pos.y -= get_diagonal_dist(roach->speed * dt);
-        break;
-    case MOVING_DOWN | MOVING_RIGHT:
-        roach->pos.x += get_diagonal_dist(roach->speed * dt);
-        roach->pos.y += get_diagonal_dist(roach->speed * dt);
-        break;
-    case MOVING_DOWN | MOVING_LEFT:
-        roach->pos.x -= get_diagonal_dist(roach->speed * dt);
-        roach->pos.y += get_diagonal_dist(roach->speed * dt);
-    }
-}
+//void enemy_chase_player(struct ChocoRoach* roach, struct ChocoShooter player) {
+//    roach->movement = STOPPED;
+//    // chase player 
+//    float enemyMinX = roach->hitbox.pos.x - (roach->hitbox.width / 2),
+//        enemyMaxX = roach->hitbox.pos.x + (roach->hitbox.width / 2),
+//        enemyMinY = roach->hitbox.pos.y - (roach->hitbox.height / 2),
+//        enemyMaxY = roach->hitbox.pos.y + (roach->hitbox.height / 2),
+//        playerMinX = player.hitbox.pos.x - (player.hitbox.width / 2),
+//        playerMaxX = player.hitbox.pos.x + (player.hitbox.width / 2),
+//        playerMinY = player.hitbox.pos.y - (player.hitbox.height / 2),
+//        playerMaxY = player.hitbox.pos.y + (player.hitbox.height / 2);
+//
+//    if (enemyMinY > playerMaxY) // Player is above enemy
+//        roach->movement |= MOVING_UP;
+//    if (enemyMaxY < playerMinY) // Player is below enemy
+//        roach->movement |= MOVING_DOWN;
+//    if (enemyMinX > playerMaxX) // Player is at the left of enemy 
+//        roach->movement |= MOVING_LEFT;
+//    if (enemyMaxX < playerMinX) // Player is at the right of enemy 
+//        roach->movement |= MOVING_RIGHT;
+//}
+//
+//void enemy_move_to_tower(struct ChocoRoach* roach, struct DefenseTarget tower) {
+//    roach->movement = STOPPED;
+//    float enemyMinX = roach->hitbox.pos.x - (roach->hitbox.width / 2),
+//        enemyMaxX = roach->hitbox.pos.x + (roach->hitbox.width / 2),
+//        enemyMinY = roach->hitbox.pos.y - (roach->hitbox.height / 2),
+//        enemyMaxY = roach->hitbox.pos.y + (roach->hitbox.height / 2),
+//        towerMinX = tower.pos.x - (tower.width / 2),
+//        towerMaxX = tower.pos.x + (tower.width / 2),
+//        towerMinY = tower.pos.y - (tower.height / 2),
+//        towerMaxY = tower.pos.y + (tower.height / 2);
+//
+//    if (enemyMinY > towerMaxY) // Tower is above enemy
+//        roach->movement |= MOVING_UP;
+//    if (enemyMaxY < towerMinY) // Tower is below enemy
+//        roach->movement |= MOVING_DOWN;
+//    if (enemyMinX > towerMaxX) // Tower is at the left of enemy 
+//        roach->movement |= MOVING_LEFT;
+//    if (enemyMaxX < towerMinX) // Tower is at the right of enemy 
+//        roach->movement |= MOVING_RIGHT;
+//}
 
-
-void enemy_chase_player(struct ChocoRoach* roach, struct ChocoShooter player) {
-    roach->movement = STOPPED;
-    // chase player 
-    float enemyMinX = roach->hitbox.pos.x - (roach->hitbox.width / 2),
-        enemyMaxX = roach->hitbox.pos.x + (roach->hitbox.width / 2),
-        enemyMinY = roach->hitbox.pos.y - (roach->hitbox.height / 2),
-        enemyMaxY = roach->hitbox.pos.y + (roach->hitbox.height / 2),
-        playerMinX = player.hitbox.pos.x - (player.hitbox.width / 2),
-        playerMaxX = player.hitbox.pos.x + (player.hitbox.width / 2),
-        playerMinY = player.hitbox.pos.y - (player.hitbox.height / 2),
-        playerMaxY = player.hitbox.pos.y + (player.hitbox.height / 2);
-
-    if (enemyMinY > playerMaxY) // Player is above enemy
-        roach->movement |= MOVING_UP;
-    if (enemyMaxY < playerMinY) // Player is below enemy
-        roach->movement |= MOVING_DOWN;
-    if (enemyMinX > playerMaxX) // Player is at the left of enemy 
-        roach->movement |= MOVING_LEFT;
-    if (enemyMaxX < playerMinX) // Player is at the right of enemy 
-        roach->movement |= MOVING_RIGHT;
-}
-
-
-void enemy_move_to_tower(struct ChocoRoach* roach, struct DefenseTarget tower) {
-    roach->movement = STOPPED;
-    float enemyMinX = roach->hitbox.pos.x - (roach->hitbox.width / 2),
-        enemyMaxX = roach->hitbox.pos.x + (roach->hitbox.width / 2),
-        enemyMinY = roach->hitbox.pos.y - (roach->hitbox.height / 2),
-        enemyMaxY = roach->hitbox.pos.y + (roach->hitbox.height / 2),
-        towerMinX = tower.pos.x - (tower.width / 2),
-        towerMaxX = tower.pos.x + (tower.width / 2),
-        towerMinY = tower.pos.y - (tower.height / 2),
-        towerMaxY = tower.pos.y + (tower.height / 2);
-
-    if (enemyMinY > towerMaxY) // Tower is above enemy
-        roach->movement |= MOVING_UP;
-    if (enemyMaxY < towerMinY) // Tower is below enemy
-        roach->movement |= MOVING_DOWN;
-    if (enemyMinX > towerMaxX) // Tower is at the left of enemy 
-        roach->movement |= MOVING_LEFT;
-    if (enemyMaxX < towerMinX) // Tower is at the right of enemy 
-        roach->movement |= MOVING_RIGHT;
+void enemy_move_to_target(struct ChocoRoach* roach, struct Rectangle hitbox, float dt) {
+    roach->moveDirection = CP_Vector_Normalize((CP_Vector_Subtract(hitbox.pos, roach->pos)));
+    roach->pos.x += roach->moveDirection.x * roach->speed * dt;
+    roach->pos.y += roach->moveDirection.y * roach->speed * dt;
 }
 
 void render_enemy_health_bar(struct ChocoRoach* roach, struct Camera cam) {

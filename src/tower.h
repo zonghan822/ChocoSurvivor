@@ -4,10 +4,10 @@
 #include "camera.h"
 
 struct DefenseTarget {
+	CP_Image img;
 	CP_Vector pos;
 	float width;
 	float height;
-	CP_Image img;
 	int health;
 	int maxHealth;
 };

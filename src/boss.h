@@ -14,7 +14,8 @@ struct Boss {
     void (*attack)(struct Boss, struct ChocoShooter*);
     int (*canAttack)(struct Boss, struct ChocoShooter);
     struct Rectangle hitbox;
-      int attackPower;
+    int attackPower;
+    struct FlickerState flickerState;
 };
 
 void melee_attack(struct Boss, struct ChocoShooter*);

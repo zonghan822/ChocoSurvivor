@@ -20,14 +20,12 @@ int can_melee_attack(struct Boss boss, struct ChocoShooter player){
 
 void Damage(struct Boss *boss, int damage){
 
-    if (is_flickering(&bossFlickerState))
-    {
+    if (is_flickering(&(boss->flickerState))) {
         printf("Boss is invincible and cannot take damage right now.\n");
         return; // Skip the rest of the function if flickering
     }
 
-    if (boss->maxHealth > 0)
-    {
+    if (boss->maxHealth > 0) {
         boss->maxHealth -= damage;
         if (boss->maxHealth <= 0)
         {
@@ -38,9 +36,9 @@ void Damage(struct Boss *boss, int damage){
         else
         {
             printf("Boss took %d damage, health is now %d\n", damage, boss->maxHealth);
-            if (!is_flickering(&bossFlickerState))
+            if (!is_flickering(&(boss->flickerState)))
             {
-                flicker(&bossFlickerState, 1); // Trigger flickering for boss
+                flicker(&(boss->flickerState), 1); // Trigger flickering for boss
             }
         }
     }

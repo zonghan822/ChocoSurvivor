@@ -4,24 +4,10 @@
 #include "utils.h"
 #include "camera.h"
 #include "flicker.h"
-#include "game.h"
 
 #define DASH_COOLDOWN 1.0f
 #define DASH_DISTANCE 150.0f
 #define DASH_SPEED 20.0f
-
-enum BuffType {
-    ATTACK_UP,
-    ATTACK_SPEED_UP,
-    HEALTH_UP
-};
-
-struct BuffLevel {
-    enum BuffType type;   // Current buff type (can be set to the latest buff type obtained)
-    int attackP_lvl;      // Attack power level
-    int attackS_lvl;      // Attack speed level
-    int health_lvl;       // Health level
-};
 
 float buffmeterfill = 0.0f;
 const float max_buffmeter = 100.0f; // Maximum value of the buff meter
@@ -33,16 +19,16 @@ CP_Vector _dashTo;
 
 // Returns 1 if still alive, 0 if not
 int player_take_damage(struct ChocoShooter* player, int damage) {
-    if (is_flickering(&playerFlickerState)) {
+    if (player->flickerState.isFlickering) {
         printf("chocoshooter is invincible and cannot take damage right now.\n");
-        return;  // Skip the rest of the function if flickering
+        return 1;  // Skip the rest of the function if flickering
     }
 
     player->health = CP_Math_ClampInt(player->health - damage, 0, player->maxHealth);
 
     if (player->health > 0) {
         printf("Player took %d damage, health is now %d\n", damage, player->health);
-        flicker(&playerFlickerState, 1);
+        flicker(&(player->flickerState), 1);
         return 1;
     }
 
@@ -65,9 +51,9 @@ struct ChocoShooter init_player(CP_Vector pos, float speed, float maxHealth, int
         .hitbox.width = player.width = 120.0,
         .hitbox.height = player.height = get_preserved_heightf((float)CP_Image_GetWidth(player.img),
         (float)CP_Image_GetHeight(player.img), player.width),
-        .fireRate = fireRate,
         .bullets[0].isShooting = FALSE,
-        .atk = 30
+        .attackSpeed = fireRate,
+        .attackPower = atk
     };
 
     player.hitbox.width /= 1.4f;
@@ -259,4 +245,22 @@ int get_buff_meter_fill() {
     int update = buffmeterfill ;
     printf("%d\n", update);  // Print percentage to check if it works as expected
     return update;
+}
+
+void render_buff_meter() {
+    // Buff meter drawing logic
+    float meterX = CP_System_GetWindowWidth() - 150;
+    float meterY = CP_System_GetWindowHeight() - 50;
+    float meterWidth = 100;
+    float meterHeight = 20;
+
+    // Draw the empty part of the meter (white)
+    CP_Settings_RectMode(CP_POSITION_CORNER);
+    CP_Settings_Fill(CP_Color_Create(255, 255, 255, 255));
+    CP_Graphics_DrawRect(meterX, meterY, meterWidth, meterHeight);
+
+    // Draw the filled part of the meter (blue)
+    float fillWidth = get_buff_meter_fill();
+    CP_Settings_Fill(CP_Color_Create(0, 0, 255, 255));
+    CP_Graphics_DrawRect(meterX, meterY, fillWidth, meterHeight);
 }

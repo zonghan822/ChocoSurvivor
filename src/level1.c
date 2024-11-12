@@ -2,16 +2,20 @@
 #include <time.h>
 #include <stdlib.h>
 
+#include "cprocessing.h"
+#include "mainmenu.h"
 #include "level1.h"
 #include "player.h"
+#include "enemy.h"
 #include "tower.h"
-#include "cprocessing.h"
 #include "camera.h"
 #include "hittest.h"
-#include "enemy.h"
+#include "flicker.h"
 
 const float LEVEL_WIDTH = 2000.0f,
     LEVEL_HEIGHT = 1200.0f; 
+CP_Image chococursor;
+CP_Image gameOverImage;
 
 #pragma region Enemy Properties
 // ************************************* //
@@ -44,6 +48,12 @@ float lastShotTime = 0;
 #pragma endregion
 
 void level_one_init(void) {
+    
+    chococursor = CP_Image_Load("Assets/cursor.png");
+    CP_System_ShowCursor(FALSE);
+
+    gameOverImage = CP_Image_Load("Assets/gg.png");
+
     CP_Font_Set(CP_Font_Load("Assets/Fonts/Oxanium/Oxanium-Variable.ttf"));
 
     cam = init_camera(playerInstance, (float)CP_System_GetWindowWidth(), (float)CP_System_GetWindowHeight());
@@ -62,6 +72,9 @@ void level_one_init(void) {
     spawnDelay = 5.0f; // Give player some buffer
     currentWave = WAVE_0;
     isWaveStart = 1;
+
+    //set initial flickering states
+    playerInstance.flickerState.isVisible = TRUE;
 }
 
 void level_one_update(void) {
@@ -131,18 +144,23 @@ void level_one_update(void) {
                 }
             }
             else {
-                roaches[i].currentState = STATE_MOVING; // Move to defense target
+                if (are_rects_intersecting(roaches[i].hitbox, playerInstance.hitbox)) {
+                    roaches[i].currentState = STATE_ATTACKING;
+                }
+                else {
+                    roaches[i].currentState = STATE_MOVING; // Move to defense target
+                }
             }
         }
     }
 
     lastShotTime += dt;
     if (CP_Input_MouseDown(MOUSE_BUTTON_LEFT)) {
-        if (lastShotTime >= (1 / playerInstance.fireRate)) { // control fire rate
+        if (lastShotTime >= (1 / playerInstance.attackSpeed)) { // control fire rate
             float mouse_x = CP_Input_GetMouseWorldX(),
                 mouse_y = CP_Input_GetMouseWorldY();
             CP_Vector bulletDirection = CP_Vector_Subtract(CP_Vector_Set(mouse_x, mouse_y), get_cam_pos_rel(playerInstance.pos, cam));
-            struct Bullet bullet = init_bullet(bulletType, bulletSpeed, bulletDiameter, playerInstance.atk, bulletDirection);
+            struct Bullet bullet = init_bullet(bulletType, bulletSpeed, bulletDiameter, playerInstance.attackPower, bulletDirection);
             shoot_bullet(&playerInstance, &bullet);
             lastShotTime = 0;
         }
@@ -152,6 +170,8 @@ void level_one_update(void) {
     update_camera(&cam, playerInstance, LEVEL_WIDTH, LEVEL_HEIGHT);
     
     render_tower(towerInstance, cam);
+
+    update_flicker(&playerInstance.flickerState, dt);
 
     update_rect_hitbox(&playerInstance.hitbox, 0.0f, 0.0f, playerInstance.pos); // Update hitbox of player
     render_player(playerInstance, 255, cam);
@@ -167,23 +187,22 @@ void level_one_update(void) {
 
             switch (roaches[i].currentState) {
             case STATE_MOVING:
-                enemy_move_to_tower(&roaches[i], towerInstance);
+                enemy_move_to_target(&roaches[i], get_tower_hitbox(towerInstance), dt);
                 break;
             case STATE_CHASE_PLAYER:
-                enemy_chase_player(&roaches[i], playerInstance);
+                enemy_move_to_target(&roaches[i], playerInstance.hitbox, dt);
                 break;
             case STATE_ATTACKING:
-                roaches[i].movement = STOPPED;
+                roaches[i].moveDirection = CP_Vector_Zero();
                 // more code here..
                 break;
             case STATE_DETOUR:
                 // A* Pathfinding here...
                 break;
             case STATE_IDLE:
-                roaches[i].movement = STOPPED;
+                roaches[i].moveDirection = CP_Vector_Zero();
                 break;
             }
-            update_pos_enemy(&roaches[i], dt); // Update position of enemy
 
             CP_Vector hitboxPos = { roaches[i].pos.x + ENEMY_HITBOX_OFFSET_X(roaches[i].width), roaches[i].pos.y + ENEMY_HITBOX_OFFSET_Y(roaches[i].height) };
             update_rect_hitbox(&roaches[i].hitbox, 0.0f, 0.0f, hitboxPos); // Update hitbox of enemy
@@ -214,6 +233,22 @@ void level_one_update(void) {
             }
         }
     }
+
+    if (towerInstance.health <= 0) {
+        // Draw the Game Over image in the center of the screen
+        float gameOverX = CP_System_GetWindowWidth() / 2;
+        float gameOverY = CP_System_GetWindowHeight() / 2;
+        CP_Image_Draw(gameOverImage, gameOverX, gameOverY, 1000, 600, 255); // Adjust size as needed
+    }
+
+    // Exit to Main Menu
+    if (CP_Input_KeyTriggered(KEY_Q)) {
+        CP_Engine_SetNextGameState(main_menu_init, main_menu_update, main_menu_exit);
+    }
+
+    float mouse_x = CP_Input_GetMouseWorldX();
+    float mouse_y = CP_Input_GetMouseWorldY();
+    CP_Image_Draw(chococursor, mouse_x, mouse_y, 70, 50, 255);
 }
 
 void level_one_exit(void) {

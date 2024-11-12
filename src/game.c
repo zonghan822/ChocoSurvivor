@@ -85,11 +85,11 @@ void game_init(void)
     chocoShooterInstance.pos.x = 100.0f;
     chocoShooterInstance.pos.y = 100.0f;
     chocoShooterInstance.width = 200.0f,
-        chocoShooterInstance.height = 300.0f;
-        chocoShooterInstance.speed = 200.0f;
-        chocoShooterInstance.health = 20;
-        chocoShooterInstance.shield = 1;
-        chocoShooterInstance.attackPower = 5;
+    chocoShooterInstance.height = 300.0f;
+    chocoShooterInstance.speed = 200.0f;
+    chocoShooterInstance.health = 20;
+    chocoShooterInstance.shield = 1;
+    chocoShooterInstance.attackPower = 5;
     chocoShooterInstance.attackSpeed = 5;
     chocoShooterInstance.img = CP_Image_Load("Assets/choco_shooter.png");
     chocoShooterInstance.isFlipped = false,
