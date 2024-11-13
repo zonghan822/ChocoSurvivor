@@ -60,6 +60,11 @@ float barrierHeight = 0.0f;
 float barrier_rect_W = 0.0f, barrier_rect_H = 0.0f;
 #pragma endregion
 
+#pragma region Map Properties
+struct Rectangle obstacles[100] = { 0 };
+#pragma endregion
+
+
 void level_one_init(void) {
     
     chococursor = CP_Image_Load("Assets/cursor.png");
@@ -172,6 +177,7 @@ void level_one_update(void) {
             // Enemy movement logic and attacking logic
             struct Circle radarRoach = { .pos = roaches[i].pos, .diameter = 5 * roaches[i].width }; // define enemy radar
             struct Barrier* barriers = get_barriers();
+
             for (int i = 0; i < get_barrier_count(); i++) {
                 if (are_circle_rect_intersecting(radarRoach, barriers[i].hitbox)) {
                     if (are_circle_rect_intersecting(radarRoach, playerInstance.hitbox)) {
@@ -253,6 +259,7 @@ void level_one_update(void) {
     lastShotTime += dt;
     if (CP_Input_MouseDown(MOUSE_BUTTON_LEFT) && enableShooting) {
         if (lastShotTime >= (1 / playerInstance.attackSpeed)) { // control fire rate
+            // bullet direction is the vector of player with mouse pointer
             CP_Vector bulletDirection = CP_Vector_Subtract(CP_Vector_Set(mouse_x, mouse_y), get_cam_pos_rel(playerInstance.pos, cam));
             struct Bullet bullet = init_bullet(bulletType, bulletSpeed, bulletDiameter, playerInstance.attackPower, bulletDirection);
             shoot_bullet(&playerInstance, &bullet);
@@ -299,6 +306,7 @@ void level_one_update(void) {
                 break;
             case STATE_ATTACKING:
                 roaches[i].moveDirection = CP_Vector_Zero();
+
                 // more code here..
                 break;
             case STATE_DETOUR:

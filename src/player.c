@@ -171,24 +171,36 @@ struct Bullet init_bullet(enum BulletType bulletType, float bulletSpeed, float b
 }
 
 void shoot_bullet(struct ChocoShooter* player, struct Bullet* bullet) {
+    // x is the min or max x of player (extreme left or right of player)
     bullet->pos.x = (bullet->shootDirection.x < 0) ? player->pos.x - (player->width / 2) : player->pos.x + (player->width / 2);
     bullet->pos.y = player->pos.y;
 
     int bulletCount = 0;
+    // check if the bullet is still moving
     for (int i = 0; (player->bullets[i].isShooting || player->bullets[i + 1].isShooting); i++) {
 
-        // pop first index if finish shooting
+        // pop first index if finish shooting (push to the back of the last active bullet)
+        // e.g.: 
+        // before: [b1, b2, b3, b4, b5]->.ishooting = [False, True, True, True, False]
+        // after: [b2, b3, b4, b1, b5]->.ishooting = [True, True, True, False, False] , bulletCount = 3
+    
+        // if first bullet finish shooting and second bullet still shooting
         if (!(player->bullets[i].isShooting) && (player->bullets[i + 1].isShooting)) {
+            // swap bullet
             struct Bullet temp = player->bullets[i];
             player->bullets[i] = player->bullets[i + 1];
             player->bullets[i + 1] = temp;
         }
+
+        // get the count of the active bullet
         bulletCount++;
         if (i + 2 == MAX_BULLET_COUNT) {
             bulletCount = player->bullets[i + 1].isShooting ? bulletCount + 1 : bulletCount;
             break;
         }
     }
+
+    // assign the next bullet to the next active bullet slot 
     if (bulletCount < MAX_BULLET_COUNT) {
         player->bullets[bulletCount] = *bullet;
     }
