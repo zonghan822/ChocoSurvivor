@@ -13,7 +13,7 @@ struct Barrier {
     struct Rectangle hitbox;
 };
 
-// Enum for barrier states
+
 enum BarrierState {
     BARRIER_IDLE,
     BARRIER_PREVIEW
@@ -24,4 +24,4 @@ void takeDamage(int damage);
 int get_barrier_count(void);
 void increment_barrier_count(void);
 void set_barrier_properties(int index, CP_Vector position, float width, float height, int health);
-struct Barrier* get_barriers(void);  // Add this line
+struct Barrier* get_barriers(void); 

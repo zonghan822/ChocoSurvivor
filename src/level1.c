@@ -273,9 +273,11 @@ void level_one_update(void) {
     // Draw all placed barriers
     struct Barrier* barriers = get_barriers();
     for (int i = 0; i < get_barrier_count(); i++) {
-        CP_Vector vec = get_cam_pos_rel(barriers[i].position, cam);
-        CP_Settings_Fill(CP_Color_Create(0, 0, 255, 255)); // Solid blue
-        CP_Graphics_DrawRect(vec.x, vec.y, barriers[i].width, barriers[i].height);
+        if (barriers[i].health > 0) {  // Only draw if health is greater than zero
+            CP_Vector vec = get_cam_pos_rel(barriers[i].position, cam);
+            CP_Settings_Fill(CP_Color_Create(0, 0, 255, 255)); // Solid blue
+            CP_Graphics_DrawRect(vec.x, vec.y, barriers[i].width, barriers[i].height);
+        }
     }
     #pragma endregion
 
