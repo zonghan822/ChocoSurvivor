@@ -211,22 +211,33 @@ void render_bullet(struct Bullet bullet, struct Camera cam) {
     } 
 }
 
+
 void apply_buff(struct ChocoShooter* player, enum BuffType buff) {
     switch (buff) {
     case ATTACK_UP:
         player->attackPower += 5;  // Increase player's attack power
         player->buffs.attackP_lvl++;  // Increase the attackP_lvl in playerBuff
         printf("Attack Power Level: %d\n", player->buffs.attackP_lvl);  
+        if (player->buffs.attackP_lvl <= 1) {
+            assign_buff_to_slot(player, ATTACK_UP);
+        }
+       
         break;
     case ATTACK_SPEED_UP:
         player->attackSpeed += 1;
         player->buffs.attackS_lvl++;
         printf("Attack Speed Level: %d\n", player->buffs.attackS_lvl);
+        if (player->buffs.attackS_lvl <= 1) {
+            assign_buff_to_slot(player, ATTACK_SPEED_UP);
+        }
         break;
     case HEALTH_UP:
-        player->health += 10;
+       player->health += 10;
         player->buffs.health_lvl++;
         printf("Health Level: %d\n", player->buffs.health_lvl);
+        if (player->buffs.health_lvl <= 1) {
+            assign_buff_to_slot(player, HEALTH_UP);
+        }
         break;
     }
 }
@@ -243,10 +254,57 @@ int update_buff_meter(struct ChocoShooter* player, int expGained) {
         printf("Buff Meter Full! Granting buff...\n");
 
         // Generate a random buff and return it
-        enum BuffType randomBuff = CP_Random_RangeInt(1, 3); // BuffType should start at 1 if 1=HEALTH_UP, 2=ATTACK_UP, 3=ATTACK_SPEED_UP
+        enum BuffType randomBuff = CP_Random_RangeInt(1, 3);
+        
         return randomBuff;
     }
 
     return 0; // Return 0 if no buff is granted
 }
+#include <stdio.h>  // Ensure this is at the top for printing to work
 
+void activate_buff_from_slot(struct ChocoShooter* player, int slot) {
+    if (slot < 1 || slot > 3) return;  // Ensure slot is within range (1-3)
+
+    // Check if the selected slot has a buff; if not, return early
+    if (player->buffs.type[slot - 1] == NO_BUFF) {
+        printf("Slot %d is empty, cannot activate buff.\n", slot);
+        return;
+    }
+
+    // Capture the buff type and level from the selected slot before clearing it
+    player->activeBuffType = player->buffs.type[slot - 1];
+
+    switch (player->activeBuffType) {
+    case ATTACK_UP:
+        player->activeBuffLevel = player->buffs.attackP_lvl;
+        printf("Active buff set to ATTACK_UP with level %d\n", player->activeBuffLevel);
+        break;
+    case ATTACK_SPEED_UP:
+        player->activeBuffLevel = player->buffs.attackS_lvl;
+        printf("Active buff set to ATTACK_SPEED_UP with level %d\n", player->activeBuffLevel);
+        break;
+    case HEALTH_UP:
+        player->activeBuffLevel = player->buffs.health_lvl;
+        printf("Active buff set to HEALTH_UP with level %d\n", player->activeBuffLevel);
+        break;
+    default:
+        player->activeBuffLevel = 0;  // No valid buff
+        printf("No valid buff in slot %d.\n", slot);
+        return;
+    }
+
+    // Set the slot visually to empty (but keep levels intact)
+    player->buffs.type[slot - 1] = NO_BUFF;
+    printf("Cleared buff type from slot %d.\n", slot);  // Debug message
+}
+
+
+void assign_buff_to_slot(struct ChocoShooter* player, enum BuffType buffType) {
+    for (int i = 0; i < 3; i++) {
+        if (player->buffs.type[i] == NO_BUFF) {  // Find the first empty slot
+            player->buffs.type[i] = buffType;
+            break;
+        }
+    }
+}

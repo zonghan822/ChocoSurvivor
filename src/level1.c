@@ -46,7 +46,6 @@ struct Camera cam;
 enum BulletType bulletType = NORMAL_BULLET;
 float bulletSpeed = 0.f, bulletDiameter = 0.f;
 float lastShotTime = 0;
-
 #pragma endregion
 
 #pragma region HP/BUFF bar properties
@@ -58,13 +57,17 @@ int exp_perkill = 0;
 int current_exp = 0;
 float fillSpeed = 0.0f;
 float fillWidth = 0;         
-float targetFillWidth = 0;     
-char healthText[10]; char speedText[10]; char attackText[10];
+float targetFillWidth = 0;   
+int activeBuffSlot = 0;          // 0 means no active buff, 1-3 represent the buff slots
+//float activeBuffDuration = 0.0f;  // Duration in seconds for the active buff (10s when active)
 #pragma endregion
 
 
 void level_one_init(void) {
-    
+
+    //to work for active buff to set as 0 at the start for all attributes.
+  
+
     chococursor = CP_Image_Load("Assets/cursor.png");
     CP_System_ShowCursor(FALSE);
     CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_CENTER, CP_TEXT_ALIGN_V_MIDDLE);
@@ -98,7 +101,7 @@ void level_one_update(void) {
     CP_Graphics_ClearBackground(CP_Color_Create(170, 170, 170, 255));
     float dt = CP_System_GetDt();
 
-    int exp_perkill = 3; //exp for buff bar per roachy
+    int exp_perkill = 6;//exp for buff bar per roachy
     int current_exp = 0;
     float meterX = CP_System_GetWindowWidth() - 150;//  buff bar properties
     float meterY = CP_System_GetWindowHeight() - 50;
@@ -273,75 +276,100 @@ void level_one_update(void) {
 
     CP_Settings_TextSize(20.0f);
 
-    // daw and display health buff level
-    CP_Settings_Fill(CP_Color_Create(255, 0, 0, 255));  // Red for health
-    CP_Graphics_DrawCircle(150, 750, 80);
+ 
+        CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255));
+        // buff slot 1 
+        CP_Graphics_DrawCircle(150,750,80); 
+        //buff slot 2
+        CP_Graphics_DrawCircle(300, 750, 80); 
+        // buff slot 3
+        CP_Graphics_DrawCircle(450, 750, 80);
+        
+    // Display the active buff slot
+    CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255));
+    CP_Graphics_DrawCircle(600, 750, 100);
+    
 
-    CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255));  // black for text
-    switch (playerInstance.buffs.health_lvl) {
-    case 0:
-        CP_Font_DrawText("HP Lvl 0", 150, 750);
-        break;
-    case 1:
-        CP_Font_DrawText("HP Lvl 1", 150, 750);
-        break;
-    case 2:
-        CP_Font_DrawText("HP Lvl 2", 150, 750);
-        break;
-    case 3:
-        CP_Font_DrawText("HP Lvl 3", 150, 750);
-        break;
-    default:
-        CP_Font_DrawText("HP Max Lvl", 150, 750);  // For levels beyond 3
-        break;
+    for (int i = 0; i < 3; i++) {
+        // Set the position of each buff slot circle
+        CP_Settings_Fill(CP_Color_Create(255, 255, 255, 255));
+
+
+        float slotPositions[] = { 150, 300, 450 }; // Positions for buff slots
+
+        for (int i = 0; i < 3; i++) {
+            switch (playerInstance.buffs.type[i]) {
+            case ATTACK_UP:
+                CP_Font_DrawText(
+                    playerInstance.buffs.attackP_lvl > 3 ? "A Max Lvl" :
+                    playerInstance.buffs.attackP_lvl == 1 ? "A Lvl 1" :
+                    playerInstance.buffs.attackP_lvl == 2 ? "A Lvl 2" : "A Lvl 3",
+                    slotPositions[i], 750);
+                break;
+            case ATTACK_SPEED_UP:
+                CP_Font_DrawText(
+                    playerInstance.buffs.attackS_lvl > 3 ? "AS Max Lvl" :
+                    playerInstance.buffs.attackS_lvl == 1 ? "AS Lvl 1" :
+                    playerInstance.buffs.attackS_lvl == 2 ? "AS Lvl 2" : "AS Lvl 3",
+                    slotPositions[i], 750);
+                break;
+            case HEALTH_UP:
+                CP_Font_DrawText(
+                    playerInstance.buffs.health_lvl > 3 ? "HP Max Lvl" :
+                    playerInstance.buffs.health_lvl == 1 ? "HP Lvl 1" :
+                    playerInstance.buffs.health_lvl == 2 ? "HP Lvl 2" : "HP Lvl 3",
+                    slotPositions[i], 750);
+                break;
+            default:
+                CP_Font_DrawText("Empty", slotPositions[i], 750);
+                break;
+            }
+
+            if (CP_Input_KeyTriggered(KEY_1) && playerInstance.buffs.type[0] != NO_BUFF) {
+                activate_buff_from_slot(&playerInstance, 1);
+            }
+            if (CP_Input_KeyTriggered(KEY_2) && playerInstance.buffs.type[1] != NO_BUFF) {
+                activate_buff_from_slot(&playerInstance, 2);
+            }
+            if (CP_Input_KeyTriggered(KEY_3) && playerInstance.buffs.type[2] != NO_BUFF) {
+                activate_buff_from_slot(&playerInstance, 3);
+            }
+            if (playerInstance.activeBuffType != NO_BUFF) {
+                const char* activeBuffName;
+
+                // Determine the name based on the active buff type
+                switch (playerInstance.activeBuffType) {
+                case ATTACK_UP:
+                    activeBuffName = "ATTACK UP";
+                    break;
+                case ATTACK_SPEED_UP:
+                    activeBuffName = "ATTACK SPEED UP";
+                    break;
+                case HEALTH_UP:
+                    activeBuffName = "HEALTH UP";
+                    break;
+                default:
+                    activeBuffName = "NO BUFF";
+                    break;
+                }
+
+                // Display the active buff type and level at a specific position
+                CP_Font_DrawText(activeBuffName, 600, 750);  // Adjust coordinates as needed
+                if (playerInstance.activeBuffLevel == 1) {
+                    CP_Font_DrawText("Level 1", 600, 770);
+                }
+                else if (playerInstance.activeBuffLevel == 2) {
+                    CP_Font_DrawText("Level 2", 600, 770);
+                }
+                else if (playerInstance.activeBuffLevel == 3) {
+                    CP_Font_DrawText("Level 3", 600, 770);
+                }
+                else if (playerInstance.activeBuffLevel > 3) {
+                    CP_Font_DrawText("Max Level", 600, 770);
+                }
+            }
+        }
     }
-
-    // Draw and display attack buff level
-    CP_Settings_Fill(CP_Color_Create(255, 165, 0, 255));  // Orange for attack
-    CP_Graphics_DrawCircle(300, 750, 80);
-
-    CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255));  // black for text
-    switch (playerInstance.buffs.attackP_lvl) {
-    case 0:
-        CP_Font_DrawText("A Lvl 0", 300, 750);
-        break;
-    case 1:
-        CP_Font_DrawText("A Lvl 1", 300, 750);
-        break;
-    case 2:
-        CP_Font_DrawText("A Lvl 2", 300, 750);
-        break;
-    case 3:
-        CP_Font_DrawText("A Lvl 3", 300, 750);
-        break;
-    default:
-        CP_Font_DrawText("A Max Lvl", 300, 750);  // For levels beyond 3
-        break;
-    }
-
-    // Draw and display attack speed buff level
-    CP_Settings_Fill(CP_Color_Create(255, 255, 0, 255));  // Yellow for speed
-    CP_Graphics_DrawCircle(450, 750, 80);
-
-    CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255));  // black for text
-    switch (playerInstance.buffs.attackS_lvl) {
-    case 0:
-        CP_Font_DrawText("AS Lvl 0", 450, 750);
-        break;
-    case 1:
-        CP_Font_DrawText("AS Lvl 1", 450, 750);
-        break;
-    case 2:
-        CP_Font_DrawText("AS Lvl 2", 450, 750);
-        break;
-    case 3:
-        CP_Font_DrawText("AS Lvl 3", 450, 750);
-        break;
-    default:
-        CP_Font_DrawText("AS Max Lvl", 450, 750);  // For levels beyond 3
-        break;
-    }
-
     // Set targetFillWidth based on updated buffExp
     targetFillWidth = ((playerInstance.buffs.buffExp % playerInstance.buffs.maxBuffMeter) / (float)playerInstance.buffs.maxBuffMeter) * meterWidth;
 

@@ -54,7 +54,10 @@ struct ChocoShooter {
     struct Buffs buffs;
     int attackPower;   
     float attackSpeed;
-    int shield;
+    int shield; 
+    int activeBuffSlot;
+    int activeBuffType;
+    int activeBuffLevel;
 };
 
 int player_take_damage(struct ChocoShooter* player, int damage);
@@ -66,6 +69,7 @@ struct Bullet init_bullet(enum BulletType bulletType, float bulletSpeed, float b
 void shoot_bullet(struct ChocoShooter *player, struct Bullet *bullet);
 void update_pos_bullet(struct Bullet* bullet, float dt);
 void render_bullet(struct Bullet bullet, struct Camera cam);
-
+void apply_buff(struct ChocoShooter* player, enum BuffType buff);
 int update_buff_meter(struct ChocoShooter* player, int expGained);
+void assign_buff_to_slot(struct ChocoShooter* player, enum BuffType buffType);
 //void render_buff_meter(struct Buffs buff);
