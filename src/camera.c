@@ -36,3 +36,13 @@ CP_Vector get_cam_pos_rel(CP_Vector vec, struct Camera cam) {
 
 	return CP_Vector_Subtract(vec, cam.pos);
 }
+
+CP_Vector get_world_pos_rel(CP_Vector vec, struct Camera cam) {
+	float camHalfWidth = cam.width / 2,
+		camHalfHeight = cam.height / 2;
+
+	cam.pos.x -= camHalfWidth;
+	cam.pos.y -= camHalfHeight;
+
+	return CP_Vector_Add(vec, cam.pos);
+}

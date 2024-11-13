@@ -17,6 +17,7 @@ BOOL _isDashing = FALSE;
 float _dashProgress, _lastDash;
 CP_Vector _dashTo;
 
+#pragma region Player
 // Returns 1 if still alive, 0 if not
 int player_take_damage(struct ChocoShooter* player, int damage) {
     if (player->flickerState.isFlickering) {
@@ -62,7 +63,7 @@ struct ChocoShooter init_player(CP_Vector pos, float speed, float maxHealth, int
     return player;
 }
 
-void move_player(struct ChocoShooter *player, float dt) {
+void move_player(struct ChocoShooter* player, float dt) {
     CP_Vector moveDirection = CP_Vector_Zero();
 
     // Player movement and setting movement
@@ -85,33 +86,33 @@ void move_player(struct ChocoShooter *player, float dt) {
         player->movement &= ~(MOVING_LEFT | MOVING_RIGHT);
 
     switch (player->movement) {
-        case MOVING_UP:
-            moveDirection.y -= 1.0f;
-            break;
-        case MOVING_RIGHT:
-            moveDirection.x += 1.0f;
-            break;
-        case MOVING_DOWN:
-            moveDirection.y += 1.0f;
-            break;
-        case MOVING_LEFT:
-            moveDirection.x -= 1.0f;
-            break;
-        case MOVING_UP | MOVING_RIGHT:
-            moveDirection.y -= 1.0f;
-            moveDirection.x += 1.0f;
-            break;
-        case MOVING_UP | MOVING_LEFT:
-            moveDirection.y -= 1.0f;
-            moveDirection.x -= 1.0f;
-            break;
-        case MOVING_DOWN | MOVING_RIGHT:
-            moveDirection.y += 1.0f;
-            moveDirection.x += 1.0f;
-            break;
-        case MOVING_DOWN | MOVING_LEFT:
-            moveDirection.y += 1.0f;
-            moveDirection.x -= 1.0f;
+    case MOVING_UP:
+        moveDirection.y -= 1.0f;
+        break;
+    case MOVING_RIGHT:
+        moveDirection.x += 1.0f;
+        break;
+    case MOVING_DOWN:
+        moveDirection.y += 1.0f;
+        break;
+    case MOVING_LEFT:
+        moveDirection.x -= 1.0f;
+        break;
+    case MOVING_UP | MOVING_RIGHT:
+        moveDirection.y -= 1.0f;
+        moveDirection.x += 1.0f;
+        break;
+    case MOVING_UP | MOVING_LEFT:
+        moveDirection.y -= 1.0f;
+        moveDirection.x -= 1.0f;
+        break;
+    case MOVING_DOWN | MOVING_RIGHT:
+        moveDirection.y += 1.0f;
+        moveDirection.x += 1.0f;
+        break;
+    case MOVING_DOWN | MOVING_LEFT:
+        moveDirection.y += 1.0f;
+        moveDirection.x -= 1.0f;
     }
 
     // Normalize
@@ -153,6 +154,9 @@ void render_player(struct ChocoShooter player, float alpha, struct Camera cam) {
     CP_Image_Draw(player.img, vec.x, vec.y, player.width, player.height, alpha);
 }
 
+#pragma endregion
+
+#pragma region Bullet
 struct Bullet init_bullet(enum BulletType bulletType, float bulletSpeed, float bulletDiameter, int dmg, CP_Vector bulletDirection) {
     struct Bullet bullet = {
         .isShooting = TRUE,
@@ -172,7 +176,7 @@ void shoot_bullet(struct ChocoShooter* player, struct Bullet* bullet) {
 
     int bulletCount = 0;
     for (int i = 0; (player->bullets[i].isShooting || player->bullets[i + 1].isShooting); i++) {
-        
+
         // pop first index if finish shooting
         if (!(player->bullets[i].isShooting) && (player->bullets[i + 1].isShooting)) {
             struct Bullet temp = player->bullets[i];
@@ -183,7 +187,7 @@ void shoot_bullet(struct ChocoShooter* player, struct Bullet* bullet) {
         if (i + 2 == MAX_BULLET_COUNT) {
             bulletCount = player->bullets[i + 1].isShooting ? bulletCount + 1 : bulletCount;
             break;
-        }   
+        }
     }
     if (bulletCount < MAX_BULLET_COUNT) {
         player->bullets[bulletCount] = *bullet;
@@ -208,10 +212,14 @@ void update_pos_bullet(struct Bullet* bullet, float dt) {
 void render_bullet(struct Bullet bullet, struct Camera cam) {
     if (bullet.isShooting) {
         CP_Vector vec = get_cam_pos_rel(bullet.pos, cam);
+        CP_Settings_Fill(CP_Color_Create(113, 54, 0, 128));
         CP_Graphics_DrawCircle(vec.x, vec.y, bullet.diameter);
-    } 
+    }
 }
 
+#pragma endregion
+
+#pragma region Buff
 void apply_buff(struct ChocoShooter* player, enum BuffType buff) {
     switch (buff) {
     case ATTACK_UP:
@@ -242,7 +250,7 @@ void update_buff_meter(struct ChocoShooter* player, float dt) {
 
 // Get buff meter fill percentage as an integer (0 to 100)
 int get_buff_meter_fill() {
-    int update = buffmeterfill ;
+    int update = buffmeterfill;
     printf("%d\n", update);  // Print percentage to check if it works as expected
     return update;
 }
@@ -264,3 +272,5 @@ void render_buff_meter() {
     CP_Settings_Fill(CP_Color_Create(0, 0, 255, 255));
     CP_Graphics_DrawRect(meterX, meterY, fillWidth, meterHeight);
 }
+
+#pragma endregion
