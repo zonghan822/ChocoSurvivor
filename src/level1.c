@@ -128,7 +128,7 @@ void level_one_update(void) {
             enemySpeed = 150.f;
             enemyMaxHealth = 100;
             enemyDmg = 20;
-            roachesMax = 20;
+            roachesMax = 40;
             break;
         case WAVE_1:
             enemySpeed = 200.f;
@@ -152,7 +152,7 @@ void level_one_update(void) {
 
         for (int i = 0; i < roachesMax; i++) {
             // Store enemies in array
-            roaches[i] = init_enemy(LEVEL_HEIGHT * 1 / 5, LEVEL_HEIGHT * 4 / 5, 200.f, enemySpeed, enemyMaxHealth, enemyDmg);
+            roaches[i] = init_enemy(LEVEL_HEIGHT * 1 / 5, LEVEL_HEIGHT * 4 / 5, 500.f, enemySpeed, enemyMaxHealth, enemyDmg);
         }
         #pragma endregion
         isWaveStart = 0;
@@ -178,33 +178,20 @@ void level_one_update(void) {
             struct Circle radarRoach = { .pos = roaches[i].pos, .diameter = 5 * roaches[i].width }; // define enemy radar
             struct Barrier* barriers = get_barriers();
 
-            for (int i = 0; i < get_barrier_count(); i++) {
-                if (are_circle_rect_intersecting(radarRoach, barriers[i].hitbox)) {
-                    if (are_circle_rect_intersecting(radarRoach, playerInstance.hitbox)) {
-                        // if (!astar_to(player)){ // astar_to() will return 0 if no path
-                        //      barriers_take_damage()
-                        // }
-                    }
-                    else {
-                        // if (!astar_to(tower)){
-                        //      barriers_take_damage()
-                        // }
-                    }
-                } else if (are_circle_rect_intersecting(radarRoach, playerInstance.hitbox)) { // Check enemy near with player
-                    if (are_rects_intersecting(roaches[i].hitbox, playerInstance.hitbox)) { // When collide...
-                        roaches[i].currentState = STATE_ATTACKING;
-                    }
-                    else {
-                        roaches[i].currentState = STATE_CHASE_PLAYER;
-                    }
+            if (are_circle_rect_intersecting(radarRoach, playerInstance.hitbox)) { // Check enemy near with player
+                if (are_rects_intersecting(roaches[i].hitbox, playerInstance.hitbox)) { // When collide...
+                    roaches[i].currentState = STATE_ATTACKING;
                 }
                 else {
-                    if (are_rects_intersecting(roaches[i].hitbox, playerInstance.hitbox)) {
-                        roaches[i].currentState = STATE_ATTACKING;
-                    }
-                    else {
-                        roaches[i].currentState = STATE_MOVING; // Move to defense target
-                    }
+                    roaches[i].currentState = STATE_CHASE_PLAYER;
+                }
+            }
+            else {
+                if (are_rects_intersecting(roaches[i].hitbox, playerInstance.hitbox)) {
+                    roaches[i].currentState = STATE_ATTACKING;
+                }
+                else {
+                    roaches[i].currentState = STATE_MOVING; // Move to defense target
                 }
             }
         }
@@ -296,7 +283,7 @@ void level_one_update(void) {
 
     for (int i = 0; i < roachesMax; i++) {   
         if (roaches[i].currentState) { // if enemy is alive
-            #pragma region Move_Enemy
+            #pragma region Enemy_Action
             switch (roaches[i].currentState) {
             case STATE_MOVING:
                 enemy_move_to_target(&roaches[i], get_tower_hitbox(towerInstance), dt);
