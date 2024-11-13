@@ -46,13 +46,28 @@ struct Camera cam;
 enum BulletType bulletType = NORMAL_BULLET;
 float bulletSpeed = 0.f, bulletDiameter = 0.f;
 float lastShotTime = 0;
+
 #pragma endregion
+
+#pragma region HP/BUFF bar properties
+float meterX =0 ;
+float meterY = 0 ;
+float meterWidth = 0;
+float meterHeight = 0;
+int exp_perkill = 0; 
+int current_exp = 0;
+float fillSpeed = 0.0f;
+float fillWidth = 0;         
+float targetFillWidth = 0;     
+char healthText[10]; char speedText[10]; char attackText[10];
+#pragma endregion
+
 
 void level_one_init(void) {
     
     chococursor = CP_Image_Load("Assets/cursor.png");
     CP_System_ShowCursor(FALSE);
-
+    CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_CENTER, CP_TEXT_ALIGN_V_MIDDLE);
     gameOverImage = CP_Image_Load("Assets/gg.png");
 
     CP_Font_Set(CP_Font_Load("Assets/Fonts/Oxanium/Oxanium-Variable.ttf"));
@@ -74,6 +89,7 @@ void level_one_init(void) {
     currentWave = WAVE_0;
     isWaveStart = 1;
 
+
     //set initial flickering states
     playerInstance.flickerState.isVisible = TRUE;
 }
@@ -82,6 +98,14 @@ void level_one_update(void) {
     CP_Graphics_ClearBackground(CP_Color_Create(170, 170, 170, 255));
     float dt = CP_System_GetDt();
 
+    int exp_perkill = 3; //exp for buff bar per roachy
+    int current_exp = 0;
+    float meterX = CP_System_GetWindowWidth() - 150;//  buff bar properties
+    float meterY = CP_System_GetWindowHeight() - 50;
+    float meterWidth = 100;
+    float meterHeight = 20;
+    float fillSpeed = 0.05f;
+  
     // Init enemy when wave start
     if (isWaveStart) {
         float enemySpeed = 0.f;
@@ -223,10 +247,114 @@ void level_one_update(void) {
 
     // Buff and currency drops here...
     
-    if (enemyKilled) { // (enemyKilled || bossKilled)
-        // update_buff_meter(&playerInstance, expGained);
-        // 
+
+    // Draw the empty part of the meter (white)
+    CP_Settings_RectMode(CP_POSITION_CORNER);
+    
+
+    if (enemyKilled) {
+        int expGained = exp_perkill * enemyKilled;
+        enum BuffType randomBuff = update_buff_meter(&playerInstance, expGained);
+
+        // Apply the buff if one was granted
+        if (randomBuff != 0) {
+            apply_buff(&playerInstance, randomBuff);
+        }
+
+        // Reset enemyKilled count
+        enemyKilled = 0;
     }
+    
+    CP_Settings_Fill(CP_Color_Create(255, 255, 255, 255));
+    CP_Graphics_DrawRect(meterX, meterY, meterWidth, meterHeight);
+    CP_Settings_Fill(CP_Color_Create(0, 0, 255, 255));
+    CP_Graphics_DrawRect(meterX, meterY, fillWidth, meterHeight);
+
+
+    CP_Settings_TextSize(20.0f);
+
+    // daw and display health buff level
+    CP_Settings_Fill(CP_Color_Create(255, 0, 0, 255));  // Red for health
+    CP_Graphics_DrawCircle(150, 750, 80);
+
+    CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255));  // black for text
+    switch (playerInstance.buffs.health_lvl) {
+    case 0:
+        CP_Font_DrawText("HP Lvl 0", 150, 750);
+        break;
+    case 1:
+        CP_Font_DrawText("HP Lvl 1", 150, 750);
+        break;
+    case 2:
+        CP_Font_DrawText("HP Lvl 2", 150, 750);
+        break;
+    case 3:
+        CP_Font_DrawText("HP Lvl 3", 150, 750);
+        break;
+    default:
+        CP_Font_DrawText("HP Max Lvl", 150, 750);  // For levels beyond 3
+        break;
+    }
+
+    // Draw and display attack buff level
+    CP_Settings_Fill(CP_Color_Create(255, 165, 0, 255));  // Orange for attack
+    CP_Graphics_DrawCircle(300, 750, 80);
+
+    CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255));  // black for text
+    switch (playerInstance.buffs.attackP_lvl) {
+    case 0:
+        CP_Font_DrawText("A Lvl 0", 300, 750);
+        break;
+    case 1:
+        CP_Font_DrawText("A Lvl 1", 300, 750);
+        break;
+    case 2:
+        CP_Font_DrawText("A Lvl 2", 300, 750);
+        break;
+    case 3:
+        CP_Font_DrawText("A Lvl 3", 300, 750);
+        break;
+    default:
+        CP_Font_DrawText("A Max Lvl", 300, 750);  // For levels beyond 3
+        break;
+    }
+
+    // Draw and display attack speed buff level
+    CP_Settings_Fill(CP_Color_Create(255, 255, 0, 255));  // Yellow for speed
+    CP_Graphics_DrawCircle(450, 750, 80);
+
+    CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255));  // black for text
+    switch (playerInstance.buffs.attackS_lvl) {
+    case 0:
+        CP_Font_DrawText("AS Lvl 0", 450, 750);
+        break;
+    case 1:
+        CP_Font_DrawText("AS Lvl 1", 450, 750);
+        break;
+    case 2:
+        CP_Font_DrawText("AS Lvl 2", 450, 750);
+        break;
+    case 3:
+        CP_Font_DrawText("AS Lvl 3", 450, 750);
+        break;
+    default:
+        CP_Font_DrawText("AS Max Lvl", 450, 750);  // For levels beyond 3
+        break;
+    }
+
+    // Set targetFillWidth based on updated buffExp
+    targetFillWidth = ((playerInstance.buffs.buffExp % playerInstance.buffs.maxBuffMeter) / (float)playerInstance.buffs.maxBuffMeter) * meterWidth;
+
+    // Smoothly interpolate fillWidth towards targetFillWidth
+    if (fillWidth < targetFillWidth) {
+        fillWidth += fillSpeed * (targetFillWidth - fillWidth);
+        if (fillWidth > targetFillWidth) fillWidth = targetFillWidth;  // Prevent overshooting
+    }
+    else if (fillWidth > targetFillWidth) {
+        fillWidth -= fillSpeed * (fillWidth - targetFillWidth);
+        if (fillWidth < targetFillWidth) fillWidth = targetFillWidth;  // Prevent undershooting
+    }
+
 
     sort_enemies(roaches, roachesMax); // Sort enemy based on pos asc
     render_enemies(roaches, cam, roachesMax); // Draw enemies instances

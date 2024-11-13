@@ -52,7 +52,7 @@ struct ChocoShooter init_player(CP_Vector pos, float speed, float maxHealth, int
         .attackSpeed = fireRate,
         .attackPower = atk,
         .buffs = {0},
-        .buffs.maxBuffMeter = 10
+        .buffs.maxBuffMeter = 20
     };
 
     player.hitbox.width /= 1.4f;
@@ -216,45 +216,37 @@ void apply_buff(struct ChocoShooter* player, enum BuffType buff) {
     case ATTACK_UP:
         player->attackPower += 5;  // Increase player's attack power
         player->buffs.attackP_lvl++;  // Increase the attackP_lvl in playerBuff
+        printf("Attack Power Level: %d\n", player->buffs.attackP_lvl);  
         break;
     case ATTACK_SPEED_UP:
         player->attackSpeed += 1;
         player->buffs.attackS_lvl++;
+        printf("Attack Speed Level: %d\n", player->buffs.attackS_lvl);
         break;
     case HEALTH_UP:
         player->health += 10;
         player->buffs.health_lvl++;
+        printf("Health Level: %d\n", player->buffs.health_lvl);
         break;
     }
 }
 
 int update_buff_meter(struct ChocoShooter* player, int expGained) {
-
+    // Increase buff experience by the amount gained
     player->buffs.buffExp += expGained;
-    player->buffs.buffExp % player->buffs.maxBuffMeter;
-    if (player->buffs.buffExp >= player->buffs.maxBuffMeter) {
-        player->buffs.buffExp = player->buffs.maxBuffMeter - player->buffs.buffExp;
+    printf("Current Buff Exp: %d / %d\n", player->buffs.buffExp, player->buffs.maxBuffMeter);
 
-        enum BuffType randomBuff = CP_Random_RangeInt(1, 3);
+    // Check if buffExp has reached or exceeded maxBuffMeter
+    if (player->buffs.buffExp >= player->buffs.maxBuffMeter) {
+        // Wrap around the excess experience
+        player->buffs.buffExp -= player->buffs.maxBuffMeter;
+        printf("Buff Meter Full! Granting buff...\n");
+
+        // Generate a random buff and return it
+        enum BuffType randomBuff = CP_Random_RangeInt(1, 3); // BuffType should start at 1 if 1=HEALTH_UP, 2=ATTACK_UP, 3=ATTACK_SPEED_UP
         return randomBuff;
     }
+
+    return 0; // Return 0 if no buff is granted
 }
 
-//void render_buff_meter(struct Buffs buff) {
-//
-//    // Buff meter drawing logic
-//    float meterX = CP_System_GetWindowWidth() - 150;
-//    float meterY = CP_System_GetWindowHeight() - 50;
-//    float meterWidth = 100;
-//    float meterHeight = 20;
-//
-//    // Draw the empty part of the meter (white)
-//    CP_Settings_RectMode(CP_POSITION_CORNER);
-//    CP_Settings_Fill(CP_Color_Create(255, 255, 255, 255));
-//    CP_Graphics_DrawRect(meterX, meterY, meterWidth, meterHeight);
-//
-//    // Draw the filled part of the meter (blue)
-//    float fillWidth = get_buff_meter_fill();
-//    CP_Settings_Fill(CP_Color_Create(0, 0, 255, 255));
-//    CP_Graphics_DrawRect(meterX, meterY, fillWidth, meterHeight);
-//}
