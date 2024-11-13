@@ -9,13 +9,10 @@
 #define DASH_DISTANCE 150.0f
 #define DASH_SPEED 20.0f
 
-float buffmeterfill = 0.0f;
-const float max_buffmeter = 100.0f; // Maximum value of the buff meter
-struct BuffLevel playerBuff = { 0 };
-
 BOOL _isDashing = FALSE;
 float _dashProgress, _lastDash;
 CP_Vector _dashTo;
+
 
 // Returns 1 if still alive, 0 if not
 int player_take_damage(struct ChocoShooter* player, int damage) {
@@ -53,7 +50,9 @@ struct ChocoShooter init_player(CP_Vector pos, float speed, float maxHealth, int
         (float)CP_Image_GetHeight(player.img), player.width),
         .bullets[0].isShooting = FALSE,
         .attackSpeed = fireRate,
-        .attackPower = atk
+        .attackPower = atk,
+        .buffs = {0},
+        .buffs.maxBuffMeter = 10
     };
 
     player.hitbox.width /= 1.4f;
@@ -216,51 +215,46 @@ void apply_buff(struct ChocoShooter* player, enum BuffType buff) {
     switch (buff) {
     case ATTACK_UP:
         player->attackPower += 5;  // Increase player's attack power
-        playerBuff.attackP_lvl++;  // Increase the attackP_lvl in playerBuff
+        player->buffs.attackP_lvl++;  // Increase the attackP_lvl in playerBuff
         break;
     case ATTACK_SPEED_UP:
         player->attackSpeed += 1;
-        playerBuff.attackS_lvl++;
+        player->buffs.attackS_lvl++;
         break;
     case HEALTH_UP:
         player->health += 10;
-        playerBuff.health_lvl++;
+        player->buffs.health_lvl++;
         break;
     }
 }
 
-void update_buff_meter(struct ChocoShooter* player, float dt) {
-    // Adjust fill rate to control how fast the bar fills
-    buffmeterfill += 5;
+int update_buff_meter(struct ChocoShooter* player, int expGained) {
 
-    if (buffmeterfill >= max_buffmeter) {
-        buffmeterfill = 0;
-        enum BuffType randomBuff = rand() % 3;
-        apply_buff(player, randomBuff);
+    player->buffs.buffExp += expGained;
+    player->buffs.buffExp % player->buffs.maxBuffMeter;
+    if (player->buffs.buffExp >= player->buffs.maxBuffMeter) {
+        player->buffs.buffExp = player->buffs.maxBuffMeter - player->buffs.buffExp;
+
+        enum BuffType randomBuff = CP_Random_RangeInt(1, 3);
+        return randomBuff;
     }
 }
 
-// Get buff meter fill percentage as an integer (0 to 100)
-int get_buff_meter_fill() {
-    int update = buffmeterfill ;
-    printf("%d\n", update);  // Print percentage to check if it works as expected
-    return update;
-}
-
-void render_buff_meter() {
-    // Buff meter drawing logic
-    float meterX = CP_System_GetWindowWidth() - 150;
-    float meterY = CP_System_GetWindowHeight() - 50;
-    float meterWidth = 100;
-    float meterHeight = 20;
-
-    // Draw the empty part of the meter (white)
-    CP_Settings_RectMode(CP_POSITION_CORNER);
-    CP_Settings_Fill(CP_Color_Create(255, 255, 255, 255));
-    CP_Graphics_DrawRect(meterX, meterY, meterWidth, meterHeight);
-
-    // Draw the filled part of the meter (blue)
-    float fillWidth = get_buff_meter_fill();
-    CP_Settings_Fill(CP_Color_Create(0, 0, 255, 255));
-    CP_Graphics_DrawRect(meterX, meterY, fillWidth, meterHeight);
-}
+//void render_buff_meter(struct Buffs buff) {
+//
+//    // Buff meter drawing logic
+//    float meterX = CP_System_GetWindowWidth() - 150;
+//    float meterY = CP_System_GetWindowHeight() - 50;
+//    float meterWidth = 100;
+//    float meterHeight = 20;
+//
+//    // Draw the empty part of the meter (white)
+//    CP_Settings_RectMode(CP_POSITION_CORNER);
+//    CP_Settings_Fill(CP_Color_Create(255, 255, 255, 255));
+//    CP_Graphics_DrawRect(meterX, meterY, meterWidth, meterHeight);
+//
+//    // Draw the filled part of the meter (blue)
+//    float fillWidth = get_buff_meter_fill();
+//    CP_Settings_Fill(CP_Color_Create(0, 0, 255, 255));
+//    CP_Graphics_DrawRect(meterX, meterY, fillWidth, meterHeight);
+//}

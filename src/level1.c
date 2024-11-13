@@ -36,6 +36,7 @@ char isWaveStart = 0;
 struct ChocoRoach roaches[MAX_ENEMY_COUNT] = { 0 };
 enum SpawnWave currentWave = WAVE_0;
 float healthBarDisplayTime = 0.f;
+int enemyKilled = 0;
 #pragma endregion
 
 #pragma region Player Properties
@@ -211,7 +212,7 @@ void level_one_update(void) {
                 if (playerInstance.bullets[j].isShooting) {
                     struct Circle bullet = { .pos = playerInstance.bullets[j].pos, .diameter = playerInstance.bullets[j].diameter };
                     if (are_circle_rect_intersecting(bullet, roaches[i].hitbox)) {
-                        enemy_take_damage(&roaches[i], playerInstance.bullets[j].dmg);
+                        enemyKilled += enemy_take_damage(&roaches[i], playerInstance.bullets[j].dmg);
                         playerInstance.bullets[j].isShooting = FALSE;
                     }
                 }
@@ -219,6 +220,14 @@ void level_one_update(void) {
         } 
         // can use else statement here for dying animation...
     }
+
+    // Buff and currency drops here...
+    
+    if (enemyKilled) { // (enemyKilled || bossKilled)
+        // update_buff_meter(&playerInstance, expGained);
+        // 
+    }
+
     sort_enemies(roaches, roachesMax); // Sort enemy based on pos asc
     render_enemies(roaches, cam, roachesMax); // Draw enemies instances
     for (int i = 0; roaches[i].currentState; i++) {
