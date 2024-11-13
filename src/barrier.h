@@ -1,6 +1,8 @@
 #pragma once
-#define MAX_BARRIERS 10
 #include "cprocessing.h"
+#include "utils.h"
+
+#define MAX_BARRIERS 10
 #define BARRIER_INITIAL_HEALTH 5
 
 struct Barrier {
@@ -8,6 +10,7 @@ struct Barrier {
     float width;
     float height;
     int health;
+    struct Rectangle hitbox;
 };
 
 // Enum for barrier states

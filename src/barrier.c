@@ -35,9 +35,9 @@ void increment_barrier_count(void) {
 
 void set_barrier_properties(int index, CP_Vector position, float width, float height, int health) {
     if (index < MAX_BARRIERS) {
-        barriers[index].position = position;
-        barriers[index].width = width;
-        barriers[index].height = height;
+        barriers[index].position = barriers[index].hitbox.pos = position;
+        barriers[index].width = barriers[index].hitbox.width = width;
+        barriers[index].height = barriers[index].hitbox.height = height;
         barriers[index].health = health;
     }
 }

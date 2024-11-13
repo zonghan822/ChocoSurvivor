@@ -171,20 +171,34 @@ void level_one_update(void) {
 
             // Enemy movement logic and attacking logic
             struct Circle radarRoach = { .pos = roaches[i].pos, .diameter = 5 * roaches[i].width }; // define enemy radar
-            if (are_circle_rect_intersecting(radarRoach, playerInstance.hitbox)) { // Check enemy near with player
-                if (are_rects_intersecting(roaches[i].hitbox, playerInstance.hitbox)) { // When collide...
-                    roaches[i].currentState = STATE_ATTACKING;
+            struct Barrier* barriers = get_barriers();
+            for (int i = 0; i < get_barrier_count(); i++) {
+                if (are_circle_rect_intersecting(radarRoach, barriers[i].hitbox)) {
+                    if (are_circle_rect_intersecting(radarRoach, playerInstance.hitbox)) {
+                        // if (!astar_to(player)){ // astar_to() will return 0 if no path
+                        //      barriers_take_damage()
+                        // }
+                    }
+                    else {
+                        // if (!astar_to(tower)){
+                        //      barriers_take_damage()
+                        // }
+                    }
+                } else if (are_circle_rect_intersecting(radarRoach, playerInstance.hitbox)) { // Check enemy near with player
+                    if (are_rects_intersecting(roaches[i].hitbox, playerInstance.hitbox)) { // When collide...
+                        roaches[i].currentState = STATE_ATTACKING;
+                    }
+                    else {
+                        roaches[i].currentState = STATE_CHASE_PLAYER;
+                    }
                 }
                 else {
-                    roaches[i].currentState = STATE_CHASE_PLAYER;
-                }
-            }
-            else {
-                if (are_rects_intersecting(roaches[i].hitbox, playerInstance.hitbox)) {
-                    roaches[i].currentState = STATE_ATTACKING;
-                }
-                else {
-                    roaches[i].currentState = STATE_MOVING; // Move to defense target
+                    if (are_rects_intersecting(roaches[i].hitbox, playerInstance.hitbox)) {
+                        roaches[i].currentState = STATE_ATTACKING;
+                    }
+                    else {
+                        roaches[i].currentState = STATE_MOVING; // Move to defense target
+                    }
                 }
             }
         }
