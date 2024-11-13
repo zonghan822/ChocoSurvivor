@@ -353,8 +353,8 @@ void level_one_update(void) {
                     break;
                 }
 
-                // Display the active buff type and level at a specific position
-                CP_Font_DrawText(activeBuffName, 600, 750);  // Adjust coordinates as needed
+                
+                CP_Font_DrawText(activeBuffName, 600, 750);  
                 if (playerInstance.activeBuffLevel == 1) {
                     CP_Font_DrawText("Level 1", 600, 770);
                 }

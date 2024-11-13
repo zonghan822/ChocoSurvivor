@@ -264,9 +264,9 @@ int update_buff_meter(struct ChocoShooter* player, int expGained) {
 #include <stdio.h>  // Ensure this is at the top for printing to work
 
 void activate_buff_from_slot(struct ChocoShooter* player, int slot) {
-    if (slot < 1 || slot > 3) return;  // Ensure slot is within range (1-3)
+ 
 
-    // Check if the selected slot has a buff; if not, return early
+    //debug
     if (player->buffs.type[slot - 1] == NO_BUFF) {
         printf("Slot %d is empty, cannot activate buff.\n", slot);
         return;
@@ -289,14 +289,14 @@ void activate_buff_from_slot(struct ChocoShooter* player, int slot) {
         printf("Active buff set to HEALTH_UP with level %d\n", player->activeBuffLevel);
         break;
     default:
-        player->activeBuffLevel = 0;  // No valid buff
+        player->activeBuffLevel = 0;  
         printf("No valid buff in slot %d.\n", slot);
         return;
     }
 
-    // Set the slot visually to empty (but keep levels intact)
+    // Set the slot visually to empty
     player->buffs.type[slot - 1] = NO_BUFF;
-    printf("Cleared buff type from slot %d.\n", slot);  // Debug message
+    printf("Cleared buff type from slot %d.\n", slot);  // Debug 
 }
 
 
