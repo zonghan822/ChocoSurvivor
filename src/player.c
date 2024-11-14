@@ -52,7 +52,7 @@ struct ChocoShooter init_player(CP_Vector pos, float speed, float maxHealth) {
     return player;
 }
 
-void move_player(struct ChocoShooter *player, float dt) {
+void move_player(struct ChocoShooter *player, float dt, float level_width, float level_height) {
     CP_Vector moveDirection = CP_Vector_Zero();
 
     // Player movement and setting movement
@@ -136,6 +136,14 @@ void move_player(struct ChocoShooter *player, float dt) {
         if (_dashProgress >= 1.5f)
             _isDashing = FALSE;
     }
+
+    // Use hitbox instead because images can have whitespaces in them
+    // Add some padding
+    float halfWidth = (player->hitbox.width / 2.0f) + 2.0f,
+        halfHeight = (player->hitbox.height / 2.0f) + 2.0f;
+
+    player->pos.x = CP_Math_ClampFloat(player->pos.x, halfWidth, level_width - halfWidth);
+    player->pos.y = CP_Math_ClampFloat(player->pos.y, halfHeight, level_height - halfHeight);
 }
 
 void render_player(struct ChocoShooter player, float alpha, struct Camera cam) {

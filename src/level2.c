@@ -2,7 +2,8 @@
 #include <time.h>
 #include <stdlib.h>
 
-#include "level3.h"
+#include "level2.h"
+#include "boss.h"
 #include "player.h"
 #include "tower.h"
 #include "cprocessing.h"
@@ -37,6 +38,7 @@ static char isWaveStart = 0;
 // ************************************* //
 static unsigned short int roachesMax = 0;
 struct ChocoRoach roaches[MAX_ENEMY_COUNT];
+struct Boss bossInstance;
 
 // ************************************* //
 // *        Player Properties          * //
@@ -53,7 +55,7 @@ struct Rectangle playerClips[1];
 struct Rectangle enemyClips[1];
 struct Rectangle playerBarricades[10];
 
-void level_three_init(void) {
+void level_two_init(void) {
     levelBg = CP_Image_Load("Assets/Levels/level3.png");
     cam = init_camera(playerInstance, (float)CP_System_GetWindowWidth(), (float)CP_System_GetWindowHeight());
 
@@ -64,6 +66,7 @@ void level_three_init(void) {
     worldClips[0] = get_tower_hitbox(towerInstance);
 
     playerInstance = init_player(CP_Vector_Set(towerInstance.pos.x / 1.05, towerInstance.pos.y), 200.0f, 3);
+    bossInstance = init_boss_one(400.f, 95.f, 600, 100, 3.f);
 
     roachesMax = 40;
     spawnDelay = 5.0f; // Give player some buffer
@@ -72,7 +75,7 @@ void level_three_init(void) {
     isWaveStart = 1;
 }
 
-void level_three_update(void) {
+void level_two_update(void) {
     CP_Graphics_ClearBackground(CP_Color_Create(170, 170, 170, 255));
     CP_Vector bgVec = CP_Vector_Set((LEVEL_WIDTH / 2), (LEVEL_HEIGHT / 2)),
         relBgVec = get_cam_pos_rel(bgVec, cam);
@@ -80,6 +83,7 @@ void level_three_update(void) {
     float dt = CP_System_GetDt();
 
     move_player(&playerInstance, dt, LEVEL_WIDTH, LEVEL_HEIGHT);
+    bossInstance.move(&bossInstance, playerInstance.pos, dt);
     update_camera(&cam, playerInstance, LEVEL_WIDTH, LEVEL_HEIGHT);
     update_rect_hitbox(&playerInstance.hitbox, 0.0f, 0.0f, playerInstance.pos); // Player
 
@@ -90,7 +94,13 @@ void level_three_update(void) {
     }
 
     render_tower(towerInstance, cam);
+    render_boss(bossInstance, cam);
     render_player(playerInstance, 255, cam);
+
+    if (bossInstance.canSecondaryAttack(bossInstance, playerInstance))
+        bossInstance.secondaryAttack(&bossInstance, &playerInstance, dt);
+    if (bossInstance.canPrimaryAttack(bossInstance, playerInstance))
+        bossInstance.primaryAttack(&bossInstance, &playerInstance, dt);
 
     // Render UI
     {
@@ -116,9 +126,10 @@ void level_three_update(void) {
     }
 }
 
-void level_three_exit(void) {
+void level_two_exit(void) {
     CP_Image_Free(&playerInstance.img);
     CP_Image_Free(&levelBg);
+    CP_Image_Free(&bossInstance.img);
 
     for (int i = 0; i < roachesMax; i++) {
         struct ChocoRoach roach = roaches[i];

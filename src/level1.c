@@ -175,7 +175,7 @@ void level_one_update(void) {
         }
     }
     
-    move_player(&playerInstance, dt);
+    move_player(&playerInstance, dt, LEVEL_WIDTH, LEVEL_HEIGHT);
     update_camera(&cam, playerInstance, LEVEL_WIDTH, LEVEL_HEIGHT);
     
     update_rect_hitbox(&playerInstance.hitbox, 0.0f, 0.0f, playerInstance.pos); // Update hitbox of player

@@ -24,7 +24,7 @@
     <ClCompile Include="enemy.c" />
     <ClCompile Include="hittest.c" />
     <ClCompile Include="level1.c" />
-    <ClCompile Include="level3.c" />
+    <ClCompile Include="level2.c" />
     <ClCompile Include="main.c" />
     <ClCompile Include="mainmenu.c" />
     <ClCompile Include="player.c" />
@@ -36,7 +36,7 @@
     <ClInclude Include="camera.h" />
     <ClInclude Include="enemy.h" />
     <ClInclude Include="level1.h" />
-    <ClInclude Include="level3.h" />
+    <ClInclude Include="level2.h" />
     <ClInclude Include="tower.h" />
     <ClInclude Include="utils.h" />
     <ClInclude Include="hittest.h" />

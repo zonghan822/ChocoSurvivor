@@ -31,6 +31,9 @@
     <ClCompile Include="level1.c">
       <Filter>Source Files\Levels</Filter>
     </ClCompile>
+    <ClCompile Include="level2.c">
+      <Filter>Source Files\Levels</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="utils.h">
@@ -58,6 +61,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="level1.h">
+      <Filter>Header Files\Levels</Filter>
+    </ClInclude>
+    <ClInclude Include="level2.h">
       <Filter>Header Files\Levels</Filter>
     </ClInclude>
   </ItemGroup>
