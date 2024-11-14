@@ -63,15 +63,6 @@ float barrierHeight = 0.0f;
 float barrier_rect_W = 0.0f, barrier_rect_H = 0.0f;
 #pragma endregion
 
-#pragma region Barriers Properties
-enum BarrierState currentState = BARRIER_IDLE;
-CP_Vector previewPosition;
-CP_Vector finalPosition;
-float barrierWidth = 0.0f;
-float barrierHeight = 0.0f;
-float barrier_rect_W = 0.0f, barrier_rect_H = 0.0f;
-#pragma endregion
-
 #pragma region Map Properties
 struct Rectangle worldClips[1];
 struct Rectangle playerClips[1];
@@ -82,8 +73,6 @@ struct Rectangle playerBarricades[10];
 
 void level_one_init(void) {
     levelBg = CP_Image_Load("Assets/Levels/level1.png");
-
-    playerInstance = init_player(CP_Vector_Set(towerInstance.pos.x / 1.05, towerInstance.pos.y), 200.0f, 3);
     
     chococursor = CP_Image_Load("Assets/cursor.png");
     CP_System_ShowCursor(FALSE);
@@ -95,7 +84,7 @@ void level_one_init(void) {
 
     #pragma region Player_Init
     // Init Player Properties
-    playerInstance = init_player(CP_Vector_Set(300, 500), 350.0f, 100, 30, 10.f);
+    playerInstance = init_player(CP_Vector_Set(towerInstance.pos.x / 1.05, towerInstance.pos.y), 350.0f, 100, 30, 10.f);
     playerInstance.flickerState.isVisible = TRUE; //set initial flickering states
     bulletType = NORMAL_BULLET;
     bulletSpeed = 1000.f;

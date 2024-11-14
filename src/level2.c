@@ -65,7 +65,7 @@ void level_two_init(void) {
     towerInstance.pos = CP_Vector_Set(LEVEL_WIDTH / 1.03, LEVEL_HEIGHT / 2.3);
     worldClips[0] = get_tower_hitbox(towerInstance);
 
-    playerInstance = init_player(CP_Vector_Set(towerInstance.pos.x / 1.05, towerInstance.pos.y), 200.0f, 3);
+    playerInstance = init_player(CP_Vector_Set(towerInstance.pos.x / 1.05, towerInstance.pos.y), 350.0f, 100, 30, 10.f);
     bossInstance = init_boss_one(400.f, 95.f, 600, 100, 3.f);
 
     roachesMax = 40;
