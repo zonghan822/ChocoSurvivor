@@ -1,5 +1,6 @@
 #include "mainmenu.h"
 #include "level1.h"
+#include "level2.h"
 #include "hittest.h"
 #include "cprocessing.h"
 #include <stdio.h>
@@ -83,12 +84,12 @@ void main_menu_update(void) {
 
   		// Maybe Credits?
 
-  		// Quit
-  		else if (is_rect_clicked(quitRect, mouse_x, mouse_y))
-   			CP_Engine_Terminate();
- 	}
+		// Quit
+		else if (is_rect_clicked(quitRect, mouse_x, mouse_y))
+			CP_Engine_Terminate();
+	}
 }
 
-void main_menu_exit(void){
+void main_menu_exit(void) {
 
 }

@@ -60,16 +60,22 @@ struct ChocoShooter {
     int activeBuffLevel;
 };
 
+#pragma region Player
 int player_take_damage(struct ChocoShooter* player, int damage);
 struct ChocoShooter init_player(CP_Vector pos, float speed, float maxHealth, int attackPower, float attackSpeed);
-void move_player(struct ChocoShooter* player, float dt);
+void move_player(struct ChocoShooter* player, float dt, float level_width, float level_height);
 void render_player(struct ChocoShooter player, float alpha, struct Camera cam);
+#pragma endregion
 
+#pragma region Bullet
 struct Bullet init_bullet(enum BulletType bulletType, float bulletSpeed, float bulletDiameter, int dmg, CP_Vector bulletDirection);
-void shoot_bullet(struct ChocoShooter *player, struct Bullet *bullet);
+void shoot_bullet(struct ChocoShooter* player, struct Bullet* bullet);
 void update_pos_bullet(struct Bullet* bullet, float dt);
 void render_bullet(struct Bullet bullet, struct Camera cam);
+#pragma endregion
+
+#pragma region Buffs
 void apply_buff(struct ChocoShooter* player, enum BuffType buff);
 int update_buff_meter(struct ChocoShooter* player, int expGained);
 void assign_buff_to_slot(struct ChocoShooter* player, enum BuffType buffType);
-//void render_buff_meter(struct Buffs buff);
+#pragma endregion

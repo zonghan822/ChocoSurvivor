@@ -14,6 +14,7 @@ float _dashProgress, _lastDash;
 CP_Vector _dashTo;
 
 
+#pragma region Player
 // Returns 1 if still alive, 0 if not
 int player_take_damage(struct ChocoShooter* player, int damage) {
     if (player->flickerState.isFlickering) {
@@ -47,7 +48,7 @@ struct ChocoShooter init_player(CP_Vector pos, float speed, float maxHealth, int
         .movement = STOPPED,
         .hitbox.width = player.width = 120.0,
         .hitbox.height = player.height = get_preserved_heightf((float)CP_Image_GetWidth(player.img),
-        (float)CP_Image_GetHeight(player.img), player.width),
+            (float)CP_Image_GetHeight(player.img), player.width),
         .bullets[0].isShooting = FALSE,
         .attackSpeed = fireRate,
         .attackPower = atk,
@@ -61,7 +62,7 @@ struct ChocoShooter init_player(CP_Vector pos, float speed, float maxHealth, int
     return player;
 }
 
-void move_player(struct ChocoShooter *player, float dt) {
+void move_player(struct ChocoShooter *player, float dt, float level_width, float level_height) {
     CP_Vector moveDirection = CP_Vector_Zero();
 
     // Player movement and setting movement
@@ -84,33 +85,33 @@ void move_player(struct ChocoShooter *player, float dt) {
         player->movement &= ~(MOVING_LEFT | MOVING_RIGHT);
 
     switch (player->movement) {
-        case MOVING_UP:
-            moveDirection.y -= 1.0f;
-            break;
-        case MOVING_RIGHT:
-            moveDirection.x += 1.0f;
-            break;
-        case MOVING_DOWN:
-            moveDirection.y += 1.0f;
-            break;
-        case MOVING_LEFT:
-            moveDirection.x -= 1.0f;
-            break;
-        case MOVING_UP | MOVING_RIGHT:
-            moveDirection.y -= 1.0f;
-            moveDirection.x += 1.0f;
-            break;
-        case MOVING_UP | MOVING_LEFT:
-            moveDirection.y -= 1.0f;
-            moveDirection.x -= 1.0f;
-            break;
-        case MOVING_DOWN | MOVING_RIGHT:
-            moveDirection.y += 1.0f;
-            moveDirection.x += 1.0f;
-            break;
-        case MOVING_DOWN | MOVING_LEFT:
-            moveDirection.y += 1.0f;
-            moveDirection.x -= 1.0f;
+    case MOVING_UP:
+        moveDirection.y -= 1.0f;
+        break;
+    case MOVING_RIGHT:
+        moveDirection.x += 1.0f;
+        break;
+    case MOVING_DOWN:
+        moveDirection.y += 1.0f;
+        break;
+    case MOVING_LEFT:
+        moveDirection.x -= 1.0f;
+        break;
+    case MOVING_UP | MOVING_RIGHT:
+        moveDirection.y -= 1.0f;
+        moveDirection.x += 1.0f;
+        break;
+    case MOVING_UP | MOVING_LEFT:
+        moveDirection.y -= 1.0f;
+        moveDirection.x -= 1.0f;
+        break;
+    case MOVING_DOWN | MOVING_RIGHT:
+        moveDirection.y += 1.0f;
+        moveDirection.x += 1.0f;
+        break;
+    case MOVING_DOWN | MOVING_LEFT:
+        moveDirection.y += 1.0f;
+        moveDirection.x -= 1.0f;
     }
 
     // Normalize
@@ -124,7 +125,7 @@ void move_player(struct ChocoShooter *player, float dt) {
         _lastDash += dt;
 
     // Dash movement with spacebar
-    if (CP_Input_KeyTriggered(KEY_SPACE) && !_isDashing && _lastDash >= DASH_COOLDOWN) {
+    if (CP_Input_KeyDown(KEY_SPACE) && !_isDashing && _lastDash >= DASH_COOLDOWN) {
         _dashTo = player->pos;
         _isDashing = TRUE;
         _dashProgress = 0.0;
@@ -142,9 +143,17 @@ void move_player(struct ChocoShooter *player, float dt) {
         player->pos.x = CP_Math_LerpFloat(player->pos.x, _dashTo.x, _dashProgress);
         player->pos.y = CP_Math_LerpFloat(player->pos.y, _dashTo.y, _dashProgress);
 
-        if (_dashProgress >= 1.0f)
+        if (_dashProgress >= 1.5f)
             _isDashing = FALSE;
     }
+
+    // Use hitbox instead because images can have whitespaces in them
+    // Add some padding
+    float halfWidth = (player->hitbox.width / 2.0f) + 2.0f,
+        halfHeight = (player->hitbox.height / 2.0f) + 2.0f;
+
+    player->pos.x = CP_Math_ClampFloat(player->pos.x, halfWidth, level_width - halfWidth);
+    player->pos.y = CP_Math_ClampFloat(player->pos.y, halfHeight, level_height - halfHeight);
 }
 
 void render_player(struct ChocoShooter player, float alpha, struct Camera cam) {
@@ -152,6 +161,9 @@ void render_player(struct ChocoShooter player, float alpha, struct Camera cam) {
     CP_Image_Draw(player.img, vec.x, vec.y, player.width, player.height, alpha);
 }
 
+#pragma endregion
+
+#pragma region Bullet
 struct Bullet init_bullet(enum BulletType bulletType, float bulletSpeed, float bulletDiameter, int dmg, CP_Vector bulletDirection) {
     struct Bullet bullet = {
         .isShooting = TRUE,
@@ -166,24 +178,36 @@ struct Bullet init_bullet(enum BulletType bulletType, float bulletSpeed, float b
 }
 
 void shoot_bullet(struct ChocoShooter* player, struct Bullet* bullet) {
+    // x is the min or max x of player (extreme left or right of player)
     bullet->pos.x = (bullet->shootDirection.x < 0) ? player->pos.x - (player->width / 2) : player->pos.x + (player->width / 2);
     bullet->pos.y = player->pos.y;
 
     int bulletCount = 0;
+    // check if the bullet is still moving
     for (int i = 0; (player->bullets[i].isShooting || player->bullets[i + 1].isShooting); i++) {
-        
-        // pop first index if finish shooting
+
+        // pop first index if finish shooting (push to the back of the last active bullet)
+        // e.g.: 
+        // before: [b1, b2, b3, b4, b5]->.ishooting = [False, True, True, True, False]
+        // after: [b2, b3, b4, b1, b5]->.ishooting = [True, True, True, False, False] , bulletCount = 3
+    
+        // if first bullet finish shooting and second bullet still shooting
         if (!(player->bullets[i].isShooting) && (player->bullets[i + 1].isShooting)) {
+            // swap bullet
             struct Bullet temp = player->bullets[i];
             player->bullets[i] = player->bullets[i + 1];
             player->bullets[i + 1] = temp;
         }
+
+        // get the count of the active bullet
         bulletCount++;
         if (i + 2 == MAX_BULLET_COUNT) {
             bulletCount = player->bullets[i + 1].isShooting ? bulletCount + 1 : bulletCount;
             break;
-        }   
+        }
     }
+
+    // assign the next bullet to the next active bullet slot 
     if (bulletCount < MAX_BULLET_COUNT) {
         player->bullets[bulletCount] = *bullet;
     }
@@ -207,11 +231,15 @@ void update_pos_bullet(struct Bullet* bullet, float dt) {
 void render_bullet(struct Bullet bullet, struct Camera cam) {
     if (bullet.isShooting) {
         CP_Vector vec = get_cam_pos_rel(bullet.pos, cam);
+        CP_Settings_Fill(CP_Color_Create(113, 54, 0, 128));
         CP_Graphics_DrawCircle(vec.x, vec.y, bullet.diameter);
-    } 
+    }
 }
 
 
+#pragma endregion
+
+#pragma region Buff
 void apply_buff(struct ChocoShooter* player, enum BuffType buff) {
     switch (buff) {
     case ATTACK_UP:
