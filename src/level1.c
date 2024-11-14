@@ -145,14 +145,6 @@ void level_one_update(void) {
     float mouse_y = CP_Input_GetMouseWorldY();
 
     enableShooting = true;
-
-    int exp_perkill = 6;//exp for buff bar per roachy
-    int current_exp = 0;
-    float meterX = CP_System_GetWindowWidth() - 150;//  buff bar properties
-    float meterY = CP_System_GetWindowHeight() - 50;
-    float meterWidth = 100;
-    float meterHeight = 20;
-    float fillSpeed = 5.f;
   
     // Init enemy when wave start
     if (isWaveStart) {
@@ -394,19 +386,27 @@ void level_one_update(void) {
 
     CP_Settings_TextSize(20.0f);
 
- 
-        CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255));
-        // buff slot 1 
-        CP_Graphics_DrawCircle(150,750,80); 
-        //buff slot 2
-        CP_Graphics_DrawCircle(300, 750, 80); 
-        // buff slot 3
-        CP_Graphics_DrawCircle(450, 750, 80);
+    CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255));
+    // buff slot 1 
+    CP_Graphics_DrawCircle(150,750,80); 
+    //buff slot 2
+    CP_Graphics_DrawCircle(300, 750, 80); 
+    // buff slot 3
+    CP_Graphics_DrawCircle(450, 750, 80);
         
     // Display the active buff slot
     CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255));
     CP_Graphics_DrawCircle(600, 750, 100);
     
+    // TODO 3: exp_perkill is placeholder
+    // TODO 4: Change CP_System_GetWindow... to windowWidth and windowHeight
+    int exp_perkill = 6;//exp for buff bar per roachy
+    int current_exp = 0;
+    float meterX = CP_System_GetWindowWidth() - 150;//  buff bar properties
+    float meterY = CP_System_GetWindowHeight() - 50;
+    float meterWidth = 100;
+    float meterHeight = 20;
+    float fillSpeed = 5.f;
 
     for (int i = 0; i < 3; i++) {
         // Set the position of each buff slot circle
@@ -492,7 +492,10 @@ void level_one_update(void) {
     targetFillWidth = ((playerInstance.buffs.buffExp % playerInstance.buffs.maxBuffMeter) / (float)playerInstance.buffs.maxBuffMeter) * meterWidth;
     fillWidth = CP_Math_ClampFloat(fillWidth, 0, playerInstance.buffs.maxBuffMeter);
 
-    // TODO
+    // TODO:
+    // fillSpeed *= dt;
+
+    // TODO 2:
     // Max is 100
     // Value = 99
     // + 5 = 104

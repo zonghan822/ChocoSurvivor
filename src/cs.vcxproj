@@ -21,7 +21,6 @@
   <ItemGroup>
     <ClCompile Include="barrier.c" />
     <ClCompile Include="boss.c" />
-    <ClCompile Include="buffs.c" />
     <ClCompile Include="camera.c" />
     <ClCompile Include="flicker.c" />
     <ClCompile Include="enemy.c" />
@@ -37,7 +36,6 @@
   <ItemGroup>
     <ClInclude Include="barrier.h" />
     <ClInclude Include="boss.h" />
-    <ClInclude Include="buffs.h" />
     <ClInclude Include="camera.h" />
     <ClInclude Include="enemy.h" />
     <ClInclude Include="level1.h" />
