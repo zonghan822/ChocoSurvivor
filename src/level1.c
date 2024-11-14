@@ -11,30 +11,30 @@
 #include "tower.h"
 #include "camera.h"
 #include "hittest.h"
+#include "enemy.h"
+#include "utils.h"
 #include "flicker.h"
 #include "barrier.h" 
 
-const float LEVEL_WIDTH = 2000.0f,
-    LEVEL_HEIGHT = 1200.0f; 
+#define MAX_ENEMY_COUNT 100
+#define LEVEL_WIDTH 2000.0f
+#define LEVEL_HEIGHT 900.0f
+
+CP_Image levelBg;
 CP_Image chococursor;
 CP_Image gameOverImage;
 
 float windowWidth, windowHeight;
 
-#pragma region Enemy Properties
-// ************************************* //
-//           Spawn Properties            //
-// ************************************* //
-float spawnMinY = 0.0f, spawnMaxY = 0.0f;
-float spawnDelay = 0.0f, spawnTime = 0.0f;
-unsigned short int roachesMax = 0;
+#pragma region Spawn Properties
+static float spawnMinY = 0.0f, spawnMaxY = 0.0f;
+static float spawnDelay = 0.0f, spawnTime = 0.0f;
 enum SpawnWave {
     WAVE_0,
     WAVE_1,
     WAVE_2,
     WAVE_3
 };
-char isWaveStart = 0;
 // ************************************* //
 
 enum AttackTarget {
@@ -45,12 +45,20 @@ enum AttackTarget {
 };
 
 struct ChocoRoach roaches[MAX_ENEMY_COUNT] = { 0 };
-enum SpawnWave currentWave = WAVE_0;
 enum AttackTarget enemyAttackTarget = NONE;
 float healthBarDisplayTime = 0.f;
+static enum SpawnWave currentWave = WAVE_0;
+static char isWaveStart = 0;
 #pragma endregion
 
-#pragma region Player Properties
+#pragma region Enemy Properties
+static unsigned short int roachesMax = 0;
+static struct ChocoRoach roaches[MAX_ENEMY_COUNT];
+float healthBarDisplayTime = 0.f;
+int enemyKilled = 0;
+#pragma endregion
+
+#pragma region Obstacles
 struct ChocoShooter playerInstance;
 struct DefenseTarget towerInstance;
 struct Camera cam;
@@ -60,7 +68,21 @@ float lastShotTime = 0;
 bool enableShooting = false;
 #pragma endregion
 
-#pragma region Barriers Properties
+#pragma region HP/BUFF bar properties
+float meterX = 0;
+float meterY = 0;
+float meterWidth = 0;
+float meterHeight = 0;
+int exp_perkill = 0; 
+int current_exp = 0;
+float fillSpeed = 0.0f;
+float fillWidth = 0;         
+float targetFillWidth = 0;   
+int activeBuffSlot = 0;          // 0 means no active buff, 1-3 represent the buff slots
+//float activeBuffDuration = 0.0f;  // Duration in seconds for the active buff (10s when active)
+#pragma endregion
+
+#pragma region Obstacle/Barrier Properties
 enum BarrierState currentState = BARRIER_IDLE;
 CP_Vector previewPosition;
 CP_Vector finalPosition;
@@ -70,11 +92,15 @@ float barrier_rect_W = 0.0f, barrier_rect_H = 0.0f;
 #pragma endregion
 
 #pragma region Map Properties
-struct Rectangle obstacles[100] = { 0 };
+struct Rectangle worldClips[1];
+struct Rectangle playerClips[1];
+struct Rectangle enemyClips[1];
+struct Rectangle playerBarricades[10];
 #pragma endregion
 
 
 void level_one_init(void) {
+    levelBg = CP_Image_Load("Assets/Levels/level1.png");
     
     chococursor = CP_Image_Load("Assets/cursor.png");
     CP_System_ShowCursor(FALSE);
@@ -86,7 +112,7 @@ void level_one_init(void) {
 
     #pragma region Player_Init
     // Init Player Properties
-    playerInstance = init_player(CP_Vector_Set(300, 500), 350.0f, 100, 30, 10.f);
+    playerInstance = init_player(CP_Vector_Set(towerInstance.pos.x / 1.05, towerInstance.pos.y), 350.0f, 100, 30, 10.f);
     playerInstance.flickerState.isVisible = TRUE; //set initial flickering states
     bulletType = NORMAL_BULLET;
     bulletSpeed = 1000.f;
@@ -98,7 +124,8 @@ void level_one_init(void) {
     towerInstance.maxHealth = towerInstance.health = 3;
     towerInstance.height = 300.0;
     towerInstance.width = 150.0;
-    towerInstance.pos = CP_Vector_Set(LEVEL_WIDTH / 1.1, LEVEL_HEIGHT / 2);
+    towerInstance.pos = CP_Vector_Set(LEVEL_WIDTH / 1.05, LEVEL_HEIGHT / 2);
+    worldClips[0] = get_tower_hitbox(towerInstance);
     #pragma endregion
 
     #pragma region Barrier_Init
@@ -121,17 +148,23 @@ void level_one_init(void) {
     spawnDelay = 5.0f; // Give player some buffer
     currentWave = WAVE_0;
     isWaveStart = 1;
+
+    //set initial flickering states
+    playerInstance.flickerState.isVisible = TRUE;
 }
 
 void level_one_update(void) {
 
     CP_Graphics_ClearBackground(CP_Color_Create(170, 170, 170, 255));
+    CP_Vector bgVec = CP_Vector_Set((LEVEL_WIDTH / 2), (LEVEL_HEIGHT / 2)),
+        relBgVec = get_cam_pos_rel(bgVec, cam);
+    CP_Image_Draw(levelBg, relBgVec.x, relBgVec.y, LEVEL_WIDTH, LEVEL_HEIGHT, 255);
     float dt = CP_System_GetDt();
     float mouse_x = CP_Input_GetMouseWorldX();
     float mouse_y = CP_Input_GetMouseWorldY();
 
     enableShooting = true;
-
+  
     // Init enemy when wave start
     if (isWaveStart) {
         #pragma region Enemy_Init
@@ -140,25 +173,25 @@ void level_one_update(void) {
 
         switch (currentWave) {
         case WAVE_0:
-            enemySpeed = 150.f;
+            enemySpeed = 100.f;
             enemyMaxHealth = 100;
             enemyDmg = 20;
             roachesMax = 40;
             break;
         case WAVE_1:
-            enemySpeed = 200.f;
+            enemySpeed = 100.f;
             enemyMaxHealth = 100;
             enemyDmg = 20;
             roachesMax = 40;
             break;
         case WAVE_2:
-            enemySpeed = 200.f;
+            enemySpeed = 100.f;
             enemyMaxHealth = 100;
             enemyDmg = 20;
             roachesMax = 40;
             break;
         case WAVE_3:
-            enemySpeed = 200.f;
+            enemySpeed = 100.f;
             enemyMaxHealth = 100;
             enemyDmg = 20;
             roachesMax = 40;
@@ -213,7 +246,7 @@ void level_one_update(void) {
         #pragma endregion
     }
     
-    move_player(&playerInstance, dt);
+    move_player(&playerInstance, dt, LEVEL_WIDTH, LEVEL_HEIGHT);
     update_camera(&cam, playerInstance, LEVEL_WIDTH, LEVEL_HEIGHT);
     
     #pragma region Place_Barriers
@@ -286,6 +319,12 @@ void level_one_update(void) {
     update_rect_hitbox(&playerInstance.hitbox, 0.0f, 0.0f, playerInstance.pos); // Update hitbox of player
     render_player(playerInstance, 255, cam);
 
+    for (int i = 0; i < sizeof(worldClips); i++) {
+        struct Rectangle worldClip = worldClips[i];
+        if (are_rects_intersecting(playerInstance.hitbox, worldClip))
+            clamp_pos_clip_rel(&playerInstance.pos, playerInstance.hitbox, worldClip);
+    }
+    
     #pragma region Render_Barriers
     // Draw all placed barriers
     struct Barrier* barriers = get_barriers();
@@ -408,7 +447,7 @@ void level_one_update(void) {
                 if (playerInstance.bullets[j].isShooting) {
                     struct Circle bullet = { .pos = playerInstance.bullets[j].pos, .diameter = playerInstance.bullets[j].diameter };
                     if (are_circle_rect_intersecting(bullet, roaches[i].hitbox)) {
-                        enemy_take_damage(&roaches[i], playerInstance.bullets[j].dmg);
+                        enemyKilled += enemy_take_damage(&roaches[i], playerInstance.bullets[j].dmg);
                         playerInstance.bullets[j].isShooting = FALSE;
                     }
                 }
@@ -417,6 +456,164 @@ void level_one_update(void) {
         } 
         // can use else statement here for dying animation...
     }
+
+    // Buff and currency drops here...
+    
+
+    // Draw the empty part of the meter (white)
+    CP_Settings_RectMode(CP_POSITION_CORNER);
+    
+
+    if (enemyKilled) {
+        int expGained = exp_perkill * enemyKilled;
+        enum BuffType randomBuff = update_buff_meter(&playerInstance, expGained);
+
+        // Apply the buff if one was granted
+        if (randomBuff != 0) {
+            apply_buff(&playerInstance, randomBuff);
+        }
+
+        // Reset enemyKilled count
+        enemyKilled = 0;
+    }
+    
+    CP_Settings_Fill(CP_Color_Create(255, 255, 255, 255));
+    CP_Graphics_DrawRect(meterX, meterY, meterWidth, meterHeight);
+    CP_Settings_Fill(CP_Color_Create(0, 0, 255, 255));
+    CP_Graphics_DrawRect(meterX, meterY, fillWidth, meterHeight);
+
+
+    CP_Settings_TextSize(20.0f);
+
+    CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255));
+    // buff slot 1 
+    CP_Graphics_DrawCircle(150,750,80); 
+    //buff slot 2
+    CP_Graphics_DrawCircle(300, 750, 80); 
+    // buff slot 3
+    CP_Graphics_DrawCircle(450, 750, 80);
+        
+    // Display the active buff slot
+    CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255));
+    CP_Graphics_DrawCircle(600, 750, 100);
+    
+    // TODO 3: exp_perkill is placeholder
+    // TODO 4: Change CP_System_GetWindow... to windowWidth and windowHeight
+    int exp_perkill = 6;//exp for buff bar per roachy
+    int current_exp = 0;
+    float meterX = CP_System_GetWindowWidth() - 150;//  buff bar properties
+    float meterY = CP_System_GetWindowHeight() - 50;
+    float meterWidth = 100;
+    float meterHeight = 20;
+    float fillSpeed = 5.f;
+
+    for (int i = 0; i < 3; i++) {
+        // Set the position of each buff slot circle
+        CP_Settings_Fill(CP_Color_Create(255, 255, 255, 255));
+
+
+        float slotPositions[] = { 150, 300, 450 }; // Positions for buff slots
+
+        for (int i = 0; i < 3; i++) {
+            switch (playerInstance.buffs.type[i]) {
+            case ATTACK_UP:
+                CP_Font_DrawText(
+                    playerInstance.buffs.attackP_lvl > 3 ? "A Max Lvl" :
+                    playerInstance.buffs.attackP_lvl == 1 ? "A Lvl 1" :
+                    playerInstance.buffs.attackP_lvl == 2 ? "A Lvl 2" : "A Lvl 3",
+                    slotPositions[i], 750);
+                break;
+            case ATTACK_SPEED_UP:
+                CP_Font_DrawText(
+                    playerInstance.buffs.attackS_lvl > 3 ? "AS Max Lvl" :
+                    playerInstance.buffs.attackS_lvl == 1 ? "AS Lvl 1" :
+                    playerInstance.buffs.attackS_lvl == 2 ? "AS Lvl 2" : "AS Lvl 3",
+                    slotPositions[i], 750);
+                break;
+            case HEALTH_UP:
+                CP_Font_DrawText(
+                    playerInstance.buffs.health_lvl > 3 ? "HP Max Lvl" :
+                    playerInstance.buffs.health_lvl == 1 ? "HP Lvl 1" :
+                    playerInstance.buffs.health_lvl == 2 ? "HP Lvl 2" : "HP Lvl 3",
+                    slotPositions[i], 750);
+                break;
+            default:
+                CP_Font_DrawText("Empty", slotPositions[i], 750);
+                break;
+            }
+
+            if (CP_Input_KeyTriggered(KEY_1) && playerInstance.buffs.type[0] != NO_BUFF) {
+                activate_buff_from_slot(&playerInstance, 1);
+            }
+            if (CP_Input_KeyTriggered(KEY_2) && playerInstance.buffs.type[1] != NO_BUFF) {
+                activate_buff_from_slot(&playerInstance, 2);
+            }
+            if (CP_Input_KeyTriggered(KEY_3) && playerInstance.buffs.type[2] != NO_BUFF) {
+                activate_buff_from_slot(&playerInstance, 3);
+            }
+            if (playerInstance.activeBuffType != NO_BUFF) {
+                const char* activeBuffName;
+
+                // Determine the name based on the active buff type
+                switch (playerInstance.activeBuffType) {
+                case ATTACK_UP:
+                    activeBuffName = "ATTACK UP";
+                    break;
+                case ATTACK_SPEED_UP:
+                    activeBuffName = "ATTACK SPEED UP";
+                    break;
+                case HEALTH_UP:
+                    activeBuffName = "HEALTH UP";
+                    break;
+                default:
+                    activeBuffName = "NO BUFF";
+                    break;
+                }
+
+                
+                CP_Font_DrawText(activeBuffName, 600, 750);  
+                if (playerInstance.activeBuffLevel == 1) {
+                    CP_Font_DrawText("Level 1", 600, 770);
+                }
+                else if (playerInstance.activeBuffLevel == 2) {
+                    CP_Font_DrawText("Level 2", 600, 770);
+                }
+                else if (playerInstance.activeBuffLevel == 3) {
+                    CP_Font_DrawText("Level 3", 600, 770);
+                }
+                else if (playerInstance.activeBuffLevel > 3) {
+                    CP_Font_DrawText("Max Level", 600, 770);
+                }
+            }
+        }
+    }
+    // Set targetFillWidth based on updated buffExp
+    targetFillWidth = ((playerInstance.buffs.buffExp % playerInstance.buffs.maxBuffMeter) / (float)playerInstance.buffs.maxBuffMeter) * meterWidth;
+    fillWidth = CP_Math_ClampFloat(fillWidth, 0, playerInstance.buffs.maxBuffMeter);
+
+    // TODO:
+    // fillSpeed *= dt;
+
+    // TODO 2:
+    // Max is 100
+    // Value = 99
+    // + 5 = 104
+    // Clamp to 100
+    // Delay
+    // Then take 104 - 100 = 4, assign it to the value
+    // Different color when bar reaches max (just use if statement)
+
+    // Smoothly interpolate fillWidth towards targetFillWidth
+    if (fillWidth < targetFillWidth) {
+        fillWidth += fillSpeed * (targetFillWidth - fillWidth);
+        if (fillWidth > targetFillWidth) fillWidth = targetFillWidth;  // Prevent overshooting
+    }
+    else if (fillWidth > targetFillWidth) {
+        fillWidth -= fillSpeed * (fillWidth - targetFillWidth);
+        if (fillWidth < targetFillWidth) fillWidth = targetFillWidth;  // Prevent undershooting
+    }
+
+
     sort_enemies(roaches, roachesMax); // Sort enemy based on pos asc
     render_enemies(roaches, cam, roachesMax); // Draw enemies instances
     #pragma region Render_Enemy_HealthBar
@@ -441,6 +638,29 @@ void level_one_update(void) {
         CP_Image_Draw(gameOverImage, gameOverX, gameOverY, 1000, 600, 255); // Adjust size as needed
     }
 
+    // Render UI
+    {
+        CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255));
+
+        // Health
+        CP_Settings_TextSize(25);
+        char healthStr[16];
+        sprintf_s(healthStr, sizeof(healthStr), "Health: %d", playerInstance.health);
+        CP_Vector playerVec = get_cam_pos_rel(playerInstance.pos, cam);
+        float playerHalfHeight = playerInstance.height / 2,
+            healthX = playerVec.x,
+            healthY = (playerVec.y - playerHalfHeight) - 15.0f;
+        CP_Settings_TextSize(25);
+        CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255));
+        CP_Font_DrawText(healthStr, healthX, healthY);
+
+        // Wave
+        CP_Settings_TextSize(60);
+        char currentWaveStr[8];
+        sprintf_s(currentWaveStr, sizeof(currentWaveStr), "Wave: %d", 1);
+        CP_Font_DrawText(currentWaveStr, CP_System_GetWindowWidth() / 2.0f, 50.0f);
+    }
+    
     // Exit to Main Menu
     if (CP_Input_KeyTriggered(KEY_Q)) {
         CP_Engine_SetNextGameState(main_menu_init, main_menu_update, main_menu_exit);
@@ -452,5 +672,12 @@ void level_one_update(void) {
 
 
 void level_one_exit(void) {
+    CP_Image_Free(&playerInstance.img);
+    CP_Image_Free(&levelBg);
 
+    for (int i = 0; i < roachesMax; i++) {
+        struct ChocoRoach roach = roaches[i];
+        if (roach.img != NULL)
+            CP_Image_Free(&roach.img);
+    }
 }

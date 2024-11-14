@@ -37,7 +37,7 @@ struct ChocoRoach {
 struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth, float speed, int maxHealth, int dmg);
 void enemy_move_to_target(struct ChocoRoach* roach, struct Rectangle hitbox, float dt);
 void render_enemy_health_bar(struct ChocoRoach* roach, struct Camera cam);
-void enemy_take_damage(struct ChocoRoach* roach, int dmg);
+int enemy_take_damage(struct ChocoRoach* roach, int dmg);
 
 // Takes in array of enemies
 void render_enemies(struct ChocoRoach* roachesArr, struct Camera cam, int size);

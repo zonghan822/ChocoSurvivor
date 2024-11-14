@@ -46,6 +46,8 @@ void render_enemy_health_bar(struct ChocoRoach* roach, struct Camera cam) {
     float health_bar_w = roach->width * 0.8;
     float health_bar_h = 15.f;
 
+    CP_Settings_RectMode(CP_POSITION_CENTER);
+
     // Draw health bar rect
     CP_Settings_Fill(CP_Color_Create(255, 0, 0, 255));
     CP_Graphics_DrawRect(health_bar_x, health_bar_y, health_bar_w, health_bar_h);
@@ -92,10 +94,13 @@ void sort_enemies(struct ChocoRoach* roaches, int size) {
     qsort(roaches, size, sizeof(struct ChocoRoach), _comp);
 }
 
-void enemy_take_damage(struct ChocoRoach* roach, int dmg) {
+// return 1 if enemy is killed, 0 otherwise
+int enemy_take_damage(struct ChocoRoach* roach, int dmg) {
     roach->health = CP_Math_ClampInt(roach->health - dmg, 0, roach->maxHealth);
     roach->isTakingDamage = TRUE;
     if (roach->health <= 0) {
         roach->currentState = STATE_DIED;
+        return 1;
     }
+    return 0;
 }
