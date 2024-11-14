@@ -336,7 +336,15 @@ void level_one_update(void) {
                         for (int j = 0; j < step; j++) {
                             tempRect.pos = CP_Vector_Add(tempRect.pos, moveDirection);
                             if (are_rects_intersecting(tempRect, clips[clipIndex])) { // Clip blocking the way...
-                                clips[clipIndex].width + (2 * roaches[i].hitbox.width)
+                                struct Rectangle radarClip = { .width = clips[clipIndex].width + (2 * roaches[i].hitbox.width),
+                                                               .height = clips[clipIndex].height + (2 * roaches[i].hitbox.height),
+                                                               .pos = clips[clipIndex].pos };
+                                int nearbyClipIdx = 0;
+                                while()
+                                    if (are_rects_intersecting(clips[nearbyClipIdx], radarClip)) {
+                                        break;
+                                    };
+
                                // for clips 
                                 //
                             }
