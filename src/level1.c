@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include "cprocessing.h"
 #include "mainmenu.h"
@@ -11,7 +12,7 @@
 #include "camera.h"
 #include "hittest.h"
 #include "flicker.h"
-#include "barrier.h"
+#include "barrier.h" 
 
 const float LEVEL_WIDTH = 2000.0f,
     LEVEL_HEIGHT = 1200.0f; 
@@ -36,8 +37,16 @@ enum SpawnWave {
 char isWaveStart = 0;
 // ************************************* //
 
+enum AttackTarget {
+    NONE,
+    PLAYER,
+    TOWER,
+    BARRIER
+};
+
 struct ChocoRoach roaches[MAX_ENEMY_COUNT] = { 0 };
 enum SpawnWave currentWave = WAVE_0;
+enum AttackTarget enemyAttackTarget = NONE;
 float healthBarDisplayTime = 0.f;
 #pragma endregion
 
@@ -102,6 +111,12 @@ void level_one_init(void) {
     #pragma endregion
 
     cam = init_camera(playerInstance, windowWidth, windowHeight);
+
+    // 0 vector is used to indicate end of array, use CP_POSITION_CENTER to avoid use of 0 vector 
+    struct Rectangle obstacleTest1 = {.pos.x = LEVEL_WIDTH/2, .pos.y = LEVEL_HEIGHT*3/7, .width = 200, .height = 100};
+    struct Rectangle obstacleTest2 = { .pos.x = LEVEL_WIDTH/2, .pos.y = LEVEL_HEIGHT*4/7, .width = 200, .height = 100 };
+    obstacles[0] = obstacleTest1;
+    obstacles[1] = obstacleTest2;
 
     spawnDelay = 5.0f; // Give player some buffer
     currentWave = WAVE_0;
@@ -176,11 +191,10 @@ void level_one_update(void) {
 
             // Enemy movement logic and attacking logic
             struct Circle radarRoach = { .pos = roaches[i].pos, .diameter = 5 * roaches[i].width }; // define enemy radar
-            struct Barrier* barriers = get_barriers();
-
             if (are_circle_rect_intersecting(radarRoach, playerInstance.hitbox)) { // Check enemy near with player
                 if (are_rects_intersecting(roaches[i].hitbox, playerInstance.hitbox)) { // When collide...
                     roaches[i].currentState = STATE_ATTACKING;
+                    enemyAttackTarget = PLAYER;
                 }
                 else {
                     roaches[i].currentState = STATE_CHASE_PLAYER;
@@ -189,6 +203,7 @@ void level_one_update(void) {
             else {
                 if (are_rects_intersecting(roaches[i].hitbox, playerInstance.hitbox)) {
                     roaches[i].currentState = STATE_ATTACKING;
+                    enemyAttackTarget = PLAYER;
                 }
                 else {
                     roaches[i].currentState = STATE_MOVING; // Move to defense target
@@ -255,6 +270,14 @@ void level_one_update(void) {
     }
     #pragma endregion
     
+    #pragma region Render_Obstacles
+    CP_Settings_Fill(CP_Color_Create(150, 150, 150, 255));
+    for (int i = 0; obstacles[i].width != 0; i++) {
+        CP_Vector vec = get_cam_pos_rel(obstacles[i].pos, cam);
+        CP_Graphics_DrawRect(vec.x, vec.y, obstacles[i].width, obstacles[i].height);
+    }
+    #pragma endregion
+
     // Render Defense Target
     render_tower(towerInstance, cam);
 
@@ -266,10 +289,10 @@ void level_one_update(void) {
     #pragma region Render_Barriers
     // Draw all placed barriers
     struct Barrier* barriers = get_barriers();
+    CP_Settings_Fill(CP_Color_Create(0, 0, 255, 255)); // Solid blue
     for (int i = 0; i < get_barrier_count(); i++) {
         if (barriers[i].health > 0) {  // Only draw if health is greater than zero
             CP_Vector vec = get_cam_pos_rel(barriers[i].position, cam);
-            CP_Settings_Fill(CP_Color_Create(0, 0, 255, 255)); // Solid blue
             CP_Graphics_DrawRect(vec.x, vec.y, barriers[i].width, barriers[i].height);
         }
     }
@@ -281,24 +304,88 @@ void level_one_update(void) {
         render_bullet(playerInstance.bullets[i], cam);
     }
 
+    #pragma region Get_All_Clips
+    struct Barrier* barriers = get_barriers();
+    // get all clips position
+    struct Rectangle clips[100] = { 0 };
+    int clipCount = 0, obstacleCount = 0;
+    while (obstacles[obstacleCount].width != 0) {
+        clips[clipCount] = obstacles[obstacleCount];
+        obstacleCount = ++clipCount;
+    }
+    while (barriers->health) {
+        clips[clipCount] = (barriers++)->hitbox;
+        clipCount++;
+    }
+    #pragma endregion
+
     for (int i = 0; i < roachesMax; i++) {   
         if (roaches[i].currentState) { // if enemy is alive
+
             #pragma region Enemy_Action
             switch (roaches[i].currentState) {
-            case STATE_MOVING:
-                enemy_move_to_target(&roaches[i], get_tower_hitbox(towerInstance), dt);
+            case STATE_MOVING:{
+                struct Circle radarRoach = { .pos = roaches[i].pos, .diameter = 5 * roaches[i].width }; // define enemy radar
+                int clipIndex = 0;
+                while (clipIndex < clipCount) {
+                    if (are_circle_rect_intersecting(radarRoach, clips[clipIndex])) { // Check enemy near with obstacles or barriers
+                        // create a temporary rectangle to simulate the movement to defense target
+                        int step = 4;
+                        CP_Vector moveDirection = CP_Vector_Scale(CP_Vector_Subtract(towerInstance.pos, roaches[i].hitbox.pos), 1.f/ (float)step);
+                        struct Rectangle tempRect = { roaches[i].hitbox.pos, roaches[i].hitbox.width, roaches[i].hitbox.height};
+                        for (int j = 0; j < step; j++) {
+                            tempRect.pos = CP_Vector_Add(tempRect.pos, moveDirection);
+                            if (are_rects_intersecting(tempRect, clips[clipIndex])) { // Clip blocking the way...
+                                clips[clipIndex].width + (2 * roaches[i].hitbox.width)
+                               // for clips 
+                                //
+                            }
+                        }
+                        break;
+                    }
+                    clipIndex++;
+                }
+                if (clipIndex == clipCount) { // if no obstacles...
+                    enemy_move_to_target(&roaches[i], get_tower_hitbox(towerInstance), dt);
+                }
                 break;
-            case STATE_CHASE_PLAYER:
-                enemy_move_to_target(&roaches[i], playerInstance.hitbox, dt);
+            }
+                
+            case STATE_CHASE_PLAYER: {
+                struct Circle radarRoach = { .pos = roaches[i].pos, .diameter = 5 * roaches[i].width }; // define enemy radar
+                int clipIndex = 0;
+                while (clipIndex < clipCount) {
+                    if (are_circle_rect_intersecting(radarRoach, clips[clipIndex])) { // Check enemy near with obstacles or barriers
+                        break;
+                    }
+                    clipIndex++;
+                }
+                if (clipIndex == clipCount) { // if no obstacles...
+                    enemy_move_to_target(&roaches[i], playerInstance.hitbox, dt);
+                }
                 break;
-            case STATE_ATTACKING:
+            }
+
+            case STATE_ATTACKING: {
                 roaches[i].moveDirection = CP_Vector_Zero();
 
-                // more code here..
+                // attack animation here...
+
+                // if animation end then...
+                switch (enemyAttackTarget) {
+                case PLAYER:
+                    //playerTakeDamage...
+                    break;
+                case TOWER:
+                    //towerTakeDamage...
+                    break;
+                case BARRIER:
+                    //barrierTakeDamage...
+                    break;
+                }
                 break;
-            case STATE_DETOUR:
-                // A* Pathfinding here...
-                break;
+            }
+                
             case STATE_IDLE:
                 roaches[i].moveDirection = CP_Vector_Zero();
                 break;

@@ -7,6 +7,7 @@
 #define MAX_BULLET_COUNT 20
 
 enum BuffType {
+    NO_BUFF,
     ATTACK_UP,
     ATTACK_SPEED_UP,
     HEALTH_UP
