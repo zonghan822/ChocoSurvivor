@@ -40,5 +40,6 @@ void render_enemy_health_bar(struct ChocoRoach* roach, struct Camera cam);
 int enemy_take_damage(struct ChocoRoach* roach, int dmg);
 
 // Takes in array of enemies
+void empty_enemies(struct ChocoRoach* roaches);
 void render_enemies(struct ChocoRoach* roachesArr, struct Camera cam, int size);
 void sort_enemies(struct ChocoRoach* roachesArr, int size);

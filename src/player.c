@@ -235,7 +235,6 @@ void render_bullet(struct Bullet bullet, struct Camera cam) {
     }
 }
 
-
 #pragma endregion
 
 #pragma region Buff
@@ -288,7 +287,6 @@ int update_buff_meter(struct ChocoShooter* player, int expGained) {
 
     return 0; // Return 0 if no buff is granted
 }
-#include <stdio.h>  // Ensure this is at the top for printing to work
 
 void activate_buff_from_slot(struct ChocoShooter* player, int slot) {
  

@@ -6,6 +6,12 @@
 #include "enemy.h"
 #include "camera.h"
 
+void empty_enemies(struct ChocoRoach* roaches) {
+    for (int i = 0; i < MAX_ENEMY_COUNT; i++) {
+        roaches->currentState = 0;
+    }
+}
+
 struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth, float speed, int maxHealth, int dmg) {
 
     srand((unsigned int)time(NULL));
@@ -77,7 +83,7 @@ void render_enemies(struct ChocoRoach* roaches, struct Camera cam, int size) {
     }
 }
 
-int _comp(const void* a, const void* b)
+static int _comp(const void* a, const void* b)
 {
     if (!(((struct ChocoRoach*)a)->currentState) && !(((struct ChocoRoach*)b)->currentState))
         return -1;
