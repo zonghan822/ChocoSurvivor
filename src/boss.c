@@ -1,3 +1,6 @@
+#pragma
+#include "cprocessing.h"
+#include "flicker.h"
 #include "boss.h"
 #include "player.h"
 #include "utils.h"

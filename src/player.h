@@ -2,8 +2,22 @@
 #include <stdbool.h>
 #include "cprocessing.h"
 #include "utils.h"
+#include "flicker.h"
 
-#define MAX_BULLET_COUNT 10
+#define MAX_BULLET_COUNT 20
+
+enum BuffType {
+    ATTACK_UP,
+    ATTACK_SPEED_UP,
+    HEALTH_UP
+};
+
+struct BuffLevel {
+    enum BuffType type;   // Current buff type (can be set to the latest buff type obtained)
+    int attackP_lvl;      // Attack power level
+    int attackS_lvl;      // Attack speed level
+    int health_lvl;       // Health level
+};
 
 enum BulletType {
     NORMAL_BULLET,
@@ -31,18 +45,26 @@ struct ChocoShooter {
     enum Movement movement;
     int health, maxHealth;
     struct Rectangle hitbox;
-    float fireRate;
     struct Bullet bullets[MAX_BULLET_COUNT];
-    int atk;
+    struct FlickerState flickerState;
+    int attackPower;
+    float attackSpeed;
+    int shield;
 };
 
+#pragma region Player
 int player_take_damage(struct ChocoShooter* player, int damage);
-struct ChocoShooter init_player(CP_Vector pos, float speed, float maxHealth);
+struct ChocoShooter init_player(CP_Vector pos, float speed, float maxHealth, int attackPower, float attackSpeed);
 void move_player(struct ChocoShooter* player, float dt, float level_width, float level_height);
 void render_player(struct ChocoShooter player, float alpha, struct Camera cam);
+#pragma endregion
 
-
+#pragma region Bullet
 struct Bullet init_bullet(enum BulletType bulletType, float bulletSpeed, float bulletDiameter, int dmg, CP_Vector bulletDirection);
-void shoot_bullet(struct ChocoShooter *player, struct Bullet *bullet);
+void shoot_bullet(struct ChocoShooter* player, struct Bullet* bullet);
 void update_pos_bullet(struct Bullet* bullet, float dt);
 void render_bullet(struct Bullet bullet, struct Camera cam);
+#pragma endregion
+
+#pragma region Buffs
+#pragma endregion
