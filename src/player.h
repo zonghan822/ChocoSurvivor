@@ -3,7 +3,6 @@
 #include "cprocessing.h"
 #include "utils.h"
 #include "flicker.h"
-#include "buffs.h"
 
 #define MAX_BULLET_COUNT 20
 
@@ -77,5 +76,6 @@ void render_bullet(struct Bullet bullet, struct Camera cam);
 #pragma region Buffs
 void apply_buff(struct ChocoShooter* player, enum BuffType buff);
 int update_buff_meter(struct ChocoShooter* player, int expGained);
+void activate_buff_from_slot(struct ChocoShooter* player, int slot);
 void assign_buff_to_slot(struct ChocoShooter* player, enum BuffType buffType);
 #pragma endregion

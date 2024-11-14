@@ -152,7 +152,7 @@ void level_one_update(void) {
     float meterY = CP_System_GetWindowHeight() - 50;
     float meterWidth = 100;
     float meterHeight = 20;
-    float fillSpeed = 0.05f;
+    float fillSpeed = 5.f;
   
     // Init enemy when wave start
     if (isWaveStart) {
@@ -490,6 +490,16 @@ void level_one_update(void) {
     }
     // Set targetFillWidth based on updated buffExp
     targetFillWidth = ((playerInstance.buffs.buffExp % playerInstance.buffs.maxBuffMeter) / (float)playerInstance.buffs.maxBuffMeter) * meterWidth;
+    fillWidth = CP_Math_ClampFloat(fillWidth, 0, playerInstance.buffs.maxBuffMeter);
+
+    // TODO
+    // Max is 100
+    // Value = 99
+    // + 5 = 104
+    // Clamp to 100
+    // Delay
+    // Then take 104 - 100 = 4, assign it to the value
+    // Different color when bar reaches max (just use if statement)
 
     // Smoothly interpolate fillWidth towards targetFillWidth
     if (fillWidth < targetFillWidth) {

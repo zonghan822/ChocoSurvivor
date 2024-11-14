@@ -9,10 +9,9 @@
 #define DASH_DISTANCE 150.0f
 #define DASH_SPEED 20.0f
 
-BOOL _isDashing = FALSE;
-float _dashProgress, _lastDash;
-CP_Vector _dashTo;
-
+static BOOL _isDashing = FALSE;
+static float _dashProgress, _lastDash;
+static CP_Vector _dashTo;
 
 #pragma region Player
 // Returns 1 if still alive, 0 if not
@@ -326,7 +325,6 @@ void activate_buff_from_slot(struct ChocoShooter* player, int slot) {
     player->buffs.type[slot - 1] = NO_BUFF;
     printf("Cleared buff type from slot %d.\n", slot);  // Debug 
 }
-
 
 void assign_buff_to_slot(struct ChocoShooter* player, enum BuffType buffType) {
     for (int i = 0; i < 3; i++) {
