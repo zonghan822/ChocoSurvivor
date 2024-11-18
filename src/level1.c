@@ -19,9 +19,8 @@
 #define LEVEL_WIDTH 2000.0f
 #define LEVEL_HEIGHT 900.0f
 
-CP_Image levelBg;
-CP_Image chococursor;
-CP_Image gameOverImage;
+CP_Image levelBg,
+    cursor, gameOverImage;
 
 float windowWidth, windowHeight;
 
@@ -87,12 +86,10 @@ struct Rectangle playerBarricades[10];
 
 
 void level_one_init(void) {
-    levelBg = CP_Image_Load("Assets/Levels/level1.png");
-    
-    chococursor = CP_Image_Load("Assets/cursor.png");
+    cursor = CP_Image_Load("Assets/cursor.png");
     CP_System_ShowCursor(FALSE);
+    levelBg = CP_Image_Load("Assets/Levels/level1.png");
     gameOverImage = CP_Image_Load("Assets/gg.png");
-    CP_Font_Set(CP_Font_Load("Assets/Fonts/Oxanium/Oxanium-Variable.ttf"));
 
     windowWidth = (float)CP_System_GetWindowWidth();
     windowHeight = (float)CP_System_GetWindowHeight();
@@ -135,14 +132,13 @@ void level_one_init(void) {
 }
 
 void level_one_update(void) {
-
     CP_Graphics_ClearBackground(CP_Color_Create(170, 170, 170, 255));
     CP_Vector bgVec = CP_Vector_Set((LEVEL_WIDTH / 2), (LEVEL_HEIGHT / 2)),
         relBgVec = get_cam_pos_rel(bgVec, cam);
     CP_Image_Draw(levelBg, relBgVec.x, relBgVec.y, LEVEL_WIDTH, LEVEL_HEIGHT, 255);
     float dt = CP_System_GetDt();
-    float mouse_x = CP_Input_GetMouseWorldX();
-    float mouse_y = CP_Input_GetMouseWorldY();
+    float mouse_x = CP_Input_GetMouseWorldX(),
+        mouse_y = CP_Input_GetMouseWorldY();
 
     enableShooting = true;
   
@@ -534,8 +530,8 @@ void level_one_update(void) {
 
     if (towerInstance.health <= 0) {
         // Draw the Game Over image in the center of the screen
-        float gameOverX = CP_System_GetWindowWidth() / 2;
-        float gameOverY = CP_System_GetWindowHeight() / 2;
+        float gameOverX = CP_System_GetWindowWidth() / 2.f,
+            gameOverY = CP_System_GetWindowHeight() / 2.f;
         CP_Image_Draw(gameOverImage, gameOverX, gameOverY, 1000, 600, 255); // Adjust size as needed
     }
 
@@ -568,13 +564,15 @@ void level_one_update(void) {
     }
 
     // Draw cursor (must be placed last)
-    CP_Image_Draw(chococursor, mouse_x, mouse_y, 70, 50, 255);
+    CP_Image_Draw(cursor, mouse_x, mouse_y, 70, 50, 255);
 }
 
 
 void level_one_exit(void) {
     CP_Image_Free(&playerInstance.img);
     CP_Image_Free(&levelBg);
+    CP_Image_Free(&cursor);
+    CP_Image_Free(&gameOverImage);
 
     for (int i = 0; i < roachesMax; i++) {
         struct ChocoRoach roach = roaches[i];
