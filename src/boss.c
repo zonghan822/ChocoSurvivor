@@ -1,6 +1,5 @@
 #pragma
 #include "cprocessing.h"
-#include "flicker.h"
 #include "boss.h"
 #include "player.h"
 #include "utils.h"
@@ -16,10 +15,14 @@
 // ********************************************* //
 static float _priAtkDelay = 0.f, _priAtkCooldown = 0.f;
 static float _secAtkDelay = 0.f, _secAtkCooldown = 0.f;
-static int _isInPriAtk = 0, _isInSecAtk = 0;
-// Boss one secondary attack private variable
+
+// Boss one attack private variables
 static float _chargeProgress;
-CP_Vector _chargeTo;
+static CP_Vector _meleeOneVec, _chargeTo;
+
+// Boss two attack private variables
+static CP_Vector _meleeTwoVec;
+static float _previousPlayerSpeed = 0.f;
 
 static void _move_boss(struct Boss* boss, CP_Vector move_to, float dt) {
 	CP_Vector moveDirection = {
@@ -67,6 +70,7 @@ struct Boss init_boss_one(float width, float speed, int health, int attack_power
 		.hitbox.pos = boss.pos = CP_Vector_Set(-550.f, 50.f),
 		.width = width,
 		.height = preservedHeight,
+		.state = BOSS_STATE_MOVING,
 		.hitbox.width = boss.width,
 		.hitbox.height = boss.height,
 		.attackPower = attack_power,
@@ -76,6 +80,31 @@ struct Boss init_boss_one(float width, float speed, int health, int attack_power
 		.secondaryAttack = boss_one_sec_atk,
 		.canSecondaryAttack = can_boss_one_sec_atk,
 		.move = boss_one_move
+	};
+
+	return boss;
+}
+
+struct Boss init_boss_two(float width, float speed, int health, int attack_power, float attack_speed) {
+	CP_Image img = CP_Image_Load("Assets/boss_lvl2.png");
+	float preservedHeight = get_preserved_heightf(CP_Image_GetWidth(img), CP_Image_GetHeight(img), width);
+	struct Boss boss = {
+		.img = img,
+		.speed = speed,
+		.health = boss.maxHealth = health,
+		.hitbox.pos = boss.pos = CP_Vector_Set(-550.f, 50.f),
+		.width = width,
+		.height = preservedHeight,
+		.state = BOSS_STATE_MOVING,
+		.hitbox.width = boss.width,
+		.hitbox.height = boss.height,
+		.attackPower = attack_power,
+		.attackSpeed = attack_speed,
+		.primaryAttack = boss_two_pri_atk,
+		.canPrimaryAttack = can_boss_two_pri_atk,
+		.secondaryAttack = boss_two_sec_atk,
+		.canSecondaryAttack = can_boss_two_sec_atk,
+		.move = boss_two_move
 	};
 
 	return boss;
@@ -102,10 +131,15 @@ void boss_one_pri_atk(struct Boss *boss, struct ChocoShooter* player, float dt) 
 	// _priAtkCooldown in this func is used
 	// for the boss recovering from attack (back to idle animation)
 
-	_isInPriAtk = 1;
+	boss->state = BOSS_STATE_ATTACKING_PRIMARY;
 	const float attackingDelay = 2.7f,
 		postAttackDelay = 1.5f;
-	printf("Boss is performing melee attack\n");
+
+	if (_meleeOneVec.x == 0 && _meleeOneVec.y == 0) {
+		printf("Boss is performing melee attack\n");
+		// Melee on the player pos
+		_meleeOneVec = player->pos;
+	}
 
 	// Add delay (attacking animation)
 	if (_priAtkDelay < attackingDelay) {
@@ -114,8 +148,8 @@ void boss_one_pri_atk(struct Boss *boss, struct ChocoShooter* player, float dt) 
 	}
 
 	// Damage player if conditions meet
-	// In this case, it's the distance
-	if (_can_boss_one_pri_atk_dist(*boss, *player))
+	// In this case, it's the distance 80 (not 125)
+	if (CP_Vector_Distance(_meleeOneVec, player->hitbox.pos) <= 80)
 		player_take_damage(player, boss->attackPower);
 	printf("Boss has performed melee attack\n");
 
@@ -127,24 +161,23 @@ void boss_one_pri_atk(struct Boss *boss, struct ChocoShooter* player, float dt) 
 	}
 
 	printf("Boss has recovered from melee attack\n");
-	_isInPriAtk = 0;
+	boss->state = BOSS_STATE_MOVING;
 	_priAtkDelay = _priAtkCooldown = 0.f;
+	_meleeOneVec = CP_Vector_Zero();
 }
 
 int can_boss_one_pri_atk(struct Boss boss, struct ChocoShooter player) {
-	return (_can_boss_one_pri_atk_dist(boss, player) || _isInPriAtk) && !_isInSecAtk;
-}
-
-static int _can_boss_one_pri_atk_dist(struct Boss boss, struct ChocoShooter player) {
-	// 125 is attack range, then add half width (distance from center origin of both entities)
+	// 125 is min range to snapshot the player's pos for the attack,
+	// then add half width (distance from center origin of both entities)
 	// You want to the boss to attack as soon as the edge of its hitbox is as close
 	// to the edge of the player's hitbox (rather than the center origin)
 	float minDistance = 125 + (boss.hitbox.width / 2) + (player.hitbox.width / 2);
-	return CP_Vector_Distance(boss.hitbox.pos, player.hitbox.pos) <= minDistance;
+	return (CP_Vector_Distance(boss.hitbox.pos, player.hitbox.pos) <= minDistance
+		|| boss.state == BOSS_STATE_ATTACKING_PRIMARY);
 }
 
 void boss_one_sec_atk(struct Boss *boss, struct ChocoShooter* player, float dt) {
-	_isInSecAtk = 1;
+	boss->state = BOSS_STATE_ATTACKING_SECONDARY;
 	const float attackingDelay = 3.5f;
 	printf("Boss is performing charge attack\n");
 
@@ -174,7 +207,7 @@ void boss_one_sec_atk(struct Boss *boss, struct ChocoShooter* player, float dt) 
 	// Done charging to pos
 	// Reset values
 	if (boss->pos.x == _chargeTo.x && boss->pos.y == _chargeTo.y) {
-		_isInSecAtk = 0;
+		boss->state = BOSS_STATE_MOVING;
 		_chargeTo = CP_Vector_Zero();
 		_chargeProgress = 0.f;
 		_secAtkCooldown = 0.f;
@@ -186,15 +219,110 @@ int can_boss_one_sec_atk(struct Boss boss, struct ChocoShooter player) {
 	// 275 is for charging distance
 	float minDistance = 275 + (boss.hitbox.width / 2) + (player.hitbox.width / 2);
 	return (CP_Vector_Distance(boss.hitbox.pos, player.hitbox.pos) <= minDistance && _secAtkCooldown >= 15.f) ||
-		_isInSecAtk && !_isInPriAtk;
+		boss.state == BOSS_STATE_ATTACKING_SECONDARY;
 }
 
 void boss_one_move(struct Boss* boss, CP_Vector move_to, float dt) {
 	if (_secAtkCooldown < 15.f)
 		_secAtkCooldown += dt;
 
-	// Boss is in attack state, don't move
-	if (_isInPriAtk || _isInSecAtk) return;
+	if (boss->state != BOSS_STATE_MOVING) return;
+
+	_move_boss(boss, move_to, dt);
+}
+#pragma endregion
+
+#pragma region Boss 2
+void boss_two_pri_atk(struct Boss* boss, struct ChocoShooter* player, float dt) {
+	// _priAtkCooldown in this func is used
+	// for the boss recovering from attack (back to idle animation)
+
+	boss->state = BOSS_STATE_ATTACKING_PRIMARY;
+	const float attackingDelay = 3.1f,
+		postAttackDelay = 1.9f;
+
+	if (_meleeTwoVec.x == 0 && _meleeTwoVec.y == 0) {
+		printf("Boss is performing melee attack\n");
+		// Melee on the player pos
+		_meleeTwoVec = player->pos;
+	}
+
+	// Add delay (attacking animation)
+	if (_priAtkDelay < attackingDelay) {
+		_priAtkDelay += dt;
+		return;
+	}
+
+	// Damage player if conditions meet
+	// In this case, it's the distance 100 (not 145)
+	if (CP_Vector_Distance(_meleeTwoVec, player->hitbox.pos) <= 100)
+		player_take_damage(player, boss->attackPower);
+	printf("Boss has performed melee attack\n");
+
+	// Post attack animation
+	if (_priAtkCooldown < postAttackDelay)
+	{
+		_priAtkCooldown += dt;
+		return;
+	}
+
+	printf("Boss has recovered from melee attack\n");
+	boss->state = BOSS_STATE_MOVING;
+	_priAtkDelay = _priAtkCooldown = 0.f;
+	_meleeTwoVec = CP_Vector_Zero();
+}
+
+int can_boss_two_pri_atk(struct Boss boss, struct ChocoShooter player) {
+	float minDistance = 145 + (boss.hitbox.width / 2) + (player.hitbox.width / 2);
+	return CP_Vector_Distance(boss.hitbox.pos, player.hitbox.pos) <= minDistance
+		|| boss.state == BOSS_STATE_ATTACKING_PRIMARY;
+}
+
+void boss_two_sec_atk(struct Boss* boss, struct ChocoShooter* player, float dt) {
+	boss->state = BOSS_STATE_ATTACKING_SECONDARY;
+	const float attackingDelay = 1.2f,
+		postAttackDelay = 4.5f;
+	printf("Boss is performing slam attack\n");
+
+	// Add delay (animation)
+	if (_secAtkDelay < attackingDelay) {
+		_secAtkDelay += dt;
+		return;
+	}
+
+	if (_previousPlayerSpeed <= 0.f)
+		_previousPlayerSpeed = player->speed;
+
+	player->speed /= 1.5f;
+
+	printf("Slam attack\n");
+
+	// Post attack animation
+	if (_secAtkCooldown < postAttackDelay)
+	{
+		_secAtkCooldown += dt;
+		return;
+	}
+
+	// Reset values
+	if (boss->pos.x == _chargeTo.x && boss->pos.y == _chargeTo.y) {
+		boss->state = BOSS_STATE_MOVING;
+		_secAtkCooldown = 0.f;
+		_secAtkDelay = 0.f;
+		player->speed = _previousPlayerSpeed;
+		_previousPlayerSpeed = 0.f;
+	}
+}
+
+int can_boss_two_sec_atk(struct Boss boss, struct ChocoShooter player) {
+	return _secAtkCooldown >= 45.f || boss.state == BOSS_STATE_ATTACKING_SECONDARY;
+}
+
+void boss_two_move(struct Boss* boss, CP_Vector move_to, float dt) {
+	if (_secAtkCooldown < 45.f)
+		_secAtkCooldown += dt;
+
+	if (boss->state != BOSS_STATE_MOVING) return;
 
 	_move_boss(boss, move_to, dt);
 }

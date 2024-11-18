@@ -4,11 +4,21 @@
 #include "player.h"
 #include "camera.h"
 
+enum BossState {
+    BOSS_STATE_DIED = 0,
+    BOSS_STATE_MOVING,
+    BOSS_STATE_ATTACKING_PRIMARY,
+    BOSS_STATE_ATTACKING_SECONDARY,
+    BOSS_STATE_DETOUR,
+    BOSS_STATE_IDLE
+};
+
 struct Boss {
     CP_Vector pos;
     float width, height;
     float speed;
     CP_Image img;
+    enum BossState state;
     int health, maxHealth;
     enum Movement movement;
     void (*move)(struct Boss*, CP_Vector move_to, float dt);
@@ -22,11 +32,18 @@ struct Boss {
 };
 
 struct Boss init_boss_one(float width, float speed, int health, int attack_power, float attack_speed);
+struct Boss init_boss_two(float width, float speed, int health, int attack_power, float attack_speed);
 void render_boss(struct Boss, struct Camera cam);
-void boss_take_damge(struct Boss* boss, int damage);
+void boss_take_damage(struct Boss* boss, int damage);
 
 void boss_one_pri_atk(struct Boss*, struct ChocoShooter*, float dt);
 int can_boss_one_pri_atk(struct Boss, struct ChocoShooter);
 void boss_one_sec_atk(struct Boss*, struct ChocoShooter*, float dt);
 int can_boss_one_sec_atk(struct Boss, struct ChocoShooter);
 void boss_one_move(struct Boss* boss, CP_Vector move_to, float dt);
+
+void boss_two_pri_atk(struct Boss*, struct ChocoShooter*, float dt);
+int can_boss_two_pri_atk(struct Boss, struct ChocoShooter);
+void boss_two_sec_atk(struct Boss*, struct ChocoShooter*, float dt);
+int can_boss_two_sec_atk(struct Boss, struct ChocoShooter);
+void boss_two_move(struct Boss* boss, CP_Vector move_to, float dt);
