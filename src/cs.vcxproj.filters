@@ -43,11 +43,11 @@
     <ClCompile Include="barrier.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="astar.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="utils.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="boss.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -79,6 +79,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="barrier.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="astar.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

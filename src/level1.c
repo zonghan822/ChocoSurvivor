@@ -15,6 +15,7 @@
 #include "utils.h"
 #include "flicker.h"
 #include "barrier.h" 
+#include "astar.h"
 
 #define MAX_ENEMY_COUNT 100
 #define LEVEL_WIDTH 2000.0f
@@ -93,6 +94,8 @@ struct Rectangle worldClips[100];
 struct Rectangle playerClips[1];
 struct Rectangle enemyClips[1];
 int worldClipsCount = 0;
+PathNode grid[1000];
+int nodeCount = 0;
 #pragma endregion
 
 
@@ -158,15 +161,15 @@ void level_one_init(void) {
     currentWave = WAVE_0;
     isWaveStart = 1;
 
-    // set initial flickering states
-    playerInstance.flickerState.isVisible = TRUE;
-
     // store non-movable path in worldClips
     worldClips[0] = get_tower_hitbox(towerInstance);
     worldClipsCount = 1;
     for (int i = 0; obstacles[i].width; i++) {
         worldClips[worldClipsCount++] = obstacles[i];
     }
+
+    nodeCount = init_grid(grid, LEVEL_WIDTH, LEVEL_HEIGHT, playerInstance.width, playerInstance.height);
+    update_grid(grid, worldClips, worldClipsCount);
 }
 
 void level_one_update(void) {
@@ -185,7 +188,7 @@ void level_one_update(void) {
     float mouse_y = CP_Input_GetMouseWorldY();
 
     enableShooting = true;
-  
+    draw_grid(grid, nodeCount, cam);
     // Init enemy when wave start
     if (isWaveStart) {
         #pragma region Enemy_Init
@@ -310,6 +313,7 @@ void level_one_update(void) {
         previewPosition = get_world_pos_rel(CP_Vector_Set(mouse_x, mouse_y), cam);
 
         // Draw translucent preview rectangle
+        CP_Settings_RectMode(CP_POSITION_CENTER);
         CP_Settings_Fill(CP_Color_Create(0, 0, 255, 128)); // Semi-transparent blue
         CP_Graphics_DrawRect(mouse_x, mouse_y, barrierWidth, barrierHeight);
 
@@ -325,6 +329,7 @@ void level_one_update(void) {
                 // store the barrier in worldClips
                 struct Barrier* barriers = get_barriers();
                 worldClips[worldClipsCount] = barriers[barrierIndex].hitbox;
+                update_grid(grid, worldClips, worldClipsCount);
             }
         }
         break;
