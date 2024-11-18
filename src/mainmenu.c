@@ -6,15 +6,11 @@
 #include <stdio.h>
 
 struct Rectangle playRect, optionsRect, quitRect;
-CP_Image chococursor;
-
-CP_Color bg;
-CP_Color playBg;
-CP_Color otherBg;
-
+CP_Image cursor;
+CP_Color bg, playBg, otherBg;
 
 void main_menu_init(void){
-	chococursor = CP_Image_Load("Assets/cursor.png");
+	cursor = CP_Image_Load("Assets/cursor.png");
 	CP_System_ShowCursor(FALSE);
 
 	CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_CENTER, CP_TEXT_ALIGN_V_MIDDLE);
@@ -27,7 +23,6 @@ void main_menu_init(void){
 }
 
 void main_menu_update(void) {
-
 	CP_Graphics_ClearBackground(bg);
 
 	int windowWidth = CP_System_GetWindowWidth(),
@@ -69,9 +64,9 @@ void main_menu_update(void) {
 	CP_Font_DrawText("Options", optionsRect.pos.x, optionsRect.pos.y + 5.0f);
 	CP_Font_DrawText("Quit", quitRect.pos.x, quitRect.pos.y + 5.0f);
 
-	float mouse_x = CP_Input_GetMouseWorldX();
-	float mouse_y = CP_Input_GetMouseWorldY();
-	CP_Image_Draw(chococursor, mouse_x, mouse_y, 70, 50, 255);
+	float mouse_x = CP_Input_GetMouseWorldX(),
+		mouse_y = CP_Input_GetMouseWorldY();
+	CP_Image_Draw(cursor, mouse_x, mouse_y, 70, 50, 255);
 	if (CP_Input_MouseTriggered(MOUSE_BUTTON_LEFT))
 	{
 		// Play
@@ -91,5 +86,5 @@ void main_menu_update(void) {
 }
 
 void main_menu_exit(void) {
-
+	CP_Image_Free(&cursor);
 }

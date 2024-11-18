@@ -17,7 +17,8 @@
 #define LEVEL_WIDTH 3000.0f
 #define LEVEL_HEIGHT 900.0f
 
-CP_Image levelBg;
+CP_Image levelBg,
+    cursor, gameOverImage;
 
 // ************************************* //
 // *         Spawn Properties          * //
@@ -56,7 +57,10 @@ struct Rectangle enemyClips[1];
 struct Rectangle playerBarricades[10];
 
 void level_two_init(void) {
-    levelBg = CP_Image_Load("Assets/Levels/level3.png");
+    cursor = CP_Image_Load("Assets/cursor.png");
+    CP_System_ShowCursor(FALSE);
+    levelBg = CP_Image_Load("Assets/Levels/level2.png");
+    gameOverImage = CP_Image_Load("Assets/gg.png");
     cam = init_camera(playerInstance, (float)CP_System_GetWindowWidth(), (float)CP_System_GetWindowHeight());
 
     towerInstance.maxHealth = towerInstance.health = 3;
@@ -66,7 +70,7 @@ void level_two_init(void) {
     worldClips[0] = get_tower_hitbox(towerInstance);
 
     playerInstance = init_player(CP_Vector_Set(towerInstance.pos.x / 1.05, towerInstance.pos.y), 350.0f, 100, 30, 10.f);
-    bossInstance = init_boss_one(400.f, 95.f, 600, 100, 3.f);
+    bossInstance = init_boss_two(400.f, 95.f, 600, 100, 3.f);
 
     roachesMax = 40;
     spawnDelay = 5.0f; // Give player some buffer
@@ -102,6 +106,13 @@ void level_two_update(void) {
     if (bossInstance.canPrimaryAttack(bossInstance, playerInstance))
         bossInstance.primaryAttack(&bossInstance, &playerInstance, dt);
 
+    if (towerInstance.health <= 0) {
+        // Draw the Game Over image in the center of the screen
+        float gameOverX = CP_System_GetWindowWidth() / 2.f,
+            gameOverY = CP_System_GetWindowHeight() / 2.f;
+        CP_Image_Draw(gameOverImage, gameOverX, gameOverY, 1000, 600, 255); // Adjust size as needed
+    }
+
     // Render UI
     {
         CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255));
@@ -124,11 +135,17 @@ void level_two_update(void) {
         sprintf_s(currentWaveStr, sizeof(currentWaveStr), "Wave: %d", 1);
         CP_Font_DrawText(currentWaveStr, CP_System_GetWindowWidth() / 2.0f, 50.0f);
     }
+
+    float mouse_x = CP_Input_GetMouseWorldX(),
+        mouse_y = CP_Input_GetMouseWorldY();
+    CP_Image_Draw(cursor, mouse_x, mouse_y, 70, 50, 255);
 }
 
 void level_two_exit(void) {
     CP_Image_Free(&playerInstance.img);
     CP_Image_Free(&levelBg);
+    CP_Image_Free(&cursor);
+    CP_Image_Free(&gameOverImage);
     CP_Image_Free(&bossInstance.img);
 
     for (int i = 0; i < roachesMax; i++) {
