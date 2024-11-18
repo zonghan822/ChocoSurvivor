@@ -53,6 +53,15 @@ void clamp_pos_clip_rel(CP_Vector* vec, struct Rectangle entity_hitbox, struct R
     }
 }
 
+float resize_by_divisor(float dimension, int divisor) {
+    int intDimension = (int)dimension;
+    if (intDimension % divisor != 0) {
+        // Round up to the nearest multiple of divisor
+        return (float)((intDimension / divisor + 1) * divisor);
+    }
+    return dimension;
+}
+
 //void resize_by_width_preservef(float* width, float* height, float new_width) {
 //	float aspectRatio = *width / *height;
 //	*width = new_width;
