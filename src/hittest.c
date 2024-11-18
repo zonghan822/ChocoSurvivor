@@ -2,7 +2,7 @@
 #include <math.h>
 #include <cprocessing.h>
 
-int is_rect_clicked(struct Rectangle rect, float click_x, float click_y) {
+int is_mouse_on_rect(struct Rectangle rect, float click_x, float click_y) {
 	rect.pos.x -= (rect.width / 2);
 	rect.pos.y -= (rect.height / 2);
 
@@ -15,7 +15,7 @@ int is_rect_clicked(struct Rectangle rect, float click_x, float click_y) {
 		click_y >= yStartpoint && click_y <= yEndpoint;
 }
 
-int is_circle_clicked(struct Circle circ, float click_x, float click_y) {
+int is_mouse_on_circle(struct Circle circ, float click_x, float click_y) {
 	float dx = click_x - circ.pos.x,
 		dy = click_y - circ.pos.y,
 		distance = (dx * dx) + (dy * dy),

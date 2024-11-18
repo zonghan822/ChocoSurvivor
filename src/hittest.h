@@ -4,8 +4,8 @@
 #include "utils.h"
 
 #pragma region Click
-int is_rect_clicked(struct Rectangle rect, float click_x, float click_y);
-int is_circle_clicked(struct Circle circ, float click_x, float click_y);
+int is_mouse_on_rect(struct Rectangle rect, float click_x, float click_y);
+int is_mouse_on_circle(struct Circle circ, float click_x, float click_y);
 #pragma endregion
 
 #pragma region Intersect
