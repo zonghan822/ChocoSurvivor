@@ -85,6 +85,14 @@ void level_two_update(void) {
         relBgVec = get_cam_pos_rel(bgVec, cam);
     CP_Image_Draw(levelBg, relBgVec.x, relBgVec.y, LEVEL_WIDTH, LEVEL_HEIGHT, 255);
     float dt = CP_System_GetDt();
+    float mouseX = CP_Input_GetMouseWorldX(),
+        mouseY = CP_Input_GetMouseWorldY();
+
+    CP_Vector mouseVec = get_world_pos_rel(CP_Vector_Set(mouseX, 0.f), cam);
+    if (playerInstance.pos.x > mouseVec.x)
+        playerInstance.width = playerInstance.width > 0 ? -playerInstance.width : playerInstance.width;
+    else
+        playerInstance.width = playerInstance.width < 0 ? -playerInstance.width : playerInstance.width;
 
     move_player(&playerInstance, dt, LEVEL_WIDTH, LEVEL_HEIGHT);
     bossInstance.move(&bossInstance, playerInstance.pos, dt);
@@ -136,9 +144,7 @@ void level_two_update(void) {
         CP_Font_DrawText(currentWaveStr, CP_System_GetWindowWidth() / 2.0f, 50.0f);
     }
 
-    float mouse_x = CP_Input_GetMouseWorldX(),
-        mouse_y = CP_Input_GetMouseWorldY();
-    CP_Image_Draw(cursor, mouse_x, mouse_y, 70, 50, 255);
+    CP_Image_Draw(cursor, mouseX, mouseY, 70, 50, 255);
 }
 
 void level_two_exit(void) {

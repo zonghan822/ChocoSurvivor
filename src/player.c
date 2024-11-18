@@ -178,7 +178,8 @@ struct Bullet init_bullet(enum BulletType bulletType, float bulletSpeed, float b
 
 void shoot_bullet(struct ChocoShooter* player, struct Bullet* bullet) {
     // x is the min or max x of player (extreme left or right of player)
-    bullet->pos.x = (bullet->shootDirection.x < 0) ? player->pos.x - (player->width / 2) : player->pos.x + (player->width / 2);
+    float playerWidth = player->width < 0 ? -player->width : player->width;
+    bullet->pos.x = (bullet->shootDirection.x < 0) ? player->pos.x - (playerWidth / 2) : player->pos.x + (playerWidth / 2);
     bullet->pos.y = player->pos.y;
 
     int bulletCount = 0;

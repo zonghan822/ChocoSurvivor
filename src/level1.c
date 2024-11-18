@@ -137,10 +137,16 @@ void level_one_update(void) {
         relBgVec = get_cam_pos_rel(bgVec, cam);
     CP_Image_Draw(levelBg, relBgVec.x, relBgVec.y, LEVEL_WIDTH, LEVEL_HEIGHT, 255);
     float dt = CP_System_GetDt();
-    float mouse_x = CP_Input_GetMouseWorldX(),
-        mouse_y = CP_Input_GetMouseWorldY();
+    float mouseX = CP_Input_GetMouseWorldX(),
+        mouseY = CP_Input_GetMouseWorldY();
 
     enableShooting = true;
+
+    CP_Vector mouseVec = get_world_pos_rel(CP_Vector_Set(mouseX, 0.f), cam);
+    if (playerInstance.pos.x > mouseVec.x)
+        playerInstance.width = playerInstance.width > 0 ? -playerInstance.width : playerInstance.width;
+    else
+        playerInstance.width = playerInstance.width < 0 ? -playerInstance.width : playerInstance.width;
   
     // Init enemy when wave start
     if (isWaveStart) {
@@ -242,11 +248,11 @@ void level_one_update(void) {
     case BARRIER_PREVIEW:
         enableShooting = false;
         // Update the preview position to follow the mouse
-        previewPosition = get_world_pos_rel(CP_Vector_Set(mouse_x, mouse_y), cam);
+        previewPosition = get_world_pos_rel(CP_Vector_Set(mouseX, mouseY), cam);
 
         // Draw translucent preview rectangle
         CP_Settings_Fill(CP_Color_Create(0, 0, 255, 128)); // Semi-transparent blue
-        CP_Graphics_DrawRect(mouse_x, mouse_y, barrierWidth, barrierHeight);
+        CP_Graphics_DrawRect(mouseX, mouseY, barrierWidth, barrierHeight);
 
         // Place the barrier on mouse click
         if (CP_Input_MouseTriggered(MOUSE_BUTTON_LEFT)) {
@@ -272,7 +278,7 @@ void level_one_update(void) {
     if (CP_Input_MouseDown(MOUSE_BUTTON_LEFT) && enableShooting) {
         if (lastShotTime >= (1 / playerInstance.attackSpeed)) { // control fire rate
             // bullet direction is the vector of player with mouse pointer
-            CP_Vector bulletDirection = CP_Vector_Subtract(CP_Vector_Set(mouse_x, mouse_y), get_cam_pos_rel(playerInstance.pos, cam));
+            CP_Vector bulletDirection = CP_Vector_Subtract(CP_Vector_Set(mouseX, mouseY), get_cam_pos_rel(playerInstance.pos, cam));
             struct Bullet bullet = init_bullet(bulletType, bulletSpeed, bulletDiameter, playerInstance.attackPower, bulletDirection);
             shoot_bullet(&playerInstance, &bullet);
             lastShotTime = 0;
@@ -288,7 +294,7 @@ void level_one_update(void) {
     update_rect_hitbox(&playerInstance.hitbox, 0.0f, 0.0f, playerInstance.pos); // Update hitbox of player
     render_player(playerInstance, 255, cam);
 
-    for (int i = 0; i < sizeof(worldClips); i++) {
+    for (int i = 0; i < ARRAY_COUNT(worldClips); i++) {
         struct Rectangle worldClip = worldClips[i];
         if (are_rects_intersecting(playerInstance.hitbox, worldClip))
             clamp_pos_clip_rel(&playerInstance.pos, playerInstance.hitbox, worldClip);
@@ -564,7 +570,7 @@ void level_one_update(void) {
     }
 
     // Draw cursor (must be placed last)
-    CP_Image_Draw(cursor, mouse_x, mouse_y, 70, 50, 255);
+    CP_Image_Draw(cursor, mouseX, mouseY, 70, 50, 255);
 }
 
 
