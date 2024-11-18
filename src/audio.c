@@ -178,32 +178,32 @@ void dispose_sounds(void) {
 	stop_sounds();
 
 	// Player Sounds
-	CP_Sounds_Free(&_soundPlayerWalk);
-	CP_Sounds_Free(&_soundPlayerShoot);
-	CP_Sounds_Free(&_soundPlayerHurt);
-	CP_Sounds_Free(&_soundPlayerDash);
-	CP_Sounds_Free(&_soundPlayerDie);
+	CP_Sound_Free(&_soundPlayerWalk);
+	CP_Sound_Free(&_soundPlayerShoot);
+	CP_Sound_Free(&_soundPlayerHurt);
+	CP_Sound_Free(&_soundPlayerDash);
+	CP_Sound_Free(&_soundPlayerDie);
 
 	// Barricade Sounds
-	// CP_Sounds_Free(&_soundBarricadeHurt);
-	// CP_Sounds_Free(&_soundBarricadeDie);
+	// CP_Sound_Free(&_soundBarricadeHurt);
+	// CP_Sound_Free(&_soundBarricadeDie);
 
 	// Roach Sounds
-	// CP_Sounds_Free(&_soundRoachWalk);
-	// CP_Sounds_Free(&_soundRoachAttack);
-	// CP_Sounds_Free(&_soundRoachHurt);
-	// CP_Sounds_Free(&_soundRoachDie);
+	// CP_Sound_Free(&_soundRoachWalk);
+	// CP_Sound_Free(&_soundRoachAttack);
+	// CP_Sound_Free(&_soundRoachHurt);
+	// CP_Sound_Free(&_soundRoachDie);
 
 	// Boss Sounds
-	// CP_Sounds_Free(&_soundBossWalk);
-	// CP_Sounds_Free(&_soundBossAttack);
-	// CP_Sounds_Free(&_soundBossAttackWindup);
-	// CP_Sounds_Free(&_soundBossHurt);
-	// CP_Sounds_Free(&_soundBossCharge);
-	// CP_Sounds_Free(&_soundBossChargeWindup);
+	// CP_Sound_Free(&_soundBossWalk);
+	// CP_Sound_Free(&_soundBossAttack);
+	// CP_Sound_Free(&_soundBossAttackWindup);
+	// CP_Sound_Free(&_soundBossHurt);
+	// CP_Sound_Free(&_soundBossCharge);
+	// CP_Sound_Free(&_soundBossChargeWindup);
 
 	// Projectile Sounds
-	// CP_Sounds_Free(&_soundProjectileHit);
+	// CP_Sound_Free(&_soundProjectileHit);
 
 	// Music
 

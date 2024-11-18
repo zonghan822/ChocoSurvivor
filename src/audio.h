@@ -54,9 +54,9 @@ enum SoundGroup {
 };
 
 void init_sounds(void);
-void play_sound(enum SoundType);
-void play_sound_advanced(enum SoundType, float volume_scale, int loop);
+void play_sound(enum SoundType sound_type);
+void play_sound_advanced(enum SoundType sound_type, float volume_scale, int loop);
 void stop_sounds(void);
-void stop_sound_group(enum SoundGroup);
-void set_volume(enum SoundType, float volume);
+void stop_sound_group(enum SoundGroup sound_group);
+void set_volume(enum SoundType sound_type, float volume);
 void dispose_sounds(void);
