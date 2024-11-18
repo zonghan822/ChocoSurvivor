@@ -38,6 +38,9 @@ static CP_Sound _soundProjectileHit;
 #pragma endregion
 
 #pragma region UI Group
+static CP_Sound _soundUiButtonHover,
+	_soundUiButtonConfirmClick,
+	_soundUiButtonBackClick;
 #pragma endregion
 
 #pragma region Music Group
@@ -82,6 +85,12 @@ static CP_Sound _get_sound_object(enum SoundType sound_type) {
 			return _soundBossChargeWindup;
 		case PROJECTILE_HIT:
 			return _soundProjectileHit;
+		case UI_BUTTON_HOVER:
+			return _soundUiButtonHover;
+		case UI_BUTTON_BACK_CLICK:
+			return _soundUiButtonBackClick;
+		case UI_BUTTON_CONFIRM_CLICK:
+			return _soundUiButtonConfirmClick;
 			// Add more cases as needed for UI and Music sounds
 		default:
 			// Return a default sound or handle the error appropriately
@@ -118,8 +127,10 @@ static enum SoundGroup _get_sound_group(enum SoundType sound_type) {
 		//     return MUSIC;
 
 		// UI Group
-		// case UI_SOMETHING:
-		//     return UI;
+		case UI_BUTTON_HOVER:
+		case UI_BUTTON_CONFIRM_CLICK:
+		case UI_BUTTON_BACK_CLICK:
+		    return UI;
 
 		default:
 			return NONE;
@@ -131,6 +142,11 @@ void init_sounds(void) {
 	// Player
 	//_soundPlayerWalk = CP_Sound_Load(filePath);
 	//...
+
+	// UI
+	_soundUiButtonHover = CP_Sound_Load("Assets/Sounds/bong_001.ogg");
+	_soundUiButtonConfirmClick = CP_Sound_Load("Assets/Sounds/drop_001.ogg");
+	_soundUiButtonBackClick = CP_Sound_Load("Assets/Sounds/error_005.ogg");
 }
 
 void play_sound(enum SoundType sound_type) {
@@ -208,4 +224,7 @@ void dispose_sounds(void) {
 	// Music
 
 	// UI
+	CP_Sound_Free(&_soundUiButtonHover);
+	CP_Sound_Free(&_soundUiButtonConfirmClick);
+	CP_Sound_Free(&_soundUiButtonBackClick);
 }

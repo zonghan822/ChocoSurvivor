@@ -32,7 +32,7 @@ enum SoundType {
 	BOSS_CHARGE_WINDUP,
 
 	// Projectiles
-	PROJECTILE_HIT
+	PROJECTILE_HIT,
 #pragma endregion
 
 #pragma region Music
@@ -42,6 +42,9 @@ enum SoundType {
 
 #pragma region UI
 	// UI
+	UI_BUTTON_HOVER,
+	UI_BUTTON_CONFIRM_CLICK,
+	UI_BUTTON_BACK_CLICK,
 	// UI_SOMETHING
 #pragma endregion
 };

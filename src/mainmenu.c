@@ -3,6 +3,8 @@
 #include "level2.h"
 #include "hittest.h"
 #include "cprocessing.h"
+#include "audio.h"
+
 #include <stdio.h>
 
 struct Rectangle playRect, optionsRect, quitRect;
@@ -10,6 +12,7 @@ CP_Image cursor;
 CP_Color bg, playBg, otherBg;
 
 void main_menu_init(void){
+	init_sounds();
 	cursor = CP_Image_Load("Assets/cursor.png");
 	CP_System_ShowCursor(FALSE);
 
@@ -67,24 +70,40 @@ void main_menu_update(void) {
 	float mouse_x = CP_Input_GetMouseWorldX(),
 		mouse_y = CP_Input_GetMouseWorldY();
 	CP_Image_Draw(cursor, mouse_x, mouse_y, 70, 50, 255);
-	if (CP_Input_MouseTriggered(MOUSE_BUTTON_LEFT))
-	{
-		// Play
-  		if (is_rect_clicked(playRect, mouse_x, mouse_y))
-   			CP_Engine_SetNextGameState(level_one_init, level_one_update, level_one_exit);
+	// Play
+	if (is_rect_clicked(playRect, mouse_x, mouse_y)) {
+		play_sound(UI_BUTTON_HOVER);
 
-  		// Options
-  		else if (is_rect_clicked(optionsRect, mouse_x, mouse_y))
-   			printf("Clicked Options\n"); // Set option state here
+		if (CP_Input_MouseTriggered(MOUSE_BUTTON_LEFT)) {
+			play_sound(UI_BUTTON_CONFIRM_CLICK);
+			CP_Engine_SetNextGameState(level_one_init, level_one_update, level_one_exit);
+		}
+	}
 
-  		// Maybe Credits?
+  	// Options
+	else if (is_rect_clicked(optionsRect, mouse_x, mouse_y)) {
+		play_sound(UI_BUTTON_HOVER);
 
-		// Quit
-		else if (is_rect_clicked(quitRect, mouse_x, mouse_y))
+		if (CP_Input_MouseTriggered(MOUSE_BUTTON_LEFT)) {
+			play_sound(UI_BUTTON_CONFIRM_CLICK);
+			printf("Clicked Options\n"); // Set option state here
+		}
+	}
+
+  	// Maybe Credits?
+
+	// Quit
+	else if (is_rect_clicked(quitRect, mouse_x, mouse_y)) {
+		play_sound(UI_BUTTON_HOVER);
+
+		if (CP_Input_MouseTriggered(MOUSE_BUTTON_LEFT)) {
+			play_sound(UI_BUTTON_CONFIRM_CLICK);
 			CP_Engine_Terminate();
+		}
 	}
 }
 
 void main_menu_exit(void) {
+	dispose_sounds();
 	CP_Image_Free(&cursor);
 }
