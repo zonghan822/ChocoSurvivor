@@ -34,15 +34,13 @@
     <ClCompile Include="flicker.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="barrier.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="boss.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="enemy.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="mainmenu.h">
@@ -64,6 +62,10 @@
       <Filter>Header Files\Levels</Filter>
     </ClInclude>
     <ClInclude Include="flicker.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="barrier.h" />
+    <ClInclude Include="enemy.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

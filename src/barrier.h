@@ -8,6 +8,7 @@ struct Barrier {
     float width;
     float height;
     int health;
+    float cooldownTimer;
 };
 
 // Enum for barrier states
@@ -22,6 +23,8 @@ int get_barrier_count(void);
 void increment_barrier_count(void);
 void set_barrier_properties(int index, CP_Vector position, float width, float height, int health);
 struct Barrier* get_barriers(void);  // Add this line
+void check_barrier_collision(struct ChocoRoach* roach);
+void reset_barriers(void);
 
 struct allies {
     CP_Vector position;
@@ -31,6 +34,6 @@ struct allies {
 };
 
 enum allieState {
-    BARRIER_IDLE,
-    BARRIER_PREVIEW
+    ALLIE_IDLE,
+    ALLIE_PREVIEW
 };

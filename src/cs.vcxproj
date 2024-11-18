@@ -36,6 +36,7 @@
     <ClInclude Include="barrier.h" />
     <ClInclude Include="boss.h" />
     <ClInclude Include="camera.h" />
+    <ClInclude Include="enemy.h" />
     <ClInclude Include="level1.h" />
     <ClInclude Include="tower.h" />
     <ClInclude Include="flicker.h" />

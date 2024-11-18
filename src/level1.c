@@ -87,14 +87,14 @@ void level_one_init(void) {
     towerInstance.pos = CP_Vector_Set(LEVEL_WIDTH / 1.1, LEVEL_HEIGHT / 2);
     #pragma endregion
 
-    #pragma region Barrier_Init
-    // Init Barrier Properties
+#pragma region Barrier_Init
+    reset_barriers();  // Reset all barriers 
     currentState = BARRIER_IDLE;
     barrierWidth = 50.0f;
     barrierHeight = 100.0f;
     barrier_rect_W = 50.0f;
     barrier_rect_H = 50.0f;
-    #pragma endregion
+#pragma endregion
 
     cam = init_camera(playerInstance, windowWidth, windowHeight);
 
@@ -102,6 +102,7 @@ void level_one_init(void) {
     currentWave = WAVE_0;
     isWaveStart = 1;
 }
+
 
 void level_one_update(void) {
 
@@ -114,7 +115,7 @@ void level_one_update(void) {
 
     // Init enemy when wave start
     if (isWaveStart) {
-        #pragma region Enemy_Init
+#pragma region Enemy_Init
         float enemySpeed = 0.f;
         int enemyMaxHealth = 0, enemyDmg = 0;
 
@@ -122,34 +123,41 @@ void level_one_update(void) {
         case WAVE_0:
             enemySpeed = 150.f;
             enemyMaxHealth = 100;
-            enemyDmg = 20;
-            roachesMax = 20;
+            enemyDmg = 1;
+            roachesMax = 5;
             break;
         case WAVE_1:
             enemySpeed = 200.f;
-            enemyMaxHealth = 100;
-            enemyDmg = 20;
-            roachesMax = 40;
+            enemyMaxHealth = 150;
+            enemyDmg = 2;
+            roachesMax = 10;
             break;
         case WAVE_2:
-            enemySpeed = 200.f;
-            enemyMaxHealth = 100;
-            enemyDmg = 20;
-            roachesMax = 40;
+            enemySpeed = 250.f;
+            enemyMaxHealth = 200;
+            enemyDmg = 3;
+            roachesMax = 15;
             break;
         case WAVE_3:
-            enemySpeed = 200.f;
-            enemyMaxHealth = 100;
-            enemyDmg = 20;
-            roachesMax = 40;
+            enemySpeed = 300.f;
+            enemyMaxHealth = 300;
+            enemyDmg = 5;
+            roachesMax = 20;
             break;
         }
 
         for (int i = 0; i < roachesMax; i++) {
-            // Store enemies in array
-            roaches[i] = init_enemy(LEVEL_HEIGHT * 1 / 5, LEVEL_HEIGHT * 4 / 5, 200.f, enemySpeed, enemyMaxHealth, enemyDmg);
+            roaches[i] = init_enemy(
+                LEVEL_HEIGHT * 1 / 5,
+                LEVEL_HEIGHT * 4 / 5,
+                200.f,                 // Spawn width
+                enemySpeed,            // xSpeed
+                enemySpeed,            // speed (same for now)
+                enemyMaxHealth,
+                enemyDmg
+            );
         }
-        #pragma endregion
+#pragma endregion
         isWaveStart = 0;
     }
 
@@ -168,6 +176,8 @@ void level_one_update(void) {
     } else {
         #pragma region Enemy_Movement_Logic
         for (int i = 0; roaches[i].currentState; i++) {
+            // Check collision with barriers
+            check_barrier_collision(&roaches[i]);
 
             // Enemy movement logic and attacking logic
             struct Circle radarRoach = { .pos = roaches[i].pos, .diameter = 5 * roaches[i].width }; // define enemy radar
@@ -229,15 +239,21 @@ void level_one_update(void) {
         break;
     }
     #pragma endregion
-
-    // Damage the first active barrier when pressing 'B'
-    if (CP_Input_KeyTriggered(KEY_B)) {
-        takeDamage(1);
+    if (CP_Input_KeyTriggered(KEY_O)) {
+        if (get_barrier_count() < MAX_BARRIERS) {
+            // Add a new barrier at a default position with default size and health
+            set_barrier_properties(get_barrier_count(), CP_Vector_Set(400, 300), 50.0f, 100.0f, BARRIER_INITIAL_HEALTH);
+            increment_barrier_count();
+            printf("Barrier regenerated! Current count: %d\n", get_barrier_count());
+        }
+        else {
+            printf("Max barriers reached. Cannot regenerate more barriers.\n");
+        }
     }
 
     #pragma region Shoot_Bullet
     lastShotTime += dt;
-    if (CP_Input_MouseDown(MOUSE_BUTTON_LEFT) && enableShooting) {
+    if (CP_Input_MouseDown(MOUSE_BUTTON_LEFT) && enableShooting) {  
         if (lastShotTime >= (1 / playerInstance.attackSpeed)) { // control fire rate
             CP_Vector bulletDirection = CP_Vector_Subtract(CP_Vector_Set(mouse_x, mouse_y), get_cam_pos_rel(playerInstance.pos, cam));
             struct Bullet bullet = init_bullet(bulletType, bulletSpeed, bulletDiameter, playerInstance.attackPower, bulletDirection);
