@@ -17,7 +17,7 @@ struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth,
     srand((unsigned int)time(NULL));
     struct ChocoRoach chocoRoach = {
             .img = CP_Image_Load("Assets/choco_roach.png"),
-            .width = 70.f,
+            .width = ENEMY_WIDTH,
             .height = get_preserved_heightf((float)CP_Image_GetWidth(chocoRoach.img),
                 (float)CP_Image_GetHeight(chocoRoach.img), chocoRoach.width),
             .pos.x = CP_Random_RangeFloat(-chocoRoach.width-spawnWidth, -chocoRoach.width),

@@ -46,7 +46,16 @@ void update_grid(PathNode* grid, struct Rectangle* worldClips, int clipsSize) {
 					int neighbourIndex = cI + cJ * _nodeCountX;
 					if (nodeIndex == neighbourIndex) continue;
 					PathNode neighbourNode = grid[neighbourIndex];
-					struct Rectangle neighbourRect = { neighbourNode.pos, .width = _nodeWidth * 2, .height = _nodeHeight * 2 };
+					struct Rectangle neighbourRect = { neighbourNode.pos, .width = _nodeWidth, .height = _nodeHeight };
+					if (cI - i > 0)
+						neighbourRect.pos.x -= neighbourRect.width / 2;
+					if (cI - i < 0)
+						neighbourRect.pos.x += neighbourRect.width / 2;
+					if (cJ - j > 0)
+						neighbourRect.pos.y -= neighbourRect.height / 2;
+					if (cJ - j < 0)
+						neighbourRect.pos.y += neighbourRect.height / 2;
+
 					bool isValidNode = true;
 					for (int clipIndex = 0; clipIndex < clipsSize; clipIndex++) {
 						if (are_rects_intersecting(neighbourRect, worldClips[clipIndex])) {
@@ -56,7 +65,6 @@ void update_grid(PathNode* grid, struct Rectangle* worldClips, int clipsSize) {
 					}
 					if (isValidNode) {
 						grid[nodeIndex].connections[connectionIndex] = neighbourIndex;
-						printf("node %d: neighbour %d\n", nodeIndex, neighbourIndex);
 						grid[nodeIndex].connectionCount++;
 						connectionIndex++;
 					}
@@ -78,15 +86,6 @@ void draw_grid(PathNode* grid, int nodeCount, struct Camera cam) {
 	}
 }
 
-AStarNode* createNode(int nodeIndex, float gCost, float hCost, AStarNode* parent) {
-	AStarNode* node = (AStarNode*)malloc(sizeof(AStarNode));
-	node->nodeIndex = nodeIndex;
-	node->gCost = gCost;
-	node->hCost = hCost;
-	node->fCost = gCost + hCost;
-	node->parentNode = parent;
-	return node;
-}
 
 int get_nearest_node_index(PathNode* grid, int nodeCount, CP_Vector position) {
 	int closestNodeIndex = 0;

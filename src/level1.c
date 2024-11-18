@@ -19,7 +19,7 @@
 
 #define MAX_ENEMY_COUNT 100
 #define LEVEL_WIDTH 2000.0f
-#define LEVEL_HEIGHT 900.0f
+#define LEVEL_HEIGHT 1200.0f
 
 CP_Image levelBg;
 CP_Image chococursor;
@@ -168,7 +168,7 @@ void level_one_init(void) {
         worldClips[worldClipsCount++] = obstacles[i];
     }
 
-    nodeCount = init_grid(grid, LEVEL_WIDTH, LEVEL_HEIGHT, playerInstance.width, playerInstance.height);
+    nodeCount = init_grid(grid, LEVEL_WIDTH, LEVEL_HEIGHT, 75, 100);
     update_grid(grid, worldClips, worldClipsCount);
 }
 
@@ -328,7 +328,7 @@ void level_one_update(void) {
 
                 // store the barrier in worldClips
                 struct Barrier* barriers = get_barriers();
-                worldClips[worldClipsCount] = barriers[barrierIndex].hitbox;
+                worldClips[worldClipsCount++] = barriers[barrierIndex].hitbox;
                 update_grid(grid, worldClips, worldClipsCount);
             }
         }
