@@ -5,12 +5,6 @@
 #include <math.h>
 #include <stdio.h>
 
-//float heuristic(PathNode* currentNode, PathNode* endNode) {
-//	float dx = fabs(currentNode->pos.x – endNode->pos.x);
-//	float dy = fabs(currentNode->pos.y – endNode->pos.y);
-//	return D * (dx + dy) + (D2 - 2 * D) * min(dx, dy)
-//}
-
 static int _nodeCountX, _nodeCountY;
 static float _nodeWidth , _nodeHeight;
 
@@ -84,6 +78,16 @@ void draw_grid(PathNode* grid, int nodeCount, struct Camera cam) {
 	}
 }
 
+AStarNode* createNode(int nodeIndex, float gCost, float hCost, AStarNode* parent) {
+	AStarNode* node = (AStarNode*)malloc(sizeof(AStarNode));
+	node->nodeIndex = nodeIndex;
+	node->gCost = gCost;
+	node->hCost = hCost;
+	node->fCost = gCost + hCost;
+	node->parentNode = parent;
+	return node;
+}
+
 int get_nearest_node_index(PathNode* grid, int nodeCount, CP_Vector position) {
 	int closestNodeIndex = 0;
 	float closestDistance = CP_Vector_Distance(position, grid[closestNodeIndex].pos);
@@ -93,19 +97,100 @@ int get_nearest_node_index(PathNode* grid, int nodeCount, CP_Vector position) {
 	return closestNodeIndex;
 }
 
-//void remove_node(AStarNode* AStarList, int nodeIndex, int nodeCount) {
-//	for (int i = 0; i < nodeCount; i++) {
-//		if (AStarList[i].nodeIndex == nodeIndex) {
-//			
-//		}
-//	}
-//}
-//
-//bool find_astar_path(PathNode* grid, int nodeCount, CP_Vector startPos, CP_Vector endPos) {
-//	AStarNode startNode = { .nodeIndex = get_nearest_node_index(grid, nodeCount, startPos),
-//							.gCost = 0.f, .hCost = 0.f };
-//	AStarNode endNode = { .nodeIndex = get_nearest_node_index(grid, nodeCount, endPos),
-//							.gCost = 0.f, .hCost = 0.f };
+int remove_node(AStarNode* AStarList, int nodeIndex, int nodeCount) {
+	for (int i = 0; i < nodeCount; i++) {
+		if (AStarList[i].nodeIndex == nodeIndex) {
+			int remainingCount = nodeCount - i;
+			while (--remainingCount) {
+				AStarNode temp = AStarList[i];
+				AStarList[i] = AStarList[i + 1];
+				AStarList[i + 1] = temp;
+				i++;
+			}
+			nodeCount--;
+			break;
+		}
+	}
+	return nodeCount;
+}
 
+void reverse_array(int* array, int arrayCount) {
+	for (int i = 0, j = arrayCount - 1; i < j; ++i, --j) {
+		int tmp = array[i];
+		array[i] = array[j];
+		array[j] = tmp;
+	}
+}
+
+
+int find_astar_path(PathNode* grid, int nodeCount, CP_Vector startPos, CP_Vector endPos, int *pathArray) {
 	
-//}
+	AStarNode startNode = { .nodeIndex = get_nearest_node_index(grid, nodeCount, startPos),
+							.fCost = 0.f, .gCost = 0.f, .hCost = 0.f, .parentNode = NULL };
+	AStarNode endNode = { .nodeIndex = get_nearest_node_index(grid, nodeCount, endPos),
+							.fCost = 0.f, .gCost = 0.f, .hCost = 0.f, .parentNode = NULL };
+
+
+	AStarNode openList[MAX_NODE_SIZE];
+	AStarNode closedList[MAX_NODE_SIZE];
+
+	int openListCount = 0, closedListCount = 0;
+	openList[openListCount++] = startNode;
+
+
+	while (openListCount > 0) {
+		
+		// Get the current Node which has the least f cost.
+		AStarNode currentNode = openList[0];
+
+		for (int i = 1; i < openListCount; i++) {
+			if (openList[i].fCost < currentNode.fCost) {
+				currentNode = openList[i];
+			}
+		}
+
+		openListCount = remove_node(openList, currentNode.nodeIndex, openListCount);
+		closedList[closedListCount++] = currentNode;
+
+		// Goal is found
+		if (currentNode.nodeIndex == endNode.nodeIndex) {
+			AStarNode current = currentNode;
+			int pathNodeCount = 0;
+			while (current.nodeIndex != startNode.nodeIndex) {
+				pathArray[pathNodeCount++] = current.nodeIndex;
+				current = *(current.parentNode);
+			}
+
+			return pathNodeCount;
+		}
+
+		for (int i = 0; i < grid[currentNode.nodeIndex].connectionCount; i++) {
+			bool isNeighbourInClosed = false;
+			for (int closedListIndex = 0; closedListIndex < closedListCount; closedListIndex++) {
+				if (closedList[closedListIndex].nodeIndex == grid[currentNode.nodeIndex].connections[i]) {
+					isNeighbourInClosed = true;
+					break;
+				}
+			}
+
+			if (!isNeighbourInClosed) {
+				AStarNode neighbourNode = { .nodeIndex = grid[currentNode.nodeIndex].connections[i],
+											.parentNode = &currentNode, 
+											.gCost = currentNode.gCost+1, 
+											.hCost = CP_Vector_Distance(grid[grid[currentNode.nodeIndex].connections[i]].pos, grid[endNode.nodeIndex].pos),
+				};
+				neighbourNode.fCost = neighbourNode.gCost + neighbourNode.hCost;
+
+				bool addNeighbourToOpen = true;
+				for (int openListIndex = 0; openListIndex < openListCount; openListIndex++) {
+					if ((openList[i].nodeIndex == neighbourNode.nodeIndex) && (openList[i].gCost < neighbourNode.gCost)) {
+						addNeighbourToOpen = false;
+					}
+				}
+				
+				if (addNeighbourToOpen)
+					openList[openListCount++] = neighbourNode;
+			}
+		}
+	}
+}

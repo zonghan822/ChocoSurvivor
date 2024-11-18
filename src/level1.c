@@ -94,7 +94,7 @@ struct Rectangle worldClips[100];
 struct Rectangle playerClips[1];
 struct Rectangle enemyClips[1];
 int worldClipsCount = 0;
-PathNode grid[1000];
+PathNode grid[MAX_NODE_SIZE];
 int nodeCount = 0;
 #pragma endregion
 
