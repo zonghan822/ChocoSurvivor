@@ -21,8 +21,9 @@ typedef struct AStarNode {
 }AStarNode;
 
 
-int init_grid(PathNode* grid, float levelWidth, float levelHeight, float nodeWidth, float nodeHeight);
+int init_grid(PathNode* grid, float levelWidth, float levelHeight, float nodeWidth, float nodeHeight, float spawnWidth);
 void update_grid(PathNode* grid, struct Rectangle* worldClips, int clipsSize);
 void draw_grid(PathNode* grid, int nodeCount, struct Camera cam); // for debugging
 
-int find_astar_path(PathNode* grid, int nodeCount, CP_Vector startPos, CP_Vector endPos, int* pathArray);
+int get_nearest_node_index(PathNode* grid, int nodeCount, CP_Vector position);
+int find_astar_path(PathNode* grid, int nodeCount, int startNodeIndex, int endNodeIndex, int* pathArray);

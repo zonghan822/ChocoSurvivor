@@ -5,6 +5,8 @@
 #include "flicker.h"
 
 #define MAX_BULLET_COUNT 20
+#define PLAYER_HITBOX_OFFSET_X(playerWidth) (- 1 / 33.f * playerWidth)
+#define PLAYER_HITBOX_OFFSET_Y(playerHeight) (- 8.f / 77.f * playerHeight)
 
 enum BuffType {
     NO_BUFF,

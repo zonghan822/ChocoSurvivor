@@ -4,6 +4,7 @@
 #include "utils.h"
 #include "player.h"
 #include "tower.h"
+#include "astar.h"
 
 #define MAX_ENEMY_COUNT 100
 #define ENEMY_WIDTH 70.f
@@ -36,7 +37,7 @@ struct ChocoRoach {
 
 // Takes in single enemy
 struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth, float speed, int maxHealth, int dmg);
-void enemy_move_to_target(struct ChocoRoach* roach, struct Rectangle hitbox, float dt);
+void enemy_move_to_target(struct ChocoRoach* roach, struct Rectangle hitbox, float dt, PathNode* grid, int nodeCount);
 void render_enemy_health_bar(struct ChocoRoach* roach, struct Camera cam);
 int enemy_take_damage(struct ChocoRoach* roach, int dmg);
 

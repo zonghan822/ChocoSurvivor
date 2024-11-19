@@ -28,7 +28,7 @@ CP_Image gameOverImage;
 float windowWidth, windowHeight;
 
 #pragma region Spawn Properties
-static float spawnMinY = 0.0f, spawnMaxY = 0.0f;
+static float spawnMinY = 0.0f, spawnMaxY = 0.0f, spawnWidth = 0.0f;
 static float spawnDelay = 0.0f, spawnTime = 0.0f;
 enum SpawnWave {
     WAVE_0,
@@ -138,6 +138,9 @@ void level_one_init(void) {
 
     empty_enemies(roaches);
     enemyKilled = 0;
+    spawnMinY = LEVEL_HEIGHT * 1 / 5;
+    spawnMaxY = LEVEL_HEIGHT * 4 / 5;
+    spawnWidth = 500.f;
     
     // TODO 3: exp_perkill is placeholder
     exp_perkill = 6;//exp for buff bar per roachy
@@ -168,7 +171,7 @@ void level_one_init(void) {
         worldClips[worldClipsCount++] = obstacles[i];
     }
 
-    nodeCount = init_grid(grid, LEVEL_WIDTH, LEVEL_HEIGHT, 75, 100);
+    nodeCount = init_grid(grid, LEVEL_WIDTH, LEVEL_HEIGHT, 75, 100, spawnWidth);
     update_grid(grid, worldClips, worldClipsCount);
 }
 
@@ -200,7 +203,7 @@ void level_one_update(void) {
             enemySpeed = 100.f;
             enemyMaxHealth = 100;
             enemyDmg = 20;
-            roachesMax = 40;
+            roachesMax = 1;
             break;
         case WAVE_1:
             enemySpeed = 100.f;
@@ -224,7 +227,7 @@ void level_one_update(void) {
 
         for (int i = 0; i < roachesMax; i++) {
             // Store enemies in array
-            roaches[i] = init_enemy(LEVEL_HEIGHT * 1 / 5, LEVEL_HEIGHT * 4 / 5, 500.f, enemySpeed, enemyMaxHealth, enemyDmg);
+            roaches[i] = init_enemy(spawnMinY, spawnMaxY, spawnWidth, enemySpeed, enemyMaxHealth, enemyDmg);
         }
         #pragma endregion
         isWaveStart = 0;
@@ -247,7 +250,7 @@ void level_one_update(void) {
         for (int i = 0; roaches[i].currentState; i++) {
 
             // Enemy move to player if near to player, else move to defense target
-            struct Circle radarRoach = { .pos = roaches[i].pos, .diameter = 5 * roaches[i].width }; // define enemy radar
+            struct Circle radarRoach = { .pos = roaches[i].pos, .diameter = 10 * roaches[i].width }; // define enemy radar
             if (are_circle_rect_intersecting(radarRoach, playerInstance.hitbox)) { // Check enemy near with player
                 if (are_rects_intersecting(roaches[i].hitbox, playerInstance.hitbox)) { // When collide attack player
                     roaches[i].currentState = STATE_ATTACKING;
@@ -288,7 +291,7 @@ void level_one_update(void) {
         for (int j = 0; j < MAX_BULLET_COUNT; j++) {
             if (playerInstance.bullets[j].isShooting) {
                 struct Circle bullet = { .pos = playerInstance.bullets[j].pos, .diameter = playerInstance.bullets[j].diameter };
-                if (are_circle_rect_intersecting(bullet, worldClip)) {
+                if (are_circle_rect_intersecting(bullet, worldClip)) { // bullet cannot go through walls and barricades...
                     playerInstance.bullets[j].isShooting = FALSE;
                 }
             }
@@ -396,12 +399,13 @@ void level_one_update(void) {
             #pragma region Enemy_Action
             switch (roaches[i].currentState) {
             case STATE_MOVING:{
-                enemy_move_to_target(&roaches[i], get_tower_hitbox(towerInstance), dt);
+                printf("Enemy moving!\n");
+                enemy_move_to_target(&roaches[i], get_tower_hitbox(towerInstance), dt, grid, nodeCount);
                 break;
             }
                 
             case STATE_CHASE_PLAYER: {
-                enemy_move_to_target(&roaches[i], playerInstance.hitbox, dt);
+                enemy_move_to_target(&roaches[i], playerInstance.hitbox, dt, grid, nodeCount);
                 break;
             }
 
