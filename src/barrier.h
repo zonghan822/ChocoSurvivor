@@ -30,6 +30,12 @@ struct Barrier* get_barriers(void);  // Add this line
 void check_barrier_collision(struct ChocoRoach* roach);
 void reset_barriers(void);
 
+enum AllyState {
+    ALLY_IDLE,
+    ALLY_PREVIEW,
+    ALLY_ACTIVE
+};
+
 struct Ally {
     CP_Vector position;
     float width;
@@ -41,13 +47,17 @@ struct Ally {
     struct Bullet bullets[MAX_ABULLET_COUNT];
     float lastShotTime;
     CP_Image image;  // Ally's image
+    enum AllyState state;  
 };
 
 // Functions for managing allies
-void init_ally_properties(int index, CP_Vector position);
-void update_allies(struct Ally* allies, int allyCount, struct ChocoRoach* enemies, int enemyCount, float dt);
-void render_allies(struct Ally* allies, int allyCount, struct Camera cam);
-void shoot_ally_bullet(struct Ally* ally, struct Bullet* bullet, struct ChocoRoach* target);
-void add_ally(CP_Vector position);
+void init_ally_properties(int index, CP_Vector position, float width, float height, int health);
+void update_allies(float dt, struct ChocoRoach* enemies, int enemyCount, struct Camera cam);
 struct Ally* get_allies(void);
 int get_ally_count(void);
+int find_bullet_slot(struct Bullet* bullets);
+void reset_allies(void);
+void increment_ally_count(void);
+CP_Image get_ally_image(void);
+void render_allies(struct Camera cam);
+void render_abullet(struct Bullet bullet, struct Camera cam);
