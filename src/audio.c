@@ -120,20 +120,20 @@ static enum SoundGroup _get_sound_group(enum SoundType sound_type) {
 		case BOSS_CHARGE:
 		case BOSS_CHARGE_WINDUP:
 		case PROJECTILE_HIT:
-			return SFX;
+			return SOUNDGROUP_SFX;
 
 		// Music Group
 		// case MUSIC_SOMETHING:
-		//     return MUSIC;
+		//     return SOUNDGROUP_MUSIC;
 
 		// UI Group
 		case UI_BUTTON_HOVER:
 		case UI_BUTTON_CONFIRM_CLICK:
 		case UI_BUTTON_BACK_CLICK:
-		    return UI;
+		    return SOUNDGROUP_UI;
 
 		default:
-			return NONE;
+			return SOUNDGROUP_NONE;
 	}
 }
 
@@ -153,10 +153,10 @@ void play_sound(enum SoundType sound_type) {
 	CP_Sound snd = _get_sound_object(sound_type);
 	enum SoundGroup grp = _get_sound_group(sound_type);
 
-	if (snd == NULL || grp == NONE) return;
+	if (snd == NULL || grp == SOUNDGROUP_NONE) return;
 	float vol = CP_Sound_GetGroupVolume(grp);
 
-	if (grp != MUSIC)
+	if (grp != SOUNDGROUP_MUSIC)
 		CP_Sound_PlayAdvanced(snd, vol, 1.f, 0, grp);
 	else
 		CP_Sound_PlayMusic(snd);
@@ -166,7 +166,7 @@ void play_sound_advanced(enum SoundType sound_type, float volume_scale, int loop
 	CP_Sound snd = _get_sound_object(sound_type);
 	enum SoundGroup grp = _get_sound_group(sound_type);
 
-	if (snd == NULL || grp == NONE) return;
+	if (snd == NULL || grp == SOUNDGROUP_NONE) return;
 
 	float vol = CP_Sound_GetGroupVolume(grp) * volume_scale;
 	CP_Sound_PlayAdvanced(snd, vol, 1.f, (unsigned int)loop, grp);
@@ -176,7 +176,6 @@ void stop_sounds(void) {
 	CP_Sound_StopAll();
 }
 
-
 void stop_sound_group(enum SoundGroup sound_group) {
 	CP_Sound_StopGroup(sound_group);
 }
@@ -184,10 +183,18 @@ void stop_sound_group(enum SoundGroup sound_group) {
 void set_volume(enum SoundType sound_type, float volume) {
 	enum SoundGroup grp = _get_sound_group(sound_type);
 
-	if (grp == NONE) return;
+	if (grp == SOUNDGROUP_NONE) return;
 
+	set_volume_group(grp, volume);
+}
+
+void set_volume_group(enum SoundGroup sound_group, float volume) {
 	volume = CP_Math_ClampFloat(volume, 0.f, 1.f);
-	CP_Sound_SetGroupVolume(grp, volume);
+	CP_Sound_SetGroupVolume(sound_group, volume);
+}
+
+float get_volume_group(enum SoundGroup sound_group) {
+	return CP_Sound_GetGroupVolume(sound_group);
 }
 
 void dispose_sounds(void) {

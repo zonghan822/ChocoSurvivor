@@ -32,7 +32,9 @@
     <ClCompile Include="level2.c" />
     <ClCompile Include="main.c" />
     <ClCompile Include="mainmenu.c" />
+    <ClCompile Include="panel.c" />
     <ClCompile Include="player.c" />
+    <ClCompile Include="slider.c" />
     <ClCompile Include="tower.c" />
     <ClCompile Include="utils.c" />
   </ItemGroup>
@@ -46,6 +48,8 @@
     <ClInclude Include="enemy.h" />
     <ClInclude Include="level1.h" />
     <ClInclude Include="level2.h" />
+    <ClInclude Include="panel.h" />
+    <ClInclude Include="slider.h" />
     <ClInclude Include="tower.h" />
     <ClInclude Include="flicker.h" />
     <ClInclude Include="hittest.h" />

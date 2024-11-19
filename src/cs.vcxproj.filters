@@ -51,6 +51,11 @@
     </ClCompile>
     <ClCompile Include="astar.c">
       <Filter>Source Files</Filter>
+    <ClCompile Include="panel.c">
+      <Filter>Source Files\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="slider.c">
+      <Filter>Source Files\UI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -98,6 +103,11 @@
     </ClInclude>
     <ClInclude Include="astar.h">
       <Filter>Header Files</Filter>
+    <ClInclude Include="panel.h">
+      <Filter>Header Files\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="slider.h">
+      <Filter>Header Files\UI</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

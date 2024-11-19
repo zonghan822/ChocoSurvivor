@@ -6,28 +6,32 @@
 
 #include <stdio.h>
 
-struct Button init_button(float button_x, float button_y, float button_width, float button_height, enum ButtonType type, CP_Color button_color, const char* text, float text_x, float text_y, CP_Color text_color, float text_size) {
-    struct Rectangle rect = {
-        .width = button_width,
-        .height = button_height,
-        .pos = CP_Vector_Set(button_x, button_y)
-    };
+struct Button init_button(float button_x, float button_y, float button_width, float button_height, enum ButtonType type, CP_Color button_color, const char* text, CP_Color text_color, float text_size) {
+    float textX = button_x,
+        textY = button_y + 2.f; // padding
 
     struct Button button = {
-        .rect = rect,
+        .rect = {
+            .width = button_width,
+            .height = button_height,
+            .pos = CP_Vector_Set(button_x, button_y)
+        },
         .state = BUTTON_STATE_NONE,
         .type = type,
         .rectColor = button_color,
         .text = text,
         .textColor = text_color,
-        .textPos = CP_Vector_Set(text_x, text_y),
+        .textPos = CP_Vector_Set(textX, textY),
         .textSize = text_size
     };
 
     return button;
 }
 
-struct Button init_button_image(float button_x, float button_y, float button_width, float button_height, enum ButtonType type, const char* text, float text_x, float text_y, CP_Color text_color, float text_size) {
+struct Button init_button_image(float button_x, float button_y, float button_width, float button_height, enum ButtonType type, const char* text, CP_Color text_color, float text_size) {
+    float textX = button_x,
+        textY = button_y + 2.f; // padding
+
     struct Rectangle rect = {
         .width = resize_by_divisor(button_width, 4),
         .height = resize_by_divisor(button_height, 4),
@@ -41,7 +45,7 @@ struct Button init_button_image(float button_x, float button_y, float button_wid
         .tileMap = CP_Image_Load("Assets/GUI/tilemap.png"),
         .text = text,
         .textColor = text_color,
-        .textPos = CP_Vector_Set(text_x, text_y),
+        .textPos = CP_Vector_Set(textX, textY),
         .textSize = text_size
     };
 
@@ -73,14 +77,14 @@ void render_button(struct Button button) {
         }
 
         float leftWidth, rightWidth, topHeight, bottomHeight;
-        leftWidth = rightWidth = topHeight = bottomHeight = 4.0f;
+        leftWidth = rightWidth = topHeight = bottomHeight = 10.0f;
 
         // Center stretchable area — remaining part after accounting for corners and edges
         float centerWidth = button.rect.width - (leftWidth + rightWidth), 
             centerHeight = button.rect.height - (topHeight + bottomHeight);
 
         float uCoords[4] = { 0.0f, 4.0f, 12.0f, 16.0f },  // Left, center, right bounds for U (with respect to 16px width)
-            vCoords[4] = { 0.0f, 4.0f, 8.0f, 12.0f };     // Top, center, bottom bounds for V (with respect to 12px 
+            vCoords[4] = { 0.0f, 4.0f, 8.0f, 12.0f };     // Top, center, bottom bounds for V (with respect to 12px height)
 
         float xPos[4] = {
             button.rect.pos.x - button.rect.width / 2.0f,               // Left
@@ -99,19 +103,19 @@ void render_button(struct Button button) {
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 3; col++) {
                 // Determine size to draw for this patch
-                float patchWidth = (col == 1) ? centerWidth : leftWidth * 3.f;   // Center column stretches
-                float patchHeight = (row == 1) ? centerHeight : topHeight * 3.f; // Center row stretches
+                float patchWidth = (col == 1) ? centerWidth : leftWidth;   // Center column stretches
+                float patchHeight = (row == 1) ? centerHeight : topHeight; // Center row stretches
 
                 // Calculate draw position (the center of each patch,
                 // since the CP_Image_DrawSubImage() function centers it)
-                float drawX = (xPos[col] + xPos[col + 1]) / 2.0f;
-                float drawY = (yPos[row] + yPos[row + 1]) / 2.0f;
+                float drawX = (xPos[col] + xPos[col + 1]) / 2.0f,
+                    drawY = (yPos[row] + yPos[row + 1]) / 2.0f;
 
                 // Calculate the UV coordinates within the sprite for this patch
-                float u0 = uStart + uCoords[col];
-                float v0 = vStart + vCoords[row];
-                float u1 = uStart + uCoords[col + 1];
-                float v1 = vStart + vCoords[row + 1];
+                float u0 = uStart + uCoords[col],
+                    v0 = vStart + vCoords[row],
+                    u1 = uStart + uCoords[col + 1],
+                    v1 = vStart + vCoords[row + 1];
 
                 // Draw the patch
                 CP_Image_DrawSubImage(button.tileMap, drawX, drawY, patchWidth, patchHeight, u0, v0, u1, v1, 255);
@@ -134,7 +138,15 @@ void update_button_state(struct Button* button, float mouse_x, float mouse_y) {
 
         button->state = BUTTON_STATE_HOVERED;
         if (CP_Input_MouseTriggered(MOUSE_BUTTON_LEFT)) {
-            play_sound(UI_BUTTON_CONFIRM_CLICK); // TODO (If possible): check if button is positive (confirm) or negative (back/cancel)
+            switch (button->type) {
+            default:
+            case BUTTON_TYPE_SUCCESS:
+                play_sound(UI_BUTTON_CONFIRM_CLICK);
+                break;
+            case BUTTON_TYPE_WARNING:
+                play_sound(UI_BUTTON_BACK_CLICK);
+                break;
+            }
             button->state = BUTTON_STATE_CLICKED;
         }
     }

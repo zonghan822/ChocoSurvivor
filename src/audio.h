@@ -50,10 +50,10 @@ enum SoundType {
 };
 
 enum SoundGroup {
-	NONE = -1,
-	SFX = 0,
-	MUSIC = 1,
-	UI
+	SOUNDGROUP_NONE = -1,
+	SOUNDGROUP_SFX = 0,
+	SOUNDGROUP_MUSIC = 1,
+	SOUNDGROUP_UI = 2,
 };
 
 void init_sounds(void);
@@ -62,4 +62,6 @@ void play_sound_advanced(enum SoundType sound_type, float volume_scale, int loop
 void stop_sounds(void);
 void stop_sound_group(enum SoundGroup sound_group);
 void set_volume(enum SoundType sound_type, float volume);
+void set_volume_group(enum SoundGroup sound_group, float volume);
+float get_volume_group(enum SoundGroup sound_group);
 void dispose_sounds(void);

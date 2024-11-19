@@ -26,8 +26,8 @@ struct Button {
 	float textSize;
 };
 
-struct Button init_button(float button_x, float button_y, float button_width, float button_height, enum ButtonType type, CP_Color button_color, const char* text, float text_x, float text_y, CP_Color text_color, float text_size);
-struct Button init_button_image(float button_x, float button_y, float button_width, float button_height, enum ButtonType type, const char* text, float text_x, float text_y, CP_Color text_color, float text_size);
+struct Button init_button(float button_x, float button_y, float button_width, float button_height, enum ButtonType type, CP_Color button_color, const char* text, CP_Color text_color, float text_size);
+struct Button init_button_image(float button_x, float button_y, float button_width, float button_height, enum ButtonType type, const char* text, CP_Color text_color, float text_size);
 void render_button(struct Button button);
 void update_button_state(struct Button* button, float mouse_x, float mouse_y);
 void dispose_button(struct Button* button);
