@@ -60,6 +60,9 @@ float barrierHeight = 0.0f;
 float barrier_rect_W = 0.0f, barrier_rect_H = 0.0f;
 #pragma endregion
 
+#pragma region ally properties
+int allyCount = 0;
+#pragma endregion
 void level_one_init(void) {
     
     chococursor = CP_Image_Load("Assets/cursor.png");
@@ -94,6 +97,7 @@ void level_one_init(void) {
     barrierHeight = 100.0f;
     barrier_rect_W = 50.0f;
     barrier_rect_H = 50.0f;
+
 #pragma endregion
 
     cam = init_camera(playerInstance, windowWidth, windowHeight);
@@ -160,7 +164,7 @@ void level_one_update(void) {
 #pragma endregion
         isWaveStart = 0;
     }
-
+    #pragma region Enemy_Init
     // Enemy spawning
     if (spawnTime < spawnDelay) {
         #pragma region Show_Spawning_Time
@@ -203,7 +207,12 @@ void level_one_update(void) {
     
     move_player(&playerInstance, dt);
     update_camera(&cam, playerInstance, LEVEL_WIDTH, LEVEL_HEIGHT);
-    
+
+    #pragma region ally_Init
+    update_allies(get_allies(), get_ally_count(), roaches, roachesMax, dt);
+    render_allies(get_allies(), get_ally_count(), cam);
+    #pragma engregion
+
     #pragma region Place_Barriers
     float barrier_butt_x = windowWidth - 1450.0f;
     float barrier_butt_y = windowHeight - 100.0f;
@@ -239,7 +248,7 @@ void level_one_update(void) {
         break;
     }
     #pragma endregion
-    if (CP_Input_KeyTriggered(KEY_O)) {
+    /*if (CP_Input_KeyTriggered(KEY_O)) {
         if (get_barrier_count() < MAX_BARRIERS) {
             // Add a new barrier at a default position with default size and health
             set_barrier_properties(get_barrier_count(), CP_Vector_Set(400, 300), 50.0f, 100.0f, BARRIER_INITIAL_HEALTH);
@@ -249,7 +258,7 @@ void level_one_update(void) {
         else {
             printf("Max barriers reached. Cannot regenerate more barriers.\n");
         }
-    }
+    }*/
 
     #pragma region Shoot_Bullet
     lastShotTime += dt;
@@ -344,6 +353,15 @@ void level_one_update(void) {
     }
     #pragma endregion
 
+    if (CP_Input_KeyTriggered(KEY_L)) {  // Example: Press 'L' to add an ally
+        if (get_ally_count() < MAX_ALLIES) {
+            add_ally(CP_Vector_Set(400, 400));  // Example position
+            printf("Ally added! Current ally count: %d\n", get_ally_count());
+        }
+        else {
+            printf("Max allies reached.\n");
+        }
+    }
     if (towerInstance.health <= 0) {
         // Draw the Game Over image in the center of the screen
         float gameOverX = CP_System_GetWindowWidth() / 2;
