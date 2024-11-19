@@ -33,7 +33,6 @@ void reset_barriers(void);
 enum AllyState {
     ALLY_IDLE,
     ALLY_PREVIEW,
-    ALLY_ACTIVE
 };
 
 struct Ally {
