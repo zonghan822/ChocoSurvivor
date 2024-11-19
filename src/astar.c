@@ -149,7 +149,7 @@ int find_astar_path(PathNode* grid, int nodeCount, int startNodeIndex, int endNo
 	openList[openListCount++] = startNode;
 
 	// loop until find end
-	while (openListCount > 0) {
+	while (openListCount > 0 && openListCount < nodeCount) {
 		
 		// Get the current Node which has the least f cost.
 		AStarNode currentNode = openList[0];
