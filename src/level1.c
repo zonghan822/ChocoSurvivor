@@ -562,7 +562,6 @@ void level_one_update(void) {
                     activeBuffName = "NO BUFF";
                     break;
                 }
-
                 
                 CP_Font_DrawText(activeBuffName, 600, 750);  
                 if (playerInstance.activeBuffLevel == 1) {
@@ -676,5 +675,5 @@ void level_one_exit(void) {
         if (roach.img != NULL)
             CP_Image_Free(&roach.img);
     }
-    CP_Image_Free(&chococursor);
+    CP_Image_Free(&cursor);
 }

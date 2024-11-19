@@ -45,7 +45,7 @@ struct ChocoShooter init_player(CP_Vector pos, float speed, float maxHealth, int
         .health = player.maxHealth = maxHealth,
         .img = CP_Image_Load("Assets/choco_shooter.png"),
         .movement = STOPPED,
-        .hitbox.width = player.width = 120.0,
+        .hitbox.width = player.width = 120.f,
         .hitbox.height = player.height = get_preserved_heightf((float)CP_Image_GetWidth(player.img),
             (float)CP_Image_GetHeight(player.img), player.width),
         .bullets[0].isShooting = FALSE,
