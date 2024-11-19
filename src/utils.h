@@ -24,8 +24,8 @@ struct Circle {
 	float diameter;
 };
 
-// return the normalized diagonal distance
-float get_diagonal_dist(float dist);
+//// return the normalized diagonal distance
+//float get_diagonal_dist(float dist);
 
 // Resize width preserving aspect ratio
 //void resize_by_width_preservef(float* width, float* height, float new_width);

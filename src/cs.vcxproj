@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="audio.c" />
+    <ClCompile Include="astar.c" />
     <ClCompile Include="barrier.c" />
     <ClCompile Include="boss.c" />
     <ClCompile Include="button.c" />
@@ -37,6 +38,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="audio.h" />
+    <ClInclude Include="astar.h" />
     <ClInclude Include="barrier.h" />
     <ClInclude Include="boss.h" />
     <ClInclude Include="button.h" />

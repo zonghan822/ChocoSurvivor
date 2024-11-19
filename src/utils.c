@@ -4,10 +4,6 @@
 #include "cprocessing.h"
 #include "utils.h"
 
-float get_diagonal_dist(float dist) {
-	return (float)sqrt((dist * dist)/2);
-}
-
 float get_preserved_widthf(float width, float height, float new_height) {
 	float aspectRatio = width / height;
 	return new_height / aspectRatio;
@@ -62,6 +58,11 @@ float resize_by_divisor(float dimension, int divisor) {
     return dimension;
 }
 
+
+//float get_diagonal_dist(float dist) {
+//	return (float)sqrt((dist * dist)/2);
+//}
+// 
 //void resize_by_width_preservef(float* width, float* height, float new_width) {
 //	float aspectRatio = *width / *height;
 //	*width = new_width;

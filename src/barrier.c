@@ -9,7 +9,7 @@ struct Barrier* get_barriers(void) {
     return barriers;
 }
 
-void takeDamage(int damage) {
+void barrier_take_damage(int damage) {
     for (int i = 0; i < barrierCount; i++) {
         if (barriers[i].health > 0) {
             barriers[i].health -= damage;

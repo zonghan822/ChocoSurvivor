@@ -49,6 +49,9 @@
     <ClCompile Include="button.c">
       <Filter>Source Files\UI</Filter>
     </ClCompile>
+    <ClCompile Include="astar.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="boss.h">
@@ -92,6 +95,9 @@
     </ClInclude>
     <ClInclude Include="button.h">
       <Filter>Header Files\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="astar.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

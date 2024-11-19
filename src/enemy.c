@@ -6,32 +6,59 @@
 #include "enemy.h"
 #include "camera.h"
 
+void empty_enemies(struct ChocoRoach* roaches) {
+    for (int i = 0; i < MAX_ENEMY_COUNT; i++) {
+        roaches->currentState = 0;
+    }
+}
+
 struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth, float speed, int maxHealth, int dmg) {
 
     srand((unsigned int)time(NULL));
-    struct ChocoRoach chocoRoach = {
-            .img = CP_Image_Load("Assets/choco_roach.png"),
-            .width = 70.f,
-            .height = get_preserved_heightf((float)CP_Image_GetWidth(chocoRoach.img),
-                (float)CP_Image_GetHeight(chocoRoach.img), chocoRoach.width),
-            .pos.x = CP_Random_RangeFloat(-chocoRoach.width-spawnWidth, -chocoRoach.width),
-            .pos.y = CP_Random_RangeFloat(spawnMinY, spawnMaxY), // Generate random y pos for enemies
-            .speed = speed,
-            .health = maxHealth,
-            .maxHealth = maxHealth,
-            .dmg = dmg,
-            .moveDirection = CP_Vector_Zero(),
-            .currentState = STATE_IDLE,
-            .hitbox.pos.x = chocoRoach.pos.x + ENEMY_HITBOX_OFFSET_X(chocoRoach.width),
-            .hitbox.pos.y = chocoRoach.pos.y + ENEMY_HITBOX_OFFSET_Y(chocoRoach.height),
-            .hitbox.width = 0.8 * chocoRoach.width,
-            .hitbox.height = 0.75 * chocoRoach.height,
-    };
+    struct ChocoRoach chocoRoach;
+    chocoRoach.img = CP_Image_Load("Assets/choco_roach.png");
+    chocoRoach.width = ENEMY_WIDTH;
+    chocoRoach.height = get_preserved_heightf((float)CP_Image_GetWidth(chocoRoach.img), (float)CP_Image_GetHeight(chocoRoach.img), chocoRoach.width);
+    chocoRoach.pos.x = CP_Random_RangeFloat(-chocoRoach.width - spawnWidth, -chocoRoach.width);
+    chocoRoach.pos.y = CP_Random_RangeFloat(spawnMinY, spawnMaxY); // Generate random y pos for enemies
+    chocoRoach.speed = speed;
+    chocoRoach.health = maxHealth;
+    chocoRoach.maxHealth = maxHealth;
+    chocoRoach.dmg = dmg;
+    chocoRoach.moveDirection = CP_Vector_Zero();
+    chocoRoach.currentState = STATE_IDLE;
+    chocoRoach.hitbox.pos.x = chocoRoach.pos.x + ENEMY_HITBOX_OFFSET_X(chocoRoach.width);
+    chocoRoach.hitbox.pos.y = chocoRoach.pos.y + ENEMY_HITBOX_OFFSET_Y(chocoRoach.height);
+    chocoRoach.hitbox.width = 0.8 * chocoRoach.width;
+    chocoRoach.hitbox.height = 0.75 * chocoRoach.height;
     return chocoRoach;
 }
 
-void enemy_move_to_target(struct ChocoRoach* roach, struct Rectangle hitbox, float dt) {
-    roach->moveDirection = CP_Vector_Normalize((CP_Vector_Subtract(hitbox.pos, roach->pos)));
+void enemy_move_to_target(struct ChocoRoach* roach, struct Rectangle hitbox, float dt, PathNode* grid, int nodeCount) {
+    int pathArray[50];
+    int pathNodeCount = 0;
+    int startNodeIndex = get_nearest_node_index(grid, nodeCount, roach->pos);
+    int endNodeIndex = get_nearest_node_index(grid, nodeCount, hitbox.pos);
+    //printf("Target Pos: (%lf, %lf)\n", hitbox.pos.x, hitbox.pos.y);
+    //printf("End Node Pos: (%lf, %lf)\n", grid[endNodeIndex].pos.x, grid[endNodeIndex].pos.y);
+    //printf("End Node: %d\n", endNodeIndex);
+    if (startNodeIndex == endNodeIndex) {
+        roach->moveDirection = CP_Vector_Normalize((CP_Vector_Subtract(hitbox.pos, roach->pos)));
+        printf("Moving to target!\n");
+    } else {
+        pathNodeCount = find_astar_path(grid, nodeCount, startNodeIndex, endNodeIndex, pathArray);
+        //for (int i = 0; i < pathNodeCount; i++) {
+        //    printf("%d ", pathArray[i]);
+        //}
+        printf("Astar ing...\n");
+        if (pathNodeCount) {
+            roach->moveDirection = CP_Vector_Normalize((CP_Vector_Subtract(grid[pathArray[0]].pos, roach->pos)));
+        }
+        else {
+            roach->moveDirection = CP_Vector_Zero();
+            printf("No path!\n");
+        }
+    }
     roach->pos.x += roach->moveDirection.x * roach->speed * dt;
     roach->pos.y += roach->moveDirection.y * roach->speed * dt;
 }
@@ -77,7 +104,7 @@ void render_enemies(struct ChocoRoach* roaches, struct Camera cam, int size) {
     }
 }
 
-int _comp(const void* a, const void* b)
+static int _comp(const void* a, const void* b)
 {
     if (!(((struct ChocoRoach*)a)->currentState) && !(((struct ChocoRoach*)b)->currentState))
         return -1;
