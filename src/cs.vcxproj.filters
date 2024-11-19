@@ -46,6 +46,9 @@
     <ClCompile Include="audio.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="button.c">
+      <Filter>Source Files\UI</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="boss.h">
@@ -87,6 +90,9 @@
     <ClInclude Include="utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="button.h">
+      <Filter>Header Files\UI</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Header Files">
@@ -100,6 +106,12 @@
     </Filter>
     <Filter Include="Header Files\Levels">
       <UniqueIdentifier>{fe7f65a1-1918-40cf-adf6-460bd9cd3c4f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\UI">
+      <UniqueIdentifier>{37ade6fc-d0a1-4a9d-9840-5828ff6b45d2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\UI">
+      <UniqueIdentifier>{5aed46db-ab69-4e6c-9f73-a1381b09156c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
