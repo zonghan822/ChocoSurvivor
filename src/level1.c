@@ -642,7 +642,7 @@ void level_one_update(void) {
         // Draw the Game Over image in the center of the screen
         float gameOverX = windowWidth / 2.f,
             gameOverY = windowHeight / 2.f;
-        float ggWidth = windowWidth *3/4;
+        float ggWidth = windowWidth * 3.f / 4.f;
         float ggHeight = get_preserved_heightf(CP_Image_GetWidth(gameOverImage), CP_Image_GetHeight(gameOverImage), ggWidth);
         CP_Image_Draw(gameOverImage, gameOverX, gameOverY, ggWidth, ggHeight, 255); // Adjust size as needed
     }
