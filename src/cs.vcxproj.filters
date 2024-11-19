@@ -51,6 +51,7 @@
     </ClCompile>
     <ClCompile Include="astar.c">
       <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="panel.c">
       <Filter>Source Files\UI</Filter>
     </ClCompile>
@@ -103,6 +104,7 @@
     </ClInclude>
     <ClInclude Include="astar.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="panel.h">
       <Filter>Header Files\UI</Filter>
     </ClInclude>
