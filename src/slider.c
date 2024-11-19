@@ -44,10 +44,19 @@ void update_slider_by_mouse(struct Slider* slider, float mouse_x, float mouse_y)
 }
 
 void render_slider(struct Slider slider) {
+    // Comments are added to explain as much as possible
+    // because it can get confusing
+
+    // Nine-Patch Rect / 9 Slicing
+
     // UV start coords in tilemap
     float baseUStart = 2.f, baseVStart = 53.f,
         trackUStart = 71.f, trackVStart = 54.f,
         thumbUStart = 1.f, thumbVStart = 18.f;
+
+    // Render the base first
+    // Render the track second
+    // Render the thumb last
 
 #pragma region Base
 
@@ -56,17 +65,17 @@ void render_slider(struct Slider slider) {
     float baseVCoords[4] = { 0.f, 2.f, 10.f, 12.f };  // UV bounds for base, using 12px total height
 
     float xBasePos[4] = {
-        slider.track.pos.x - slider.track.width / 2.f,                   // Left X
+        slider.track.pos.x - slider.track.width / 2.f,                  // Left X
         slider.track.pos.x - slider.track.width / 2.f + 2.f,            // Center start (left inner)
         slider.track.pos.x + slider.track.width / 2.f - 2.f,            // Center end (right inner)
-        slider.track.pos.x + slider.track.width / 2.f                    // Right X
+        slider.track.pos.x + slider.track.width / 2.f                   // Right X
     };
 
     float yBasePos[4] = {
-        slider.track.pos.y - slider.track.height / 2.f,                  // Top Y
+        slider.track.pos.y - slider.track.height / 2.f,                 // Top Y
         slider.track.pos.y - slider.track.height / 2.f + 2.f,           // Center start 
         slider.track.pos.y + slider.track.height / 2.f - 2.f,           // Center end
-        slider.track.pos.y + slider.track.height / 2.f                   // Bottom Y
+        slider.track.pos.y + slider.track.height / 2.f                  // Bottom Y
     };
 
     // Render the base (3x3)
@@ -87,9 +96,9 @@ void render_slider(struct Slider slider) {
             float v1 = baseVStart + baseVCoords[row + 1];
 
             CP_Image_DrawSubImage(slider.tileMap,
-                drawX, drawY,                           // Center of this patch
-                patchWidth, patchHeight,                // Render size (patchWidth/patchHeight)
-                u0, v0, u1, v1,                         // UV coordinates
+                drawX, drawY,
+                patchWidth, patchHeight,
+                u0, v0, u1, v1,
                 255);
         }
     }

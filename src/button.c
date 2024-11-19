@@ -6,7 +6,10 @@
 
 #include <stdio.h>
 
-struct Button init_button(float button_x, float button_y, float button_width, float button_height, enum ButtonType type, CP_Color button_color, const char* text, float text_x, float text_y, CP_Color text_color, float text_size) {
+struct Button init_button(float button_x, float button_y, float button_width, float button_height, enum ButtonType type, CP_Color button_color, const char* text, CP_Color text_color, float text_size) {
+    float textX = button_x,
+        textY = button_y + 2.f; // padding
+
     struct Button button = {
         .rect = {
             .width = button_width,
@@ -18,14 +21,17 @@ struct Button init_button(float button_x, float button_y, float button_width, fl
         .rectColor = button_color,
         .text = text,
         .textColor = text_color,
-        .textPos = CP_Vector_Set(text_x, text_y),
+        .textPos = CP_Vector_Set(textX, textY),
         .textSize = text_size
     };
 
     return button;
 }
 
-struct Button init_button_image(float button_x, float button_y, float button_width, float button_height, enum ButtonType type, const char* text, float text_x, float text_y, CP_Color text_color, float text_size) {
+struct Button init_button_image(float button_x, float button_y, float button_width, float button_height, enum ButtonType type, const char* text, CP_Color text_color, float text_size) {
+    float textX = button_x,
+        textY = button_y + 2.f; // padding
+
     struct Rectangle rect = {
         .width = resize_by_divisor(button_width, 4),
         .height = resize_by_divisor(button_height, 4),
@@ -39,7 +45,7 @@ struct Button init_button_image(float button_x, float button_y, float button_wid
         .tileMap = CP_Image_Load("Assets/GUI/tilemap.png"),
         .text = text,
         .textColor = text_color,
-        .textPos = CP_Vector_Set(text_x, text_y),
+        .textPos = CP_Vector_Set(textX, textY),
         .textSize = text_size
     };
 
