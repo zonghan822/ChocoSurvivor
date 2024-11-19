@@ -49,6 +49,12 @@
     <ClCompile Include="button.c">
       <Filter>Source Files\UI</Filter>
     </ClCompile>
+    <ClCompile Include="panel.c">
+      <Filter>Source Files\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="slider.c">
+      <Filter>Source Files\UI</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="boss.h">
@@ -91,6 +97,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="button.h">
+      <Filter>Header Files\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="panel.h">
+      <Filter>Header Files\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="slider.h">
       <Filter>Header Files\UI</Filter>
     </ClInclude>
   </ItemGroup>

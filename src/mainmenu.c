@@ -5,10 +5,14 @@
 #include "cprocessing.h"
 #include "audio.h"
 #include "button.h"
+#include "panel.h"
+#include "slider.h"
 
 #include <stdio.h>
 
 struct Button playButton, optionsButton, quitButton;
+struct Panel panel;
+struct Slider slider;
 CP_Image cursor;
 CP_Color bg;
 
@@ -42,6 +46,10 @@ void main_menu_init(void){
 
 	quitButton = init_button_image(_buttonRectX, _buttonRectY + (_buttonRectHeight * 2.f), _buttonRectWidth, _buttonRectHeight, BUTTON_TYPE_WARNING,
 		"Quit", _buttonRectX, _buttonRectY + (_buttonRectHeight * 2.f) + 5.f, CP_Color_Create(0, 0, 0, 255), 55.f);
+
+	// PH
+	panel = init_panel(800, 400, _windowWidth / 2, _windowHeight / 2);
+	slider = init_slider(600, 16, _windowWidth / 2, _windowHeight / 2, 8.f);
 }
 
 void main_menu_update(void) {
@@ -60,6 +68,9 @@ void main_menu_update(void) {
 	update_button_state(&playButton, mouseX, mouseY);
 	update_button_state(&optionsButton, mouseX, mouseY);
 	update_button_state(&quitButton, mouseX, mouseY);
+
+	render_panel(panel);
+	render_slider(slider);
 
 	float cursorWidth = 60.f;
 	CP_Image_Draw(cursor, mouseX, mouseY, cursorWidth,
@@ -86,4 +97,6 @@ void main_menu_exit(void) {
 	dispose_button(&playButton);
 	dispose_button(&optionsButton);
 	dispose_button(&quitButton);
+	dispose_panel(&panel);
+	dispose_slider(&slider);
 }
