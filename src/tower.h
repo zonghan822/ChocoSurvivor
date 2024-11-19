@@ -2,6 +2,7 @@
 #include "cprocessing.h"
 #include "utils.h"
 #include "camera.h"
+#include "flicker.h"
 
 struct DefenseTarget {
 	CP_Image img;
@@ -10,6 +11,7 @@ struct DefenseTarget {
 	float height;
 	int health;
 	int maxHealth;
+	struct FlickerState flickerState;
 };
 
 int tower_take_damage(struct DefenseTarget* tower, int damage);

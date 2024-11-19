@@ -40,23 +40,24 @@ struct ChocoShooter init_player(CP_Vector pos, float speed, float maxHealth, int
     _dashTo = CP_Vector_Zero();
 
     struct ChocoShooter player = {
-        .hitbox.pos = player.pos = pos,
+        .pos = pos,
+        .hitbox.pos = pos,
         .speed = speed,
-        .health = player.maxHealth = maxHealth,
+        .health = maxHealth,
+        .maxHealth = maxHealth,
         .img = CP_Image_Load("Assets/choco_shooter.png"),
         .movement = STOPPED,
-        .hitbox.width = player.width = 120.f,
-        .hitbox.height = player.height = get_preserved_heightf((float)CP_Image_GetWidth(player.img),
-            (float)CP_Image_GetHeight(player.img), player.width),
+        .width = 120.f,
         .bullets[0].isShooting = FALSE,
         .attackSpeed = fireRate,
         .attackPower = atk,
         .buffs = {0},
-        .buffs.maxBuffMeter = 20
+        .buffs.maxBuffMeter = 20,
+        .flickerState.isVisible = TRUE
     };
-
-    player.hitbox.width /= 1.4f;
-    player.hitbox.height /= 1.4f;
+    player.height = get_preserved_heightf((float)CP_Image_GetWidth(player.img), (float)CP_Image_GetHeight(player.img), player.width);
+    player.hitbox.width = player.width / 1.4f;
+    player.hitbox.height = player.height / 1.4f;
 
     return player;
 }
@@ -333,3 +334,5 @@ void assign_buff_to_slot(struct ChocoShooter* player, enum BuffType buffType) {
         }
     }
 }
+
+#pragma endregion

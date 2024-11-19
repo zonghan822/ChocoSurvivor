@@ -20,10 +20,47 @@ typedef struct AStarNode {
 	struct AStarNode* parentNode;
 }AStarNode;
 
+/****************************************************
+ @brief generate grid based on map size
+ @param grid - array passed in to store the node of the
+	map grid
+ @param nodeWidth, nodeHeight - size of the node
+ @return the count of node in the grid
+*****************************************************/
+int init_grid(PathNode* grid, float levelWidth, float levelHeight, float nodeWidth, float nodeHeight);
 
-int init_grid(PathNode* grid, float levelWidth, float levelHeight, float nodeWidth, float nodeHeight, float spawnWidth);
+/****************************************************
+ @brief update the connection of nodes in the grid.
+	Non-movable path will not have connection.
+ @param grid - array containing the path node of the
+	map grid
+ @param worldClips - array of non-movable path
+ @param clipsSize - size of worldClips array
+*****************************************************/
 void update_grid(PathNode* grid, struct Rectangle* worldClips, int clipsSize);
-void draw_grid(PathNode* grid, int nodeCount, struct Camera cam); // for debugging
 
+void draw_grid(PathNode* grid, int nodeCount, struct Camera cam); // draw grid for debugging
+
+/****************************************************
+ @brief return the nearest node to position 
+ @param grid - array containing the path node of the
+	map grid
+ @param nodeCount - count of node in grid
+ @param position - a position to search for nearest
+	node
+*****************************************************/
 int get_nearest_node_index(PathNode* grid, int nodeCount, CP_Vector position);
+
+/****************************************************
+ @brief calculate the shortest path from startNode to 
+	endnode
+ @param grid - array containing the path node of the
+	map grid
+ @param nodeCount - count of node in grid
+ @param startNodeIndex, endNodeIndex - index start and 
+	end node in the grid to search shortest path
+ @param pathArray - array passed in to store the path
+	node index
+ @return the path node count, 0 if no path found
+*****************************************************/
 int find_astar_path(PathNode* grid, int nodeCount, int startNodeIndex, int endNodeIndex, int* pathArray);

@@ -36,7 +36,8 @@ enum SpawnWave {
     WAVE_3
 };
 static enum SpawnWave currentWave = WAVE_0;
-static char isWaveStart = 0;
+static bool isWaveStart = false;
+static bool areEnemiesSpawn = false;
 #pragma endregion
 
 #pragma region Enemy Properties
@@ -107,21 +108,21 @@ void level_one_init(void) {
     windowWidth = (float)CP_System_GetWindowWidth();
     windowHeight = (float)CP_System_GetWindowHeight();
 
-    #pragma region Player_Init
-    // Init Player Properties
-    playerInstance = init_player(CP_Vector_Set(towerInstance.pos.x / 1.05, towerInstance.pos.y), 350.0f, 100, 30, 10.f);
-    playerInstance.flickerState.isVisible = TRUE; //set initial flickering states
-    bulletType = NORMAL_BULLET;
-    bulletSpeed = 1000.f;
-    bulletDiameter = 20.f;
-    #pragma endregion
-
     #pragma region Defense_Target_Init
     // Init Defense Target Properties
     towerInstance.maxHealth = towerInstance.health = 3;
     towerInstance.height = 300.0;
     towerInstance.width = 150.0;
     towerInstance.pos = CP_Vector_Set(LEVEL_WIDTH / 1.05, LEVEL_HEIGHT / 2);
+    towerInstance.flickerState.isVisible = TRUE;
+    #pragma endregion
+
+    #pragma region Player_Init
+    // Init Player Properties
+    playerInstance = init_player(CP_Vector_Set(towerInstance.pos.x / 1.05, towerInstance.pos.y), 350.0f, 100, 30, 10.f);
+    bulletType = NORMAL_BULLET;
+    bulletSpeed = 1000.f;
+    bulletDiameter = 20.f;
     #pragma endregion
 
     #pragma region Barrier_Init
@@ -133,12 +134,19 @@ void level_one_init(void) {
     barrier_rect_H = 50.0f;
     #pragma endregion
 
+    #pragma region Enemy_Spawn_Init
     empty_enemies(roaches);
     enemyKilled = 0;
     spawnMinY = LEVEL_HEIGHT * 1 / 5;
     spawnMaxY = LEVEL_HEIGHT * 4 / 5;
     spawnWidth = 500.f;
-    
+    spawnDelay = 5.0f; // Give player some buffer
+    currentWave = WAVE_0;
+    isWaveStart = false;
+    areEnemiesSpawn = false;
+    #pragma endregion
+
+    #pragma region Buff_Meter_Init
     // TODO 3: exp_perkill is placeholder
     exp_perkill = 6;//exp for buff bar per roachy
     current_exp = 0;
@@ -147,19 +155,15 @@ void level_one_init(void) {
     meterWidth = 100;
     meterHeight = 20;
     fillSpeed = 0.05f;
+    #pragma endregion
 
-    cam = init_camera(playerInstance, windowWidth, windowHeight);
-
+    #pragma region Obstacles_Init
     // Define obstacles for testing
     // 0 vector is used to indicate end of array, use CP_POSITION_CENTER to avoid use of 0 vector 
-    struct Rectangle obstacleTest1 = {.pos.x = LEVEL_WIDTH/2, .pos.y = LEVEL_HEIGHT*3/7, .width = 200, .height = 100};
-    struct Rectangle obstacleTest2 = { .pos.x = LEVEL_WIDTH/2, .pos.y = LEVEL_HEIGHT*4/7, .width = 200, .height = 100 };
+    struct Rectangle obstacleTest1 = { .pos.x = LEVEL_WIDTH / 2, .pos.y = LEVEL_HEIGHT * 3 / 7, .width = 200, .height = 100 };
+    struct Rectangle obstacleTest2 = { .pos.x = LEVEL_WIDTH / 2, .pos.y = LEVEL_HEIGHT * 4 / 7, .width = 200, .height = 100 };
     obstacles[0] = obstacleTest1;
     obstacles[1] = obstacleTest2;
-
-    spawnDelay = 5.0f; // Give player some buffer
-    currentWave = WAVE_0;
-    isWaveStart = 1;
 
     // store non-movable path in worldClips
     worldClips[0] = get_tower_hitbox(towerInstance);
@@ -167,8 +171,11 @@ void level_one_init(void) {
     for (int i = 0; obstacles[i].width; i++) {
         worldClips[worldClipsCount++] = obstacles[i];
     }
+    #pragma endregion
 
-    nodeCount = init_grid(grid, LEVEL_WIDTH, LEVEL_HEIGHT, 75, 100, spawnWidth);
+    cam = init_camera(playerInstance, windowWidth, windowHeight);
+
+    nodeCount = init_grid(grid, LEVEL_WIDTH, LEVEL_HEIGHT, 75, 100);
     update_grid(grid, worldClips, worldClipsCount);
 }
 
@@ -193,8 +200,26 @@ void level_one_update(void) {
         playerInstance.width = playerInstance.width > 0 ? -playerInstance.width : playerInstance.width;
     else
         playerInstance.width = playerInstance.width < 0 ? -playerInstance.width : playerInstance.width;
-  
-    draw_grid(grid, nodeCount, cam);
+
+    // draw_grid(grid, nodeCount, cam); // draw grid for debugging
+
+    // Enemy spawning
+    if (spawnTime < spawnDelay) {
+        #pragma region Show_Spawning_Time
+        char buffer[256];
+        sprintf_s(buffer, sizeof(buffer), "Enemy coming in %d !!!", (int)(spawnDelay - spawnTime));
+        CP_Settings_Fill(CP_Color_Create(255, 0, 0, 255));
+        CP_Settings_TextSize(100.0f);
+        CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_CENTER, CP_TEXT_ALIGN_V_MIDDLE);
+        CP_Font_DrawText(buffer, (float)CP_System_GetWindowWidth() / 2, (float)CP_System_GetWindowHeight() * 1 / 5);
+        #pragma endregion
+        spawnTime += dt;
+        enableShooting = false; // disable shooting
+    } else {
+        if (!areEnemiesSpawn)
+            isWaveStart = true;
+    }
+
     // Init enemy when wave start
     if (isWaveStart) {
         #pragma region Enemy_Init
@@ -206,13 +231,13 @@ void level_one_update(void) {
             enemySpeed = 100.f;
             enemyMaxHealth = 100;
             enemyDmg = 20;
-            roachesMax = 1;
+            roachesMax = 20;
             break;
         case WAVE_1:
             enemySpeed = 100.f;
             enemyMaxHealth = 100;
             enemyDmg = 20;
-            roachesMax = 40;
+            roachesMax = 30;
             break;
         case WAVE_2:
             enemySpeed = 100.f;
@@ -232,59 +257,45 @@ void level_one_update(void) {
             // Store enemies in array
             roaches[i] = init_enemy(spawnMinY, spawnMaxY, spawnWidth, enemySpeed, enemyMaxHealth, enemyDmg);
         }
+        printf("Enemy Spawn!!!");
         #pragma endregion
-        isWaveStart = 0;
+        isWaveStart = false;
+        areEnemiesSpawn = true;
     }
 
-    // Enemy spawning
-    if (spawnTime < spawnDelay) {
-        #pragma region Show_Spawning_Time
-        char buffer[256];
-        sprintf_s(buffer, sizeof(buffer), "Enemy coming in %d !!!", (int)(spawnDelay - spawnTime));
-        CP_Settings_Fill(CP_Color_Create(255, 0, 0, 255));
-        CP_Settings_TextSize(100.0f);
-        CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_CENTER, CP_TEXT_ALIGN_V_MIDDLE);
-        CP_Font_DrawText(buffer, (float)CP_System_GetWindowWidth() / 2, (float)CP_System_GetWindowHeight() * 1 / 5);
-        #pragma endregion
-        spawnTime += dt;
-        enableShooting = false; // disable shooting
-    } else {
-        #pragma region Enemy_Movement_Logic
-        for (int i = 0; roaches[i].currentState; i++) {
+    #pragma region Enemy_Movement_Logic
+    for (int i = 0; roaches[i].currentState; i++) {
 
-            // Enemy move to player if near to player, else move to defense target
-            struct Circle radarRoach = { .pos = roaches[i].pos, .diameter = 10 * roaches[i].width }; // define enemy radar
-            if (are_circle_rect_intersecting(radarRoach, playerInstance.hitbox)) { // Check enemy near with player
-                if (are_rects_intersecting(roaches[i].hitbox, playerInstance.hitbox)) { // When collide attack player
-                    roaches[i].currentState = STATE_ATTACKING;
-                    enemyAttackTarget = PLAYER;
-                }
-                //else if (// barrierAttack) {
-                //    roaches[i].currentState = STATE_ATTACKING;
-                //    enemyAttackTarget = BARRIER;
-                //}
-                else {
-                    roaches[i].currentState = STATE_CHASE_PLAYER;
-                }
-            }
-            else {
-                if (are_rects_intersecting(roaches[i].hitbox, get_tower_hitbox(towerInstance))) {
-                    roaches[i].currentState = STATE_ATTACKING;
-                    enemyAttackTarget = TOWER;
-                }
-                //else if (// barrierAttack) { 
-                //    roaches[i].currentState = STATE_ATTACKING;
-                //    enemyAttackTarget = BARRIER;
-                //}
-                else {
-                    roaches[i].currentState = STATE_MOVING; // Move to defense target
-                }
-            }
+        // Attack defense target when collide
+        if (are_rects_intersecting(roaches[i].hitbox, get_tower_hitbox(towerInstance))) {
+            roaches[i].currentState = STATE_ATTACKING;
+            enemyAttackTarget = TOWER;
+            continue;
         }
-        #pragma endregion
+         // Attack player when collide
+        if (are_rects_intersecting(roaches[i].hitbox, playerInstance.hitbox)) { // When collide attack player
+            roaches[i].currentState = STATE_ATTACKING;
+            enemyAttackTarget = PLAYER;
+            continue;
+        }
+
+        //if (barrierAttack) {
+        //    roaches[i].currentState = STATE_ATTACKING;
+        //    enemyAttackTarget = BARRIER;
+        //}
+
+        struct Circle radarRoach = { .pos = roaches[i].pos, .diameter = 10 * roaches[i].width }; // define enemy radar
+        if (are_circle_rect_intersecting(radarRoach, playerInstance.hitbox)) { // Check enemy near with player
+            roaches[i].currentState = STATE_MOVE_TO_PLAYER;
+            continue;
+        }
+
+        roaches[i].currentState = STATE_MOVE_TO_TOWER;
     }
+    #pragma endregion
     
     move_player(&playerInstance, dt, LEVEL_WIDTH, LEVEL_HEIGHT);
+
 
     // Prevent player and bullets move into non-movable path
     for (int i = 0; i < worldClipsCount; i++) {
@@ -370,12 +381,15 @@ void level_one_update(void) {
     #pragma endregion
 
     // Render Defense Target
-    render_tower(towerInstance, cam);
+    update_flicker(&towerInstance.flickerState, dt);
+    if (towerInstance.flickerState.isVisible)
+        render_tower(towerInstance, cam);
 
     // Update and render player
     update_flicker(&playerInstance.flickerState, dt);
     update_rect_hitbox(&playerInstance.hitbox, 0.0f, 0.0f, playerInstance.pos); // Update hitbox of player
-    render_player(playerInstance, 255, cam);
+    if (playerInstance.flickerState.isVisible)
+        render_player(playerInstance, 255, cam);
 
     for (int i = 0; i < ARRAY_COUNT(worldClips); i++) {
         struct Rectangle worldClip = worldClips[i];
@@ -406,29 +420,30 @@ void level_one_update(void) {
 
             #pragma region Enemy_Action
             switch (roaches[i].currentState) {
-            case STATE_MOVING:{
-                printf("Enemy moving!\n");
+            case STATE_MOVE_TO_TOWER:{
                 enemy_move_to_target(&roaches[i], get_tower_hitbox(towerInstance), dt, grid, nodeCount);
                 break;
             }
                 
-            case STATE_CHASE_PLAYER: {
+            case STATE_MOVE_TO_PLAYER: {
                 enemy_move_to_target(&roaches[i], playerInstance.hitbox, dt, grid, nodeCount);
                 break;
             }
 
             case STATE_ATTACKING: {
+                // stop movement
                 roaches[i].moveDirection = CP_Vector_Zero();
 
                 // attack animation here...
 
+
                 // if animation end then...
                 switch (enemyAttackTarget) {
                 case PLAYER:
-                    //playerTakeDamage...
+                    player_take_damage(&playerInstance, roaches[i].dmg);
                     break;
                 case TOWER:
-                    //towerTakeDamage...
+                    tower_take_damage(&towerInstance, 1);
                     break;
                 case BARRIER:
                     //barrierTakeDamage...
@@ -625,9 +640,11 @@ void level_one_update(void) {
 
     if (towerInstance.health <= 0) {
         // Draw the Game Over image in the center of the screen
-        float gameOverX = CP_System_GetWindowWidth() / 2.f,
-            gameOverY = CP_System_GetWindowHeight() / 2.f;
-        CP_Image_Draw(gameOverImage, gameOverX, gameOverY, 1000, 600, 255); // Adjust size as needed
+        float gameOverX = windowWidth / 2.f,
+            gameOverY = windowHeight / 2.f;
+        float ggWidth = windowWidth *3/4;
+        float ggHeight = get_preserved_heightf(CP_Image_GetWidth(gameOverImage), CP_Image_GetHeight(gameOverImage), ggWidth);
+        CP_Image_Draw(gameOverImage, gameOverX, gameOverY, ggWidth, ggHeight, 255); // Adjust size as needed
     }
 
     #pragma region Render_UI
@@ -650,7 +667,7 @@ void level_one_update(void) {
         CP_Settings_TextSize(60);
         char currentWaveStr[8];
         sprintf_s(currentWaveStr, sizeof(currentWaveStr), "Wave: %d", 1);
-        CP_Font_DrawText(currentWaveStr, CP_System_GetWindowWidth() / 2.0f, 50.0f);
+        CP_Font_DrawText(currentWaveStr, windowWidth / 2.0f, 50.0f);
     }
     #pragma endregion
     
