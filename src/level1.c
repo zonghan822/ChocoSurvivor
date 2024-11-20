@@ -114,11 +114,10 @@ static int _get_exp(int health, float speed, int max_enemies) {
 }
 
 #pragma region Ally Properties
-int allyCount = 0;
-enum AllyState currentAllyState = ALLY_IDLE;  // Declare and initialize
-CP_Vector allyPreviewPosition;    // Declare and initialize
-float allyH = 150.0f;
-float allyW = 100.0f;
+static enum AllyState currentAllyState = ALLY_IDLE;  // Declare and initialize
+static CP_Vector allyPreviewPosition;    // Declare and initialize
+static float allyH = 150.0f;
+static float allyW = 100.0f;
 #pragma endregion
 
 
@@ -132,7 +131,7 @@ void level_one_init(void) {
     windowWidth = (float)CP_System_GetWindowWidth();
     windowHeight = (float)CP_System_GetWindowHeight();
 
-    bossInstance = init_boss_one(350.f, 40.f, 4500, 60, 0.6f);
+    bossInstance = init_boss_one(BOSS_WIDTH, 40.f, 4500, 60, 0.6f);
 
     #pragma region Defense_Target_Init
     // Init Defense Target Properties
@@ -358,12 +357,11 @@ void level_one_update(void) {
         //    enemyAttackTarget = BARRIER;
         //}
 
-        struct Circle radarRoach = { .pos = roaches[i].pos, .diameter = 8 * fabs(roaches[i].width) }; // define enemy radar
+        struct Circle radarRoach = { .pos = roaches[i].pos, .diameter = 5 * fabs(roaches[i].width) }; // define enemy radar
         if (are_circle_rect_intersecting(radarRoach, playerInstance.hitbox)) { // Check enemy near with player
             roaches[i].currentState = ENEMY_STATE_MOVING_TO_PLAYER;
             continue;
         }
-
         roaches[i].currentState = ENEMY_STATE_MOVING_TO_TOWER;
     }
     #pragma endregion
@@ -388,8 +386,6 @@ void level_one_update(void) {
 
     
     #pragma region Place_Barriers
-    float barrier_butt_x = windowWidth - 1450.0f;
-    float barrier_butt_y = windowHeight - 100.0f;
     switch (currentState) {
     case BARRIER_IDLE:
         // Start preview mode when 'P' is pressed
@@ -400,11 +396,12 @@ void level_one_update(void) {
         break;
 
     case BARRIER_PREVIEW:
+        enableShooting = false;
         // Update preview position for barrier
-
         previewPosition = get_world_pos_rel(CP_Vector_Set(mouseX, mouseY), cam);
 
         // Render translucent barrier preview
+        CP_Settings_RectMode(CP_POSITION_CENTER);
         CP_Settings_Fill(CP_Color_Create(0, 0, 255, 128));  // Semi-transparent blue
         CP_Graphics_DrawRect(mouseX, mouseY, barrierWidth, barrierHeight);
 
@@ -553,7 +550,7 @@ void level_one_update(void) {
         if (roaches[i].currentState) { // if enemy is alive
             #pragma region Enemy Movement And Attack    
             switch (roaches[i].currentState) {
-            case ENEMY_STATE_MOVING_TO_TOWER:{
+            case ENEMY_STATE_MOVING_TO_TOWER: {
                 enemy_move_to_target(&roaches[i], get_tower_hitbox(towerInstance), dt, enemyGrid.nodes, enemyGrid.nodeCount);
                 break;
             }
@@ -692,7 +689,7 @@ void level_one_update(void) {
     #pragma endregion
 
     // New wave
-    if (deadEnemies == totalEnemies) {
+    if (deadEnemies == totalEnemies && totalEnemies != 0) {
         if (currentWave < WAVE_3) {
             deadEnemies = 0; // Reset
             currentWave++;

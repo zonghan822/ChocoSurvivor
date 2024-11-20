@@ -1,9 +1,9 @@
 #pragma once
 #include "cprocessing.h"
 #include "utils.h"
+#include "player.h"
 
 #define MAX_BARRIERS 10
-#include "player.h"
 #define BARRIER_INITIAL_HEALTH 5
 #define MAX_ABULLET_COUNT 20
 #define MAX_ALLIES 3
@@ -18,20 +18,21 @@ struct Barrier {
     float cooldownTimer;
 };
 
-
 enum BarrierState {
     BARRIER_IDLE,
     BARRIER_PREVIEW
 };
 
+#pragma region Barrier
 // Functions for managing barriers
 void barrier_take_damage(int damage);
 int get_barrier_count(void);
 void increment_barrier_count(void);
 void set_barrier_properties(int index, CP_Vector position, float width, float height, int health);
 struct Barrier* get_barriers(void);  // Add this line
-void check_barrier_collision(struct ChocoRoach* roach);
+void check_barrier_collision(struct ChocoRoach* roach, float dt);
 void reset_barriers(void);
+#pragma endregion
 
 enum AllyState {
     ALLY_IDLE,
@@ -52,6 +53,7 @@ struct Ally {
     enum AllyState state;  
 };
 
+#pragma region Allies
 // Functions for managing allies
 void init_ally_properties(int index, CP_Vector position, float width, float height, int health);
 void update_allies(float dt, struct ChocoRoach* enemies, int enemyCount, struct Camera cam);
@@ -63,3 +65,4 @@ void increment_ally_count(void);
 CP_Image get_ally_image(void);
 void render_allies(struct Camera cam);
 void render_abullet(struct Bullet bullet, struct Camera cam);
+#pragma endregion

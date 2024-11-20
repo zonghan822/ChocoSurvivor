@@ -168,6 +168,64 @@ void render_player(struct ChocoShooter player, float alpha, struct Camera cam) {
     CP_Image_Draw(player.img, vec.x, vec.y, player.width, player.height, alpha);
 }
 
+void render_health_bar_with_interpolation(struct ChocoShooter* player, float dt, float meterX, float meterY, float meterWidth) {
+    // Health bar properties
+    float barWidth = meterWidth;      // Match the buff bar width
+    float barHeight = 10.0f;          // Slightly smaller than the buff bar
+    float barOffsetY = meterY - 15.0f; // Position slightly above the buff bar
+    static float interpolatedHealthWidth = 0.0f; // Smooth interpolation width
+
+    // Calculate target width based on current health percentage
+    float targetHealthWidth = (player->health / (float)player->maxHealth) * barWidth;
+
+    // Interpolate the width towards the target
+    if (interpolatedHealthWidth != targetHealthWidth) {
+        float delta = targetHealthWidth - interpolatedHealthWidth;
+        interpolatedHealthWidth += delta * 10.0f * dt; // Adjust speed
+        interpolatedHealthWidth = CP_Math_ClampFloat(interpolatedHealthWidth, 0, barWidth);
+    }
+
+    // Render the background of the health bar (gray)
+    CP_Settings_Fill(CP_Color_Create(50, 50, 50, 255));
+    CP_Graphics_DrawRect(meterX, barOffsetY, barWidth, barHeight);
+
+    // Render the interpolated health bar (green to red gradient)
+    CP_Settings_Fill(CP_Color_Create(
+        (1.0f - interpolatedHealthWidth / barWidth) * 255, // Red increases as health decreases
+        (interpolatedHealthWidth / barWidth) * 255,        // Green decreases as health decreases
+        0,                                                // Blue stays constant
+        255                                               // Full opacity
+    ));
+    CP_Graphics_DrawRect(meterX, barOffsetY, interpolatedHealthWidth, barHeight);
+}
+
+void render_health_bar(struct ChocoShooter* player, float dt, float windowWidth, float windowHeight, float meterX, float meterY, float meterWidth, float meterHeight) {
+    // Health bar properties
+
+    float barWidth = meterWidth;      // Match the buff bar width
+    float barHeight = 10.0f;          // Slightly smaller than the buff bar
+    float barOffsetY = meterY - 30.0f; // Position slightly above the buff bar
+    static float interpolatedHealthWidth = 0.0f; // Smooth interpolation width
+
+    // Calculate target width based on current health percentage
+    float targetHealthWidth = (player->health / (float)player->maxHealth) * barWidth;
+
+    // Interpolate the width towards the target
+    if (interpolatedHealthWidth != targetHealthWidth) {
+        float delta = targetHealthWidth - interpolatedHealthWidth;
+        interpolatedHealthWidth += delta * 10.0f * dt; // Adjust speed
+        interpolatedHealthWidth = CP_Math_ClampFloat(interpolatedHealthWidth, 0, barWidth);
+    }
+
+    // Render the background of the health bar (gray)
+    CP_Settings_Fill(CP_Color_Create(50, 50, 50, 255));
+    CP_Graphics_DrawRect(meterX, barOffsetY, barWidth, meterHeight);
+
+    // Render the interpolated health bar (green to red gradient)
+    CP_Settings_Fill(CP_Color_Create(225, 0, 0, 255));
+    CP_Graphics_DrawRect(meterX, barOffsetY, interpolatedHealthWidth, meterHeight);
+}
+
 #pragma endregion
 
 #pragma region Bullet
@@ -295,67 +353,6 @@ void apply_buff(struct ChocoShooter* player, enum BuffType buff) {
 
 
     }
-}
-   
-
-
-
-void render_health_bar_with_interpolation(struct ChocoShooter* player, float dt, float meterX, float meterY, float meterWidth) {
-    // Health bar properties
-    float barWidth = meterWidth;      // Match the buff bar width
-    float barHeight = 10.0f;          // Slightly smaller than the buff bar
-    float barOffsetY = meterY - 15.0f; // Position slightly above the buff bar
-    static float interpolatedHealthWidth = 0.0f; // Smooth interpolation width
-
-    // Calculate target width based on current health percentage
-    float targetHealthWidth = (player->health / (float)player->maxHealth) * barWidth;
-
-    // Interpolate the width towards the target
-    if (interpolatedHealthWidth != targetHealthWidth) {
-        float delta = targetHealthWidth - interpolatedHealthWidth;
-        interpolatedHealthWidth += delta * 10.0f * dt; // Adjust speed
-        interpolatedHealthWidth = CP_Math_ClampFloat(interpolatedHealthWidth, 0, barWidth);
-    }
-
-    // Render the background of the health bar (gray)
-    CP_Settings_Fill(CP_Color_Create(50, 50, 50, 255));
-    CP_Graphics_DrawRect(meterX, barOffsetY, barWidth, barHeight);
-
-    // Render the interpolated health bar (green to red gradient)
-    CP_Settings_Fill(CP_Color_Create(
-        (1.0f - interpolatedHealthWidth / barWidth) * 255, // Red increases as health decreases
-        (interpolatedHealthWidth / barWidth) * 255,        // Green decreases as health decreases
-        0,                                                // Blue stays constant
-        255                                               // Full opacity
-    ));
-    CP_Graphics_DrawRect(meterX, barOffsetY, interpolatedHealthWidth, barHeight);
-}
-
-    void render_health_bar(struct ChocoShooter* player, float dt, float windowWidth, float windowHeight, float meterX, float meterY, float meterWidth, float meterHeight){
-    // Health bar properties
-
-    float barWidth = meterWidth;      // Match the buff bar width
-    float barHeight = 10.0f;          // Slightly smaller than the buff bar
-    float barOffsetY = meterY - 30.0f; // Position slightly above the buff bar
-    static float interpolatedHealthWidth = 0.0f; // Smooth interpolation width
-
-    // Calculate target width based on current health percentage
-    float targetHealthWidth = (player->health / (float)player->maxHealth) * barWidth;
-
-    // Interpolate the width towards the target
-    if (interpolatedHealthWidth != targetHealthWidth) {
-        float delta = targetHealthWidth - interpolatedHealthWidth;
-        interpolatedHealthWidth += delta * 10.0f * dt; // Adjust speed
-        interpolatedHealthWidth = CP_Math_ClampFloat(interpolatedHealthWidth, 0, barWidth);
-    }
-
-    // Render the background of the health bar (gray)
-    CP_Settings_Fill(CP_Color_Create(50, 50, 50, 255));
-    CP_Graphics_DrawRect(meterX, barOffsetY, barWidth, meterHeight);
-
-    // Render the interpolated health bar (green to red gradient)
-    CP_Settings_Fill(CP_Color_Create(225, 0, 0, 255));
-    CP_Graphics_DrawRect(meterX, barOffsetY, interpolatedHealthWidth, meterHeight);
 }
 
 // Sidenote: EXP would refer to buff meter

@@ -6,7 +6,7 @@
 #include "enemy.h"
 #include "camera.h"
 
-struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth, float xSpeed, float speed, int maxHealth, int dmg) {
+struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth, float speed, int maxHealth, int dmg) {
     srand((unsigned int)time(NULL));
     struct ChocoRoach chocoRoach;
     chocoRoach.img = CP_Image_Load("Assets/choco_roach.png");
@@ -42,24 +42,18 @@ void enemy_move_to_target(struct ChocoRoach* roach, struct Rectangle hitbox, flo
         
         if (pathNodeCount) {
             roach->moveDirection = CP_Vector_Normalize((CP_Vector_Subtract(grid[pathArray[0]].pos, roach->pos)));
+            // printf("Move Direction (%lf, %lf)\n", roach->moveDirection.x, roach->moveDirection.y);
         }
         else {
             roach->moveDirection = CP_Vector_Zero();
             printf("No path!\n");
         }
     }
-    if (roach->moveDirection.x < 0.f) {
-        if (roach->width > 0.f) {
-            roach->width = -roach->width;
-        }
-    }
-    else {
-        if (roach->width < 0.f) {
-            roach->width = -roach->width;
-        }
-    }
+    printf("Before Pos (%lf, %lf)\n", roach->pos.x, roach->pos.y);
+    roach->width = (roach->moveDirection.x < 0.f && roach->width > 0.f) || (roach->moveDirection.x > 0.f && roach->width < 0.f) ? -roach->width: roach->width;
     roach->pos.x += roach->moveDirection.x * roach->speed * dt;
     roach->pos.y += roach->moveDirection.y * roach->speed * dt;
+    printf("After Pos (%lf, %lf)\n", roach->pos.x, roach->pos.y);
 }
 
 void render_enemy_health_bar(struct ChocoRoach* roach, struct Camera cam) {
@@ -94,6 +88,7 @@ void render_enemies(struct ChocoRoach* roaches, struct Camera cam, int size) {
                 vec.x, vec.y,
                 roaches[i].width, roaches[i].height,
                 255);
+            //printf("enemy %d pos: ( %lf, %lf )\n", i, roaches[i].pos.x, roaches[i].pos.y);
         }   
     }
 }

@@ -15,6 +15,8 @@ static struct Ally allies[MAX_ALLIES];
 static int allyCount = 0;
 static enum AllyState currentAllyState = ALLY_IDLE;
 static CP_Vector allyPreviewPosition = { 0, 0 };
+static CP_Image allyImage = NULL;  // Static variable to store the ally image
+
 
 // Barrier Functions
 struct Barrier* get_barriers(void) {
@@ -55,6 +57,54 @@ void reset_barriers(void) {
     barrierCount = 0;
     printf("All barriers reset.\n");
 }
+
+void check_barrier_collision(struct ChocoRoach* roach, float dt) {
+    for (int i = 0; i < barrierCount; i++) {
+        struct Rectangle barrierRect = {
+            .pos = barriers[i].position,
+            .width = barriers[i].width,
+            .height = barriers[i].height
+        };
+
+        // Debugging: Display barrier properties
+      //  printf("DEBUG: Checking collision for Barrier %d: position=(%.2f, %.2f), width=%.2f, height=%.2f, health=%d\n",
+           // i, barriers[i].position.x, barriers[i].position.y, barriers[i].width, barriers[i].height, barriers[i].health);
+
+        if (barriers[i].cooldownTimer > 0) {
+            barriers[i].cooldownTimer -= dt;
+            //     printf("DEBUG: Barrier %d is on cooldown. Timer: %.2f\n", i, barriers[i].cooldownTimer);
+        }
+
+        if (are_rects_intersecting(roach->hitbox, barrierRect)) {
+            //    printf("DEBUG: Roach collided with Barrier %d.\n", i);
+
+            if (barriers[i].health > 0 && barriers[i].cooldownTimer <= 0) {
+                barriers[i].health -= roach->dmg;
+                barriers[i].cooldownTimer = 500.0f;  // Cooldown time in milliseconds
+                //      printf("DEBUG: Barrier %d took damage. New health: %d\n", i, barriers[i].health);
+            }
+
+            if (barriers[i].health <= 0) {
+                //    printf("DEBUG: Barrier %d destroyed.\n", i);
+
+                    // Shift remaining barriers down to maintain array order
+                for (int j = i; j < barrierCount - 1; j++) {
+                    barriers[j] = barriers[j + 1];
+                }
+                barrierCount--;
+                i--;  // Recheck the barrier at this index after shifting
+            }
+
+            roach->speed = 0;  // Stop the roach after collision
+            return;  // Exit as roach can only hit one barrier at a time
+        }
+    }
+
+    // If no collision, reset the roach's speed
+    roach->speed = roach->originalSpeed;
+    //  printf("DEBUG: No collision detected. Roach speed reset to %.2f.\n", roach->originalSpeed);
+}
+
 
 // Ally Functions
 struct Ally* get_allies(void) {
@@ -100,8 +150,6 @@ void init_ally_properties(int index, CP_Vector position, float width, float heig
     }
 }
 
-static CP_Image allyImage = NULL;  // Static variable to store the ally image
-
 CP_Image get_ally_image(void) {
     if (allyImage == NULL) {
         allyImage = CP_Image_Load("Assets/ally_lvl1.png");
@@ -131,6 +179,7 @@ void render_abullet(struct Bullet bullet, struct Camera cam) {
             screenPos.x, screenPos.y, bullet.diameter);
     }
 }
+
 void update_allies(float dt, struct ChocoRoach* enemies, int enemyCount, struct Camera cam) {
     for (int i = 0; i < allyCount; i++) {
         if (allies[i].health <= 0) {
@@ -208,10 +257,6 @@ void update_allies(float dt, struct ChocoRoach* enemies, int enemyCount, struct 
     }
 }
 
-
-
-
-
 int find_bullet_slot(struct Bullet* bullets) {
     for (int i = 0; i < MAX_BULLET_COUNT; i++) {
         if (!bullets[i].isShooting) {
@@ -220,7 +265,6 @@ int find_bullet_slot(struct Bullet* bullets) {
     }
     return -1;
 }
-
 
 void reset_allies(void) {
     for (int i = 0; i < MAX_ALLIES; i++) {
@@ -242,50 +286,4 @@ void reset_allies(void) {
         //printf("DEBUG: Reset Ally %d to default values.\n", i);
     }
    // printf("DEBUG: All inactive allies reset. Total active allies: %d.\n", get_ally_count());
-}
-void check_barrier_collision(struct ChocoRoach* roach, float dt) {
-    for (int i = 0; i < barrierCount; i++) {
-        struct Rectangle barrierRect = {
-            .pos = barriers[i].position,
-            .width = barriers[i].width,
-            .height = barriers[i].height
-        };
-
-        // Debugging: Display barrier properties
-      //  printf("DEBUG: Checking collision for Barrier %d: position=(%.2f, %.2f), width=%.2f, height=%.2f, health=%d\n",
-           // i, barriers[i].position.x, barriers[i].position.y, barriers[i].width, barriers[i].height, barriers[i].health);
-
-        if (barriers[i].cooldownTimer > 0) {
-            barriers[i].cooldownTimer -= dt;
-       //     printf("DEBUG: Barrier %d is on cooldown. Timer: %.2f\n", i, barriers[i].cooldownTimer);
-        }
-
-        if (are_rects_intersecting(roach->hitbox, barrierRect)) {
-        //    printf("DEBUG: Roach collided with Barrier %d.\n", i);
-
-            if (barriers[i].health > 0 && barriers[i].cooldownTimer <= 0) {
-                barriers[i].health -= roach->dmg;
-                barriers[i].cooldownTimer = 500.0f;  // Cooldown time in milliseconds
-          //      printf("DEBUG: Barrier %d took damage. New health: %d\n", i, barriers[i].health);
-            }
-
-            if (barriers[i].health <= 0) {
-            //    printf("DEBUG: Barrier %d destroyed.\n", i);
-
-                // Shift remaining barriers down to maintain array order
-                for (int j = i; j < barrierCount - 1; j++) {
-                    barriers[j] = barriers[j + 1];
-                }
-                barrierCount--;
-                i--;  // Recheck the barrier at this index after shifting
-            }
-
-            roach->speed = 0;  // Stop the roach after collision
-            return;  // Exit as roach can only hit one barrier at a time
-        }
-    }
-
-    // If no collision, reset the roach's speed
-    roach->speed = roach->originalSpeed;
-  //  printf("DEBUG: No collision detected. Roach speed reset to %.2f.\n", roach->originalSpeed);
 }

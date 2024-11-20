@@ -59,9 +59,11 @@
       <Filter>Source Files\UI</Filter>
     </ClCompile>
   </ItemGroup>
-   <ClCompile Include="barrier.c" />
   <ItemGroup>
     <ClInclude Include="boss.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="enemy.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="mainmenu.h">
@@ -110,10 +112,6 @@
       <Filter>Header Files\UI</Filter>
     </ClInclude>
   </ItemGroup>
-     <ClInclude Include="barrier.h" />
-    <ClInclude Include="enemy.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   <ItemGroup>
     <Filter Include="Header Files">
       <UniqueIdentifier>{c6b1deee-9271-4a9d-b01e-9f5fe6f08a78}</UniqueIdentifier>
