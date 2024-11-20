@@ -7,9 +7,21 @@
 
 // Returns 1 if still alive, 0 if not
 int tower_take_damage(struct DefenseTarget* tower, int damage) {
+	if (tower->flickerState.isFlickering) {
+		printf("Tower is invincible and cannot take damage right now.\n");
+		return 1;  // Skip the rest of the function if flickering
+	}
+
 	tower->health = CP_Math_ClampInt(tower->health - damage, 0, tower->maxHealth);
-	printf("Tower took %d damage, health is now %d\n", damage, tower->health);
-	return tower->health > 0;
+
+	if (tower->health > 0) {
+		printf("Tower took %d damage, health is now %d\n", damage, tower->health);
+		flicker(&(tower->flickerState), 1);
+		return 1;
+	}
+
+	printf("Game Over!\n");
+	return 0;
 }
 
 // Returns 1 if can revive, 0 if not

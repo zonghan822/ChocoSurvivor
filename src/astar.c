@@ -9,11 +9,11 @@
 static int _nodeCountX, _nodeCountY;
 static float _nodeWidth , _nodeHeight;
 
-int init_grid(PathNode* grid, float levelWidth, float levelHeight, float nodeWidth, float nodeHeight, float spawnWidth) {
+int init_grid(PathNode* grid, float levelWidth, float levelHeight, float nodeWidth, float nodeHeight) {
 	float paddingX = nodeWidth / 2;
 	float paddingY = nodeHeight / 2;
-	_nodeCountX = (levelWidth + spawnWidth) / nodeWidth; // grid start from the spawn area.
-	_nodeCountY = levelHeight / nodeHeight;
+	_nodeCountX = (int)(levelWidth / nodeWidth);
+	_nodeCountY = (int)(levelHeight / nodeHeight);
 	_nodeWidth = nodeWidth;
 	_nodeHeight = nodeHeight;
 	float marginX = paddingX + (levelWidth - (nodeWidth * _nodeCountX))/2;
@@ -22,7 +22,7 @@ int init_grid(PathNode* grid, float levelWidth, float levelHeight, float nodeWid
 
 	for (int i = 0; i < _nodeCountX; i++) {
 		for (int j = 0; j < _nodeCountY; j++) {
-			CP_Vector nodePos = { (marginX + nodeWidth * i) - spawnWidth/2 , marginY + nodeHeight * j };
+			CP_Vector nodePos = { marginX + nodeWidth * i , marginY + nodeHeight * j };
 			/****************************************** 
 			grid indexes are stored in following order:
 			e.g.:
@@ -39,7 +39,7 @@ int init_grid(PathNode* grid, float levelWidth, float levelHeight, float nodeWid
 	return nodeCount;
 }
 
-bool is_valid_node(PathNode node, struct Rectangle* worldClips, int clipsSize){
+static bool is_valid_node(PathNode node, struct Rectangle* worldClips, int clipsSize){
 	struct Rectangle currentRect = { node.pos, .width = _nodeWidth, .height = _nodeHeight };
 	for (int clipIndex = 0; clipIndex < clipsSize; clipIndex++) {
 		if (are_rects_intersecting(currentRect, worldClips[clipIndex])) {
@@ -81,7 +81,6 @@ void update_grid(PathNode* grid, struct Rectangle* worldClips, int clipsSize) {
 	}
 }
 
-
 void draw_grid(PathNode* grid, int nodeCount, struct Camera cam) {
 	CP_Settings_Fill(CP_Color_Create(255, 255, 255, 255));
 	for (int i = 0; i < nodeCount; i++) {
@@ -93,7 +92,6 @@ void draw_grid(PathNode* grid, int nodeCount, struct Camera cam) {
 		}
 	}
 }
-
 
 int get_nearest_node_index(PathNode* grid, int nodeCount, CP_Vector position) {
 	int closestNodeIndex = 0;
@@ -109,7 +107,7 @@ int get_nearest_node_index(PathNode* grid, int nodeCount, CP_Vector position) {
 	return closestNodeIndex;
 }
 
-int remove_node(AStarNode* AStarList, int nodeIndex, int nodeCount) {
+static int remove_node(AStarNode* AStarList, int nodeIndex, int nodeCount) {
 	for (int i = 0; i < nodeCount; i++) {
 		if (AStarList[i].nodeIndex == nodeIndex) {
 			int remainingCount = nodeCount - i;
@@ -126,7 +124,7 @@ int remove_node(AStarNode* AStarList, int nodeIndex, int nodeCount) {
 	return nodeCount;
 }
 
-void reverse_array(int* array, int arrayCount) {
+static void reverse_array(int* array, int arrayCount) {
 	for (int i = 0, j = arrayCount - 1; i < j; ++i, --j) {
 		int tmp = array[i];
 		array[i] = array[j];
@@ -134,15 +132,14 @@ void reverse_array(int* array, int arrayCount) {
 	}
 }
 
-
 int find_astar_path(PathNode* grid, int nodeCount, int startNodeIndex, int endNodeIndex, int *pathArray) {
 	
 	AStarNode startNode = { .nodeIndex = startNodeIndex, .fCost = 0.f, .gCost = 0.f, .hCost = 0.f, .parentNode = NULL };
 	AStarNode endNode = { .nodeIndex = endNodeIndex, .fCost = 0.f, .gCost = 0.f, .hCost = 0.f, .parentNode = NULL };
 
 	// Initialize open and closed list
-	AStarNode openList[MAX_NODE_SIZE];
-	AStarNode closedList[MAX_NODE_SIZE];
+	AStarNode openList[MAX_NODE_SIZE] = {0};
+	AStarNode closedList[MAX_NODE_SIZE] = {0};
 
 	// Add start node to open list
 	int openListCount = 0, closedListCount = 0;

@@ -39,18 +39,11 @@ void enemy_move_to_target(struct ChocoRoach* roach, struct Rectangle hitbox, flo
     int pathNodeCount = 0;
     int startNodeIndex = get_nearest_node_index(grid, nodeCount, roach->pos);
     int endNodeIndex = get_nearest_node_index(grid, nodeCount, hitbox.pos);
-    //printf("Target Pos: (%lf, %lf)\n", hitbox.pos.x, hitbox.pos.y);
-    //printf("End Node Pos: (%lf, %lf)\n", grid[endNodeIndex].pos.x, grid[endNodeIndex].pos.y);
-    //printf("End Node: %d\n", endNodeIndex);
     if (startNodeIndex == endNodeIndex) {
         roach->moveDirection = CP_Vector_Normalize((CP_Vector_Subtract(hitbox.pos, roach->pos)));
-        printf("Moving to target!\n");
     } else {
         pathNodeCount = find_astar_path(grid, nodeCount, startNodeIndex, endNodeIndex, pathArray);
-        //for (int i = 0; i < pathNodeCount; i++) {
-        //    printf("%d ", pathArray[i]);
-        //}
-        printf("Astar ing...\n");
+        
         if (pathNodeCount) {
             roach->moveDirection = CP_Vector_Normalize((CP_Vector_Subtract(grid[pathArray[0]].pos, roach->pos)));
         }
