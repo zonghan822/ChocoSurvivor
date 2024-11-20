@@ -206,7 +206,7 @@ void level_one_update(void) {
             enemySpeed = 100.f;
             enemyMaxHealth = 100;
             enemyDmg = 20;
-            roachesMax = 1;
+            roachesMax = 8;
             break;
         case WAVE_1:
             enemySpeed = 100.f;
@@ -461,8 +461,14 @@ void level_one_update(void) {
         // can use else statement here for dying animation...
     }
 
-    // Buff and currency drops here...
     
+    if (fillWidth >= meterWidth) {
+        CP_Settings_Fill(CP_Color_Create(255, 0, 0, 255)); // Red for maxed-out meter
+    }
+    else {
+        CP_Settings_Fill(CP_Color_Create(0, 0, 255, 255)); // Blue for normal meter
+    }
+    CP_Graphics_DrawRect(meterX, meterY, fillWidth, meterHeight);
 
     // Draw the empty part of the meter (white)
     CP_Settings_RectMode(CP_POSITION_CORNER);
@@ -580,29 +586,16 @@ void level_one_update(void) {
         }
     }
     // Set targetFillWidth based on updated buffExp
-    targetFillWidth = ((playerInstance.buffs.buffExp % playerInstance.buffs.maxBuffMeter) / (float)playerInstance.buffs.maxBuffMeter) * meterWidth;
-    fillWidth = CP_Math_ClampFloat(fillWidth, 0, playerInstance.buffs.maxBuffMeter);
+    targetFillWidth = (playerInstance.buffs.buffExp / (float)playerInstance.buffs.maxBuffMeter) * meterWidth;
+    fillWidth = CP_Math_ClampFloat(fillWidth, 0, meterWidth); // Clamp to the actual visual width
 
-    // TODO:
-    // fillSpeed *= dt;
-
-    // TODO 2:
-    // Max is 100
-    // Value = 99
-    // + 5 = 104
-    // Clamp to 100
-    // Delay
-    // Then take 104 - 100 = 4, assign it to the value
-    // Different color when bar reaches max (just use if statement)
-
-    // Smoothly interpolate fillWidth towards targetFillWidth
     if (fillWidth < targetFillWidth) {
-        fillWidth += fillSpeed * (targetFillWidth - fillWidth);
-        if (fillWidth > targetFillWidth) fillWidth = targetFillWidth;  // Prevent overshooting
+        fillWidth += fillSpeed * dt; // Use delta time for smooth updates
+        if (fillWidth > targetFillWidth) fillWidth = targetFillWidth; // Avoid overshooting
     }
     else if (fillWidth > targetFillWidth) {
-        fillWidth -= fillSpeed * (fillWidth - targetFillWidth);
-        if (fillWidth < targetFillWidth) fillWidth = targetFillWidth;  // Prevent undershooting
+        fillWidth -= fillSpeed * dt;
+        if (fillWidth < targetFillWidth) fillWidth = targetFillWidth;
     }
 
 
