@@ -20,6 +20,13 @@ typedef struct AStarNode {
 	struct AStarNode* parentNode;
 }AStarNode;
 
+typedef struct AStarNodeList {
+	AStarNode* list;
+	int nodeCount;
+	int size;
+}AStarList;
+
+
 /****************************************************
  @brief generate grid based on map size
  @param grid - array passed in to store the node of the
@@ -42,12 +49,12 @@ void update_grid(PathNode* grid, struct Rectangle* worldClips, int clipsSize);
 void draw_grid(PathNode* grid, int nodeCount, struct Camera cam); // draw grid for debugging
 
 /****************************************************
- @brief return the nearest node to position 
  @param grid - array containing the path node of the
 	map grid
  @param nodeCount - count of node in grid
  @param position - a position to search for nearest
 	node
+ @return return the nearest node to position 
 *****************************************************/
 int get_nearest_node_index(PathNode* grid, int nodeCount, CP_Vector position);
 

@@ -25,6 +25,7 @@ int init_grid(PathNode* grid, float levelWidth, float levelHeight, float nodeWid
 			CP_Vector nodePos = { marginX + nodeWidth * i , marginY + nodeHeight * j };
 			/****************************************** 
 			grid indexes are stored in following order:
+			(row major)
 			e.g.:
 			grid[]:			i:				j:
 			[0, 1, 2]		[0, 1, 2]		[0, 0, 0]
@@ -106,6 +107,19 @@ int get_nearest_node_index(PathNode* grid, int nodeCount, CP_Vector position) {
 	}
 	return closestNodeIndex;
 }
+
+static void init_list(AStarList list, int size) {
+
+}
+
+static void append_list() {
+
+}
+
+static void pop_list() {
+
+}
+
 
 static int remove_node(AStarNode* AStarList, int nodeIndex, int nodeCount) {
 	for (int i = 0; i < nodeCount; i++) {
