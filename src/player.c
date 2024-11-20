@@ -281,7 +281,21 @@ void apply_buff(struct ChocoShooter* player, enum BuffType buff) {
      case HEAL:
          player->health += 10;
          printf("YOU ARE HEALED MY BOY");
+         if (player->health > player->maxHealth)
+         {
+             player->health = player->maxHealth;
+         }
          break;
+     case ALLYLVL_UP:
+         player->health += 10;
+         printf("YOU ARE HEALED MY BOY");
+         if (player->health > player->maxHealth)
+         {
+             player->health = player->maxHealth;
+         }
+         break;
+
+
     }
 }
    
@@ -321,12 +335,7 @@ void render_health_bar_with_interpolation(struct ChocoShooter* player, float dt,
 
     void render_health_bar(struct ChocoShooter* player, float dt, float windowWidth, float windowHeight, float meterX, float meterY, float meterWidth, float meterHeight){
     // Health bar properties
-    windowWidth = (float)CP_System_GetWindowWidth();
-    windowHeight = (float)CP_System_GetWindowHeight();
-    meterX = windowWidth - 150;//  buff bar properties
-    meterY = windowHeight - 50;
-    meterWidth = 100;
-    meterHeight = 20;
+
     float barWidth = meterWidth;      // Match the buff bar width
     float barHeight = 10.0f;          // Slightly smaller than the buff bar
     float barOffsetY = meterY - 30.0f; // Position slightly above the buff bar

@@ -19,6 +19,7 @@ enum BuffType {
     ATTACK_SPEED_UP,
     HEALTH_UP,
     HEAL,
+    ALLYLVL_UP,
 };
 
 struct Buffs {

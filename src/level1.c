@@ -166,8 +166,8 @@ void level_one_init(void) {
     spawnMaxY = LEVEL_HEIGHT * 4 / 5;
     spawnWidth = 300.f;
 
-    meterX = windowWidth - 150;//  buff bar properties
-    meterY = windowHeight - 50;
+    meterX = windowWidth - 200;//  buff bar properties
+    meterY = windowHeight - 100;
     meterWidth = 100;
     meterHeight = 20;
     fillSpeed = 120.0f;
