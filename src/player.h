@@ -8,6 +8,10 @@
 #define PLAYER_HITBOX_OFFSET_X(playerWidth) (- 1 / 33.f * playerWidth)
 #define PLAYER_HITBOX_OFFSET_Y(playerHeight) (- 8.f / 77.f * playerHeight)
 
+// to bring over to next level (map)
+extern int playerMaxExp;
+extern int playerLevel;
+
 enum BuffType {
     NO_BUFF,
     ATTACK_UP,
@@ -17,11 +21,9 @@ enum BuffType {
 
 struct Buffs {
     enum BuffType type[3];   // Current buff type (can be set to the latest buff type obtained)
-    int buffExp;
-    int maxBuffMeter;
-    int attackP_lvl;      // Attack power level
-    int attackS_lvl;      // Attack speed level
-    int health_lvl;       // Health level
+    int attackPowerLevel;
+    int attackSpeedLevel;
+    int healthLevel;
 };
 
 enum BulletType {
@@ -56,9 +58,8 @@ struct ChocoShooter {
     int attackPower;   
     float attackSpeed;
     int shield; 
-    int activeBuffSlot;
-    int activeBuffType;
-    int activeBuffLevel;
+    int activeBuffSlot, activeBuffType, activeBuffLevel;
+    int exp;
 };
 
 #pragma region Player

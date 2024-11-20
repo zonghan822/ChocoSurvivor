@@ -6,12 +6,6 @@
 #include "enemy.h"
 #include "camera.h"
 
-void empty_enemies(struct ChocoRoach* roaches) {
-    for (int i = 0; i < MAX_ENEMY_COUNT; i++) {
-        roaches->currentState = 0;
-    }
-}
-
 struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth, float speed, int maxHealth, int dmg) {
 
     srand((unsigned int)time(NULL));
@@ -26,7 +20,7 @@ struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth,
     chocoRoach.maxHealth = maxHealth;
     chocoRoach.dmg = dmg;
     chocoRoach.moveDirection = CP_Vector_Zero();
-    chocoRoach.currentState = STATE_IDLE;
+    chocoRoach.currentState = ENEMY_STATE_IDLE;
     chocoRoach.hitbox.pos.x = chocoRoach.pos.x + ENEMY_HITBOX_OFFSET_X(chocoRoach.width);
     chocoRoach.hitbox.pos.y = chocoRoach.pos.y + ENEMY_HITBOX_OFFSET_Y(chocoRoach.height);
     chocoRoach.hitbox.width = 0.8 * chocoRoach.width;
@@ -52,6 +46,7 @@ void enemy_move_to_target(struct ChocoRoach* roach, struct Rectangle hitbox, flo
             printf("No path!\n");
         }
     }
+
     roach->pos.x += roach->moveDirection.x * roach->speed * dt;
     roach->pos.y += roach->moveDirection.y * roach->speed * dt;
 }
@@ -83,16 +78,12 @@ void render_enemy_health_bar(struct ChocoRoach* roach, struct Camera cam) {
 
 void render_enemies(struct ChocoRoach* roaches, struct Camera cam, int size) {
     for (int i = 0; i < size; i++) {
-        if (roaches[i].currentState != STATE_DIED) {
+        if (roaches[i].currentState != ENEMY_STATE_DIED) {
             CP_Vector vec = get_cam_pos_rel(roaches[i].pos, cam);
-            CP_Image_Draw(
-                roaches[i].img,
-                vec.x,
-                vec.y,
-                roaches[i].width,
-                roaches[i].height,
-                255
-            );
+            CP_Image_Draw(roaches[i].img,
+                vec.x, vec.y,
+                roaches[i].width, roaches[i].height,
+                255);
         }   
     }
 }
@@ -119,7 +110,7 @@ int enemy_take_damage(struct ChocoRoach* roach, int dmg) {
     roach->health = CP_Math_ClampInt(roach->health - dmg, 0, roach->maxHealth);
     roach->isTakingDamage = TRUE;
     if (roach->health <= 0) {
-        roach->currentState = STATE_DIED;
+        roach->currentState = ENEMY_STATE_DIED;
         return 1;
     }
     return 0;

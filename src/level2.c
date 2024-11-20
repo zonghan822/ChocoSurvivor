@@ -95,7 +95,6 @@ void level_two_update(void) {
         playerInstance.width = playerInstance.width < 0 ? -playerInstance.width : playerInstance.width;
 
     move_player(&playerInstance, dt, LEVEL_WIDTH, LEVEL_HEIGHT);
-    bossInstance.move(&bossInstance, playerInstance.pos, dt);
     update_camera(&cam, playerInstance, LEVEL_WIDTH, LEVEL_HEIGHT);
     update_rect_hitbox(&playerInstance.hitbox, 0.0f, 0.0f, playerInstance.pos); // Player
 

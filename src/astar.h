@@ -37,7 +37,7 @@ int init_grid(PathNode* grid, float levelWidth, float levelHeight, float nodeWid
  @param worldClips - array of non-movable path
  @param clipsSize - size of worldClips array
 *****************************************************/
-void update_grid(PathNode* grid, struct Rectangle* worldClips, int clipsSize);
+void update_grid(PathNode* grid, struct Rectangle* worldClips, int clipsSize, struct Rectangle* enemyClips, int enemyClipsSize);
 
 void draw_grid(PathNode* grid, int nodeCount, struct Camera cam); // draw grid for debugging
 

@@ -5,8 +5,10 @@
 #include "utils.h"
 #include "cprocessing.h"
 #include "hittest.h"
+#include "astar.h"
 #include <stdio.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 // ************* Private variables ************* //
 //         _xAtkDelay is for pre-damage          //
@@ -24,38 +26,44 @@ static CP_Vector _meleeOneVec, _chargeTo;
 static CP_Vector _meleeTwoVec;
 static float _previousPlayerSpeed = 0.f;
 
-static void _move_boss(struct Boss* boss, CP_Vector move_to, float dt) {
-	CP_Vector moveDirection = {
-		// Get whole number instead
-		// So it's either -1, 0, or 1
-		.x = CP_Math_ClampFloat((int)move_to.x - (int)boss->pos.x, -1.f, 1.f),
-		.y = CP_Math_ClampFloat((int)move_to.y - (int)boss->pos.y, -1.f, 1.f)
-	};
+void dispose_boss(struct Boss* boss) {
+	if (boss == NULL) return;
+	boss->hitbox.pos = boss->pos = CP_Vector_Set(-500.f, -500.f);
+	CP_Image_Free(boss->img);
+	/*free(boss->move);
+	free(boss->primaryAttack);
+	free(boss->canPrimaryAttack);
+	free(boss->canSecondaryAttack);
+	free(boss->secondaryAttack);
+	free(boss->img);
 
-	// Movement state
-	boss->movement = STOPPED;
-	if (moveDirection.x > 0)
-		boss->movement |= MOVING_RIGHT; // This will add MOVING_RIGHT to movement
-	if (moveDirection.x < 0)
-		boss->movement |= MOVING_LEFT;
-	if (moveDirection.y > 0)
-		boss->movement |= MOVING_DOWN;
-	if (moveDirection.y < 0)
-		boss->movement |= MOVING_UP;
+	boss->move = NULL;
+	boss->primaryAttack = NULL;
+	boss->canPrimaryAttack = NULL;
+	boss->canSecondaryAttack = NULL;
+	boss->secondaryAttack = NULL;
+	boss->img = NULL;
+	free(boss);
+	boss = NULL;*/
+}
 
-	// Check if boss is facing right
-	// Flip sprite depending on direction
-	if (boss->movement & MOVING_RIGHT)
-		boss->width = boss->width > 0 ? -boss->width : boss->width;
-	else
-		boss->width = boss->width < 0 ? -boss->width : boss->width;
+static void _move_to_target(struct Boss* boss, struct Rectangle hitbox, float dt, PathNode* grid, int nodeCount) {
+	int pathArray[50];
+	int pathNodeCount = 0;
+	int startNodeIndex = get_nearest_node_index(grid, nodeCount, boss->pos);
+	int endNodeIndex = get_nearest_node_index(grid, nodeCount, hitbox.pos);
 
-	// Normalize
-	if (moveDirection.x != 0 || moveDirection.y != 0)
-		moveDirection = CP_Vector_Normalize(moveDirection);
-
-	boss->pos.x += moveDirection.x * boss->speed * dt;
-	boss->pos.y += moveDirection.y * boss->speed * dt;
+	if (startNodeIndex == endNodeIndex)
+		boss->moveDirection = CP_Vector_Normalize((CP_Vector_Subtract(hitbox.pos, boss->pos)));
+	else {
+		pathNodeCount = find_astar_path(grid, nodeCount, startNodeIndex, endNodeIndex, pathArray);
+		if (pathNodeCount)
+			boss->moveDirection = CP_Vector_Normalize((CP_Vector_Subtract(grid[pathArray[0]].pos, boss->pos)));
+		else
+			boss->moveDirection = CP_Vector_Zero();
+	}
+	boss->pos.x += boss->moveDirection.x * boss->speed * dt;
+	boss->pos.y += boss->moveDirection.y * boss->speed * dt;
 
 	update_rect_hitbox(&boss->hitbox, 0.f, 0.f, boss->pos);
 }
@@ -66,11 +74,13 @@ struct Boss init_boss_one(float width, float speed, int health, int attack_power
 	struct Boss boss = {
 		.img = img,
 		.speed = speed,
-		.health = boss.maxHealth = health,
-		.hitbox.pos = boss.pos = CP_Vector_Set(-550.f, 50.f),
+		.pos = CP_Vector_Set(-500.f, -500.f),
+		.hitbox.pos = CP_Vector_Set(-500.f, -500.f),
+		.health = health,
+		.maxHealth = health,
 		.width = width,
 		.height = preservedHeight,
-		.state = BOSS_STATE_MOVING,
+		.state = BOSS_STATE_UNSPAWNED,
 		.hitbox.width = boss.width,
 		.hitbox.height = boss.height,
 		.attackPower = attack_power,
@@ -91,11 +101,13 @@ struct Boss init_boss_two(float width, float speed, int health, int attack_power
 	struct Boss boss = {
 		.img = img,
 		.speed = speed,
-		.health = boss.maxHealth = health,
-		.hitbox.pos = boss.pos = CP_Vector_Set(-550.f, 50.f),
+		.pos = CP_Vector_Set(-500.f, -500.f),
+		.hitbox.pos = CP_Vector_Set(-500.f, -500.f),
+		.health = health,
+		.maxHealth = health,
 		.width = width,
 		.height = preservedHeight,
-		.state = BOSS_STATE_MOVING,
+		.state = BOSS_STATE_UNSPAWNED,
 		.hitbox.width = boss.width,
 		.hitbox.height = boss.height,
 		.attackPower = attack_power,
@@ -115,15 +127,25 @@ void render_boss(struct Boss boss, struct Camera cam) {
 	CP_Image_Draw(boss.img, vec.x, vec.y, boss.width, boss.height, 255);
 }
 
-void boss_take_damage(struct Boss* boss, int damage) {
-	boss->health = CP_Math_ClampInt(boss->health - damage, 0, boss->maxHealth);
+void spawn_boss(struct Boss* boss, float x, float y) {
+	CP_Vector vec = CP_Vector_Set(x, y);
+	boss->hitbox.pos = vec;
+	boss->pos = vec;
+	boss->state = BOSS_STATE_MOVING_TO_TOWER;
+}
 
-	if (boss->health > 0) {
-		printf("Boss took %d damage, health is now %d\n", damage, boss->health);
-		return;
+int boss_take_damage(struct Boss* boss, int damage) {
+	boss->health = CP_Math_ClampInt(boss->health - damage, 0, boss->maxHealth);
+	boss->isTakingDamage = TRUE;
+
+	if (boss->health <= 0) {
+		printf("Boss has been defeated!\n");
+		boss->state = BOSS_STATE_DIED;
+		return 1;
 	}
 
-	printf("Boss has been defeated!\n");
+	printf("Boss took %d damage, health is now %d\n", damage, boss->health);
+	return 0;
 }
 
 #pragma region Boss 1
@@ -143,7 +165,7 @@ void boss_one_pri_atk(struct Boss *boss, struct ChocoShooter* player, float dt) 
 
 	// Add delay (attacking animation)
 	if (_priAtkDelay < attackingDelay) {
-		_priAtkDelay += dt;
+		_priAtkDelay += dt * boss->attackSpeed;
 		return;
 	}
 
@@ -161,7 +183,7 @@ void boss_one_pri_atk(struct Boss *boss, struct ChocoShooter* player, float dt) 
 	}
 
 	printf("Boss has recovered from melee attack\n");
-	boss->state = BOSS_STATE_MOVING;
+	boss->state = BOSS_STATE_MOVING_TO_TOWER;
 	_priAtkDelay = _priAtkCooldown = 0.f;
 	_meleeOneVec = CP_Vector_Zero();
 }
@@ -187,13 +209,14 @@ void boss_one_sec_atk(struct Boss *boss, struct ChocoShooter* player, float dt) 
 
 	// Add delay (attacking animation)
 	if (_secAtkDelay < attackingDelay) {
-		_secAtkDelay += dt;
+		_secAtkDelay += dt * boss->attackSpeed;
 		return;
 	}
 
 	printf("Charge attack\n");
 
 	// Lerp
+	// Use speed instead
 	_chargeProgress += (boss->speed / 3.f) * dt;
 	boss->pos.x = CP_Math_LerpFloat(boss->pos.x, _chargeTo.x, _chargeProgress);
 	boss->pos.y = CP_Math_LerpFloat(boss->pos.y, _chargeTo.y, _chargeProgress);
@@ -207,7 +230,7 @@ void boss_one_sec_atk(struct Boss *boss, struct ChocoShooter* player, float dt) 
 	// Done charging to pos
 	// Reset values
 	if (boss->pos.x == _chargeTo.x && boss->pos.y == _chargeTo.y) {
-		boss->state = BOSS_STATE_MOVING;
+		boss->state = BOSS_STATE_MOVING_TO_TOWER;
 		_chargeTo = CP_Vector_Zero();
 		_chargeProgress = 0.f;
 		_secAtkCooldown = 0.f;
@@ -222,13 +245,17 @@ int can_boss_one_sec_atk(struct Boss boss, struct ChocoShooter player) {
 		boss.state == BOSS_STATE_ATTACKING_SECONDARY;
 }
 
-void boss_one_move(struct Boss* boss, CP_Vector move_to, float dt) {
+void boss_one_move(struct Boss* boss, struct ChocoShooter player, struct Rectangle hitbox, float dt, PathNode* grid, int nodeCount) {
 	if (_secAtkCooldown < 15.f)
 		_secAtkCooldown += dt;
 
-	if (boss->state != BOSS_STATE_MOVING) return;
+	if (boss->state != BOSS_STATE_MOVING_TO_TOWER && boss->state != BOSS_STATE_MOVING_TO_PLAYER) return;
 
-	_move_boss(boss, move_to, dt);
+	struct Circle radar = { .pos = boss->pos, .diameter = 1.35f * boss->width };
+	if (are_circle_rect_intersecting(radar, player.hitbox))
+		boss->state = BOSS_STATE_MOVING_TO_PLAYER;
+
+	_move_to_target(boss, hitbox, dt, grid, nodeCount);
 }
 #pragma endregion
 
@@ -249,7 +276,7 @@ void boss_two_pri_atk(struct Boss* boss, struct ChocoShooter* player, float dt) 
 
 	// Add delay (attacking animation)
 	if (_priAtkDelay < attackingDelay) {
-		_priAtkDelay += dt;
+		_priAtkDelay += dt * boss->attackSpeed;
 		return;
 	}
 
@@ -267,7 +294,7 @@ void boss_two_pri_atk(struct Boss* boss, struct ChocoShooter* player, float dt) 
 	}
 
 	printf("Boss has recovered from melee attack\n");
-	boss->state = BOSS_STATE_MOVING;
+	boss->state = BOSS_STATE_MOVING_TO_TOWER;
 	_priAtkDelay = _priAtkCooldown = 0.f;
 	_meleeTwoVec = CP_Vector_Zero();
 }
@@ -306,7 +333,7 @@ void boss_two_sec_atk(struct Boss* boss, struct ChocoShooter* player, float dt) 
 
 	// Reset values
 	if (boss->pos.x == _chargeTo.x && boss->pos.y == _chargeTo.y) {
-		boss->state = BOSS_STATE_MOVING;
+		boss->state = BOSS_STATE_MOVING_TO_TOWER;
 		_secAtkCooldown = 0.f;
 		_secAtkDelay = 0.f;
 		player->speed = _previousPlayerSpeed;
@@ -318,12 +345,16 @@ int can_boss_two_sec_atk(struct Boss boss, struct ChocoShooter player) {
 	return _secAtkCooldown >= 45.f || boss.state == BOSS_STATE_ATTACKING_SECONDARY;
 }
 
-void boss_two_move(struct Boss* boss, CP_Vector move_to, float dt) {
+void boss_two_move(struct Boss* boss, struct ChocoShooter player, struct Rectangle hitbox, float dt, PathNode* grid, int nodeCount) {
 	if (_secAtkCooldown < 45.f)
 		_secAtkCooldown += dt;
 
-	if (boss->state != BOSS_STATE_MOVING) return;
+	if (boss->state != BOSS_STATE_MOVING_TO_TOWER && boss->state != BOSS_STATE_MOVING_TO_PLAYER) return;
 
-	_move_boss(boss, move_to, dt);
+	struct Circle radar = { .pos = boss->pos, .diameter = 1.35f * boss->width };
+	if (are_circle_rect_intersecting(radar, player.hitbox))
+		boss->state = BOSS_STATE_MOVING_TO_PLAYER;
+
+	_move_to_target(boss, hitbox, dt, grid, nodeCount);
 }
 #pragma endregion
