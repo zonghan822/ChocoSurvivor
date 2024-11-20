@@ -31,7 +31,7 @@ void main_menu_init(void){
 
 	CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_CENTER, CP_TEXT_ALIGN_V_MIDDLE);
 	CP_Settings_RectMode(CP_POSITION_CENTER);
-	CP_Font_Set(CP_Font_Load("Assets/Fonts/Oxanium/Oxanium-Variable.ttf"));
+	CP_Font_Set(CP_Font_Load("Assets/Fonts/Tiny5/Tiny5-Regular.ttf"));
 
 	_windowWidth = CP_System_GetWindowWidth();
 	_windowHeight = CP_System_GetWindowHeight();

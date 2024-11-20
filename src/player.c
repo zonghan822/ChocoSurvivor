@@ -5,13 +5,17 @@
 #include "camera.h"
 #include "flicker.h"
 
-#define DASH_COOLDOWN 1.0f
-#define DASH_DISTANCE 150.0f
-#define DASH_SPEED 20.0f
+static const float DASH_COOLDOWN = 1.f,
+    DASH_DISTANCE = 150.f, DASH_SPEED = 20.f;
+
+static const float EXP_INCREASE_MULTIPLIER = 1.35f;
 
 static BOOL _isDashing = FALSE;
 static float _dashProgress, _lastDash;
 static CP_Vector _dashTo;
+
+int playerMaxExp = 20;
+int playerLevel = 1;
 
 #pragma region Player
 // Returns 1 if still alive, 0 if not
@@ -21,11 +25,11 @@ int player_take_damage(struct ChocoShooter* player, int damage) {
         return 1;  // Skip the rest of the function if flickering
     }
 
+    flicker(&(player->flickerState), 1);
     player->health = CP_Math_ClampInt(player->health - damage, 0, player->maxHealth);
 
     if (player->health > 0) {
         printf("Player took %d damage, health is now %d\n", damage, player->health);
-        flicker(&(player->flickerState), 1);
         return 1;
     }
 
@@ -47,13 +51,15 @@ struct ChocoShooter init_player(CP_Vector pos, float speed, float maxHealth, int
         .maxHealth = maxHealth,
         .img = CP_Image_Load("Assets/choco_shooter.png"),
         .movement = STOPPED,
-        .width = 120.f,
+        .hitbox.width = player.width = 100.f,
+        .hitbox.height = player.height = get_preserved_heightf((float)CP_Image_GetWidth(player.img),
+            (float)CP_Image_GetHeight(player.img), player.width),
         .bullets[0].isShooting = FALSE,
         .attackSpeed = fireRate,
         .attackPower = atk,
         .buffs = {0},
-        .buffs.maxBuffMeter = 20,
-        .flickerState.isVisible = TRUE
+        .flickerState.isVisible = TRUE,
+        .exp = 0
     };
     player.height = get_preserved_heightf((float)CP_Image_GetWidth(player.img), (float)CP_Image_GetHeight(player.img), player.width);
     player.hitbox.width = player.width / 1.4f;
@@ -244,59 +250,56 @@ void apply_buff(struct ChocoShooter* player, enum BuffType buff) {
     switch (buff) {
     case ATTACK_UP:
         player->attackPower += 5;  // Increase player's attack power
-        player->buffs.attackP_lvl++;  // Increase the attackP_lvl in playerBuff
-        printf("Attack Power Level: %d\n", player->buffs.attackP_lvl);  
-        if (player->buffs.attackP_lvl <= 1) {
+        player->buffs.attackPowerLevel++;  // Increase the attackPowerLevel in playerBuff
+        printf("Attack Power Level: %d\n", player->buffs.attackPowerLevel);
+        if (player->buffs.attackPowerLevel <= 1) {
             assign_buff_to_slot(player, ATTACK_UP);
         }
        
         break;
     case ATTACK_SPEED_UP:
         player->attackSpeed += 1;
-        player->buffs.attackS_lvl++;
-        printf("Attack Speed Level: %d\n", player->buffs.attackS_lvl);
-        if (player->buffs.attackS_lvl <= 1) {
+        player->buffs.attackSpeedLevel++;
+        printf("Attack Speed Level: %d\n", player->buffs.attackSpeedLevel);
+        if (player->buffs.attackSpeedLevel <= 1) {
             assign_buff_to_slot(player, ATTACK_SPEED_UP);
         }
         break;
     case HEALTH_UP:
        player->health += 10;
-        player->buffs.health_lvl++;
-        printf("Health Level: %d\n", player->buffs.health_lvl);
-        if (player->buffs.health_lvl <= 1) {
+        player->buffs.healthLevel++;
+        printf("Health Level: %d\n", player->buffs.healthLevel);
+        if (player->buffs.healthLevel <= 1) {
             assign_buff_to_slot(player, HEALTH_UP);
         }
         break;
     }
 }
 
+// Sidenote: EXP would refer to buff meter
 int update_buff_meter(struct ChocoShooter* player, int expGained) {
-    // Increase buff experience by the amount gained
-    player->buffs.buffExp += expGained;
-    printf("Current Buff Exp: %d / %d\n", player->buffs.buffExp, player->buffs.maxBuffMeter);
+    player->exp += expGained;
+    printf("Current Exp: %d / %d\n", player->exp, playerMaxExp);
 
-    // Check if buffExp has reached or exceeded maxBuffMeter
-    if (player->buffs.buffExp == player->buffs.maxBuffMeter) {
-        // Buff meter is full but not exceeding; handle this case separately
-        printf("Buff Meter Full! Waiting for reset or user action...\n");
+    // Full or exceeded EXP
+    if (player->exp >= playerMaxExp) {
+        playerLevel++;
+        // Do nothing if EXP == playerMaxExp
+        // But do return the buff
+        // Wrap around only if exceeding
+        if (player->exp > playerMaxExp) {
+            // Wrap around then increase maxExp
+            player->exp -= playerMaxExp;
+            playerMaxExp *= EXP_INCREASE_MULTIPLIER;
+        }
         enum BuffType randomBuff = CP_Random_RangeInt(1, 3);
         return randomBuff;
-    }
-    else if (player->buffs.buffExp > player->buffs.maxBuffMeter) {
-        // Wrap around the excess experience
-        player->buffs.buffExp -= player->buffs.maxBuffMeter;
-        printf("Buff Meter Full! Granting buff...\n");
-
-        // Generate a random buff and return it
-        
     }
 
     return 0; // Return 0 if no buff is granted
 }
 
 void activate_buff_from_slot(struct ChocoShooter* player, int slot) {
- 
-
     //debug
     if (player->buffs.type[slot - 1] == NO_BUFF) {
         printf("Slot %d is empty, cannot activate buff.\n", slot);
@@ -308,15 +311,15 @@ void activate_buff_from_slot(struct ChocoShooter* player, int slot) {
 
     switch (player->activeBuffType) {
     case ATTACK_UP:
-        player->activeBuffLevel = player->buffs.attackP_lvl;
+        player->activeBuffLevel = player->buffs.attackPowerLevel;
         printf("Active buff set to ATTACK_UP with level %d\n", player->activeBuffLevel);
         break;
     case ATTACK_SPEED_UP:
-        player->activeBuffLevel = player->buffs.attackS_lvl;
+        player->activeBuffLevel = player->buffs.attackSpeedLevel;
         printf("Active buff set to ATTACK_SPEED_UP with level %d\n", player->activeBuffLevel);
         break;
     case HEALTH_UP:
-        player->activeBuffLevel = player->buffs.health_lvl;
+        player->activeBuffLevel = player->buffs.healthLevel;
         printf("Active buff set to HEALTH_UP with level %d\n", player->activeBuffLevel);
         break;
     default:

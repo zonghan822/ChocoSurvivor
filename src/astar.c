@@ -51,14 +51,28 @@ static bool is_valid_node(PathNode node, struct Rectangle* worldClips, int clips
 	return true;
 }
 
-void update_grid(PathNode* grid, struct Rectangle* worldClips, int clipsSize) {
+void update_grid(PathNode* grid, struct Rectangle* worldClips, int clipsSize, struct Rectangle* enemyClips, int enemyClipsSize) {
+	int size = clipsSize + enemyClipsSize;
+	struct Rectangle* tempArray = (struct Rectangle*)malloc((unsigned long)size * sizeof(struct Rectangle));
+	if (tempArray == NULL) {
+		fprintf(stderr, "Memory allocation failed\n");
+		return;
+	}
+
+	for (int i = 0; i < size; i++) {
+		if (i < clipsSize)
+			tempArray[i] = worldClips[i];
+		else
+			tempArray[i] = enemyClips[i - clipsSize];
+	}
+
 	// Connection to 8 directions (up, down, left, right, and diagonals)
 	for (int i = 0; i < _nodeCountX; i++) {
 		for (int j = 0; j < _nodeCountY; j++) {
 			int nodeIndex = i + j * _nodeCountX;
 			grid[nodeIndex].connectionCount = 0;
 
-			if (is_valid_node(grid[nodeIndex], worldClips, clipsSize)){
+			if (is_valid_node(grid[nodeIndex], tempArray, size)){
 
 				int connectionStartIndexI = max(0, i - 1);
 				int connectionStartIndexJ = max(0, j - 1);
@@ -70,7 +84,7 @@ void update_grid(PathNode* grid, struct Rectangle* worldClips, int clipsSize) {
 					for (int cJ = connectionStartIndexJ; cJ <= connectionEndIndexJ; cJ++) {
 						int neighbourIndex = cI + cJ * _nodeCountX;
 						if (nodeIndex == neighbourIndex) continue;
-						if (is_valid_node(grid[neighbourIndex], worldClips, clipsSize)) {
+						if (is_valid_node(grid[neighbourIndex], tempArray, size)) {
 							grid[nodeIndex].connections[connectionIndex] = neighbourIndex;
 							grid[nodeIndex].connectionCount++;
 							connectionIndex++;
@@ -80,6 +94,9 @@ void update_grid(PathNode* grid, struct Rectangle* worldClips, int clipsSize) {
 			}
 		}
 	}
+
+	// Done, so free memory
+	free(tempArray);
 }
 
 void draw_grid(PathNode* grid, int nodeCount, struct Camera cam) {

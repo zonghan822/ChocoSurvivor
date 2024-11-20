@@ -7,19 +7,19 @@
 #include "astar.h"
 
 #define MAX_ENEMY_COUNT 100
-#define ENEMY_WIDTH 70.f
+#define ENEMY_WIDTH 60.f
 #define ENEMY_HITBOX_OFFSET_X(enemyWidth) (- 1 / 33.f * enemyWidth)
 #define ENEMY_HITBOX_OFFSET_Y(enemyHeight) (- 8.f / 77.f * enemyHeight)
 #define ENEMY_HEALTHBAR_DISPLAY_TIME 2.f
 
 enum EnemyState {
-	STATE_DIED = 0,
-	STATE_MOVE_TO_TOWER,
-	STATE_MOVE_TO_PLAYER,
-	STATE_MOVE_TO_BARRIER,
-	STATE_DASHING,
-	STATE_ATTACKING,
-	STATE_IDLE
+	ENEMY_STATE_DIED = 0,
+	ENEMY_STATE_MOVING_TO_TOWER,
+	ENEMY_STATE_MOVING_TO_PLAYER,
+	ENEMY_STATE_MOVING_TO_BARRIER,
+	ENEMY_STATE_DASHING,
+	ENEMY_STATE_ATTACKING,
+	ENEMY_STATE_IDLE
 };
 
 struct ChocoRoach {
@@ -44,6 +44,5 @@ void render_enemy_health_bar(struct ChocoRoach* roach, struct Camera cam);
 int enemy_take_damage(struct ChocoRoach* roach, int dmg);
 
 // Takes in array of enemies
-void empty_enemies(struct ChocoRoach* roaches);
 void render_enemies(struct ChocoRoach* roachesArr, struct Camera cam, int size);
 void sort_enemies(struct ChocoRoach* roachesArr, int size);

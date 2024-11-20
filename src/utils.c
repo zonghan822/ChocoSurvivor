@@ -38,7 +38,7 @@ void clamp_pos_clip_rel(CP_Vector* vec, struct Rectangle entity_hitbox, struct R
     }
     else {
         if (fabsf(deltaY) > clipHalfHeight) {
-            // Important: Use 1/4 height, don't use half height as is for bottom side
+            // Important: Use 1/4 height, don't use half height as-is for bottom side
             if (deltaY > 0) { // Bottom side of clip
                 vec->y = CP_Math_ClampFloat(vec->y, (clip.pos.y + clipHalfHeight) + (entHalfHeight / 2), clip.pos.y + clip.height);
             }
