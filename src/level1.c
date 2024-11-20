@@ -484,7 +484,7 @@ void level_one_update(void) {
     CP_Settings_Fill(CP_Color_Create(255, 255, 255, 255));
     CP_Graphics_DrawRect(meterX, meterY, meterWidth, meterHeight);
     if (fillWidth >= meterWidth) {
-        CP_Settings_Fill(CP_Color_Create(255, 0, 0, 255)); // Red for maxed-out meter
+        CP_Settings_Fill(CP_Color_Create(200, 0, 255, 255)); // purple for maxed-out meter
     }
     else {
         CP_Settings_Fill(CP_Color_Create(0, 0, 255, 255)); // Blue for normal meter
