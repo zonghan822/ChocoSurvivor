@@ -492,6 +492,7 @@ void level_two_update(void) {
     #pragma region Render_Barriers_And_Allies
     // Draw all placed barriers
     struct Barrier* barriers = get_barriers();
+    struct Ally* ally = get_allies();    // Get a reference to the current ally
     CP_Settings_Fill(CP_Color_Create(0, 0, 255, 255)); // Solid blue
     for (int i = 0; i < get_barrier_count(); i++) {
         if (barriers[i].health > 0) {  // Only draw if health is greater than zero
@@ -592,7 +593,7 @@ void level_two_update(void) {
 
                             // Apply the buff if one was granted
                             if (randomBuff != 0) {
-                                apply_buff(&playerInstance, randomBuff);
+                                apply_buff(&playerInstance, randomBuff, barriers, ally);
                             }
                         }
                         playerInstance.bullets[j].isShooting = FALSE;
@@ -613,7 +614,7 @@ void level_two_update(void) {
 
                                 // Apply the buff if one was granted
                                 if (randomBuff != 0) {
-                                    apply_buff(&playerInstance, randomBuff);
+                                    apply_buff(&playerInstance, randomBuff, barriers, ally);
                                 }
                             }
                             ally->bullets[j].isShooting = FALSE;
@@ -638,7 +639,7 @@ void level_two_update(void) {
 
                     // Apply the buff if one was granted
                     if (randomBuff != 0) {
-                        apply_buff(&playerInstance, randomBuff);
+                        apply_buff(&playerInstance, randomBuff, barriers, ally);
                     }
                     dispose_boss(&bossInstance);
                 }
@@ -660,7 +661,7 @@ void level_two_update(void) {
 
                         // Apply the buff if one was granted
                         if (randomBuff != 0) {
-                            apply_buff(&playerInstance, randomBuff);
+                            apply_buff(&playerInstance, randomBuff, barriers, ally);
                         }
                         dispose_boss(&bossInstance);
                     }

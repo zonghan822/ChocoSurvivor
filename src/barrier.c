@@ -16,7 +16,7 @@ static int allyCount = 0;
 static enum AllyState currentAllyState = ALLY_IDLE;
 static CP_Vector allyPreviewPosition = { 0, 0 };
 static CP_Image allyImage = NULL;  // Static variable to store the ally image
-
+static CP_Image barrierImages[4] = { NULL };
 
 // Barrier Functions
 struct Barrier* get_barriers(void) {
@@ -30,7 +30,6 @@ int get_barrier_count(void) {
 void increment_barrier_count(void) {
     if (barrierCount < MAX_BARRIERS) {
         barrierCount++;
-        printf("Barrier count incremented: %d\n", barrierCount);
     }
     else {
         printf("Max barriers reached. Cannot increment.\n");
@@ -48,13 +47,16 @@ void set_barrier_properties(int index, CP_Vector position, float width, float he
     }
 }
 
-void reset_barriers(void) {
+void reset_barriers() {
     for (int i = 0; i < MAX_BARRIERS; i++) {
-        barriers[i].health = 0;
-        barriers[i].width = 0;
-        barriers[i].height = 0;
+        barriers[i].position = CP_Vector_Set(0, 0);
+        barriers[i].width = 0.0f;
+        barriers[i].height = 0.0f;
+        barriers[i].health = 0; // Reset health to zero
+        barriers[i].cooldownTimer = 0.0f;
+        barriers[i].hitbox = (struct Rectangle){ 0 };
     }
-    barrierCount = 0;
+    barrierCount = 0; // Reset the active barrier count
     printf("All barriers reset.\n");
 }
 
@@ -154,7 +156,46 @@ CP_Image get_ally_image(void) {
     if (allyImage == NULL) {
         allyImage = CP_Image_Load("Assets/ally_lvl1.png");
     }
+
     return allyImage;
+}
+
+CP_Image get_barrier_image(int barrierLevel) {
+    // Validate barrierLevel range (0 to 3)
+    if (barrierLevel < 0 || barrierLevel > 3) {
+        printf("Invalid barrier level: %d\n", barrierLevel);
+        return NULL; // Return NULL or a default image if desired
+    }
+
+    // Select and return the appropriate image based on barrierLevel
+    switch (barrierLevel) {
+    case 0:
+        printf("Returning image for barrier level 0.\n");
+        return CP_Image_Load("Assets/barrier_1.png");
+    case 1:
+        printf("Returning image for barrier level 1.\n");
+        return CP_Image_Load("Assets/barrier_2.png");
+    case 2:
+        printf("Returning image for barrier level 2.\n");
+        return CP_Image_Load("Assets/barrier_3.png");
+    case 3:
+        printf("Returning image for barrier level 3.\n");
+        return CP_Image_Load("Assets/barrier_4.png");
+    default:
+        // This case should never occur due to the earlier validation
+        printf("Unexpected error: barrier level %d is invalid.\n", barrierLevel);
+        return NULL;
+    }
+}
+
+
+void free_barrier_images() {
+    for (int i = 0; i < 4; i++) {
+        if (barrierImages[i] != NULL) {
+            CP_Image_Free(&barrierImages[i]);
+            barrierImages[i] = NULL;
+        }
+    }
 }
 
 void render_allies(struct Camera cam) {

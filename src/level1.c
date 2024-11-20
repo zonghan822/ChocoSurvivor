@@ -162,8 +162,8 @@ void level_one_init(void) {
     reset_barriers();  // Reset all barriers 
     reset_allies();
     currentState = BARRIER_IDLE;
-    barrierWidth = 50.0f;
-    barrierHeight = 100.0f;
+    barrierWidth = 100.0f;
+    barrierHeight = 150.0f;
     barrier_rect_W = 50.0f;
     barrier_rect_H = 50.0f;
     #pragma endregion
@@ -403,8 +403,7 @@ void level_one_update(void) {
         // Render translucent barrier preview
         CP_Settings_RectMode(CP_POSITION_CENTER);
         CP_Settings_Fill(CP_Color_Create(0, 0, 255, 128));  // Semi-transparent blue
-        CP_Graphics_DrawRect(mouseX, mouseY, barrierWidth, barrierHeight);
-
+        CP_Image_Draw(get_barrier_image(playerInstance.buffs.barrierLevel), mouseX, mouseY, barrierWidth, barrierHeight, 128);
         // Place barrier when left mouse button is clicked
         if (CP_Input_MouseTriggered(MOUSE_BUTTON_LEFT)) {
             int barrierIndex = get_barrier_count();
@@ -508,11 +507,12 @@ void level_one_update(void) {
     #pragma region Render_Barriers_And_Allies
     // Draw all placed barriers
     struct Barrier* barriers = get_barriers();
+    struct Ally* ally = get_allies();    // Get a reference to the current ally
     CP_Settings_Fill(CP_Color_Create(0, 0, 255, 255)); // Solid blue
     for (int i = 0; i < get_barrier_count(); i++) {
         if (barriers[i].health > 0) {  // Only draw if health is greater than zero
             CP_Vector vec = get_cam_pos_rel(barriers[i].position, cam);
-            CP_Graphics_DrawRect(vec.x, vec.y, barriers[i].width, barriers[i].height);
+            CP_Image_Draw(get_barrier_image(playerInstance.buffs.barrierLevel), vec.x, vec.y, barriers[i].width, barriers[i].height,255);
         }
     }
   
@@ -608,7 +608,7 @@ void level_one_update(void) {
 
                             // Apply the buff if one was granted
                             if (randomBuff != 0) {
-                                apply_buff(&playerInstance, randomBuff);
+                                apply_buff(&playerInstance, randomBuff, barriers, ally);
                             }
                         }
                         // Cancel bullet after hit enemy
@@ -630,7 +630,7 @@ void level_one_update(void) {
 
                                 // Apply the buff if one was granted
                                 if (randomBuff != 0) {
-                                    apply_buff(&playerInstance, randomBuff);
+                                    apply_buff(&playerInstance, randomBuff, barriers, ally);
                                 }
                             }
                             ally->bullets[j].isShooting = FALSE;
@@ -655,7 +655,7 @@ void level_one_update(void) {
 
                     // Apply the buff if one was granted
                     if (randomBuff != 0) {
-                        apply_buff(&playerInstance, randomBuff);
+                        apply_buff(&playerInstance, randomBuff, barriers, ally);
                     }
                     dispose_boss(&bossInstance);
                 }
@@ -677,7 +677,7 @@ void level_one_update(void) {
 
                         // Apply the buff if one was granted
                         if (randomBuff != 0) {
-                            apply_buff(&playerInstance, randomBuff);
+                            apply_buff(&playerInstance, randomBuff, barriers, ally);
                         }
                         dispose_boss(&bossInstance);
                     }
@@ -876,6 +876,7 @@ void level_one_exit(void) {
         CP_Image_Free(&playerInstance.img);
     CP_Image_Free(&levelBg);
     CP_Image_Free(&cursor);
+    free_barrier_images();
 
     for (int i = 0; i < roachesMax; i++) {
         struct ChocoRoach roach = roaches[i];
