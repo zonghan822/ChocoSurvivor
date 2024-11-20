@@ -6,8 +6,7 @@
 #include "enemy.h"
 #include "camera.h"
 
-struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth, float speed, int maxHealth, int dmg) {
-
+struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth, float xSpeed, float speed, int maxHealth, int dmg) {
     srand((unsigned int)time(NULL));
     struct ChocoRoach chocoRoach;
     chocoRoach.img = CP_Image_Load("Assets/choco_roach.png");
@@ -52,13 +51,11 @@ void enemy_move_to_target(struct ChocoRoach* roach, struct Rectangle hitbox, flo
 }
 
 void render_enemy_health_bar(struct ChocoRoach* roach, struct Camera cam) {
-    // get relative position after camera transformation
     CP_Vector vec = get_cam_pos_rel(roach->pos, cam);
 
-    // Set position of health bar
     float health_bar_x = vec.x;
-    float health_bar_y = (vec.y) - (roach->height / 2) - 10.f;
-    float health_bar_w = roach->width * 0.8;
+    float health_bar_y = vec.y - (roach->height / 2) - 10.f;
+    float health_bar_w = roach->width * 0.8f;
     float health_bar_h = 15.f;
 
     CP_Settings_RectMode(CP_POSITION_CENTER);
@@ -67,11 +64,9 @@ void render_enemy_health_bar(struct ChocoRoach* roach, struct Camera cam) {
     CP_Settings_Fill(CP_Color_Create(255, 0, 0, 255));
     CP_Graphics_DrawRect(health_bar_x, health_bar_y, health_bar_w, health_bar_h);
 
-    // Compute position and width for health bar gap rect
-    float health_gap_x = health_bar_x + ((float)(roach->health) / (float)(roach->maxHealth)) * health_bar_w;
-    float health_gap_w = health_bar_w * (1.f - ((float)(roach->health) / (float)(roach->maxHealth)));
+    float health_gap_x = health_bar_x + ((float)roach->health / (float)roach->maxHealth) * health_bar_w;
+    float health_gap_w = health_bar_w * (1.f - ((float)roach->health / (float)roach->maxHealth));
 
-    // Draw health bar gap
     CP_Settings_Fill(CP_Color_Create(100, 100, 100, 255));
     CP_Graphics_DrawRect(health_gap_x, health_bar_y, health_gap_w, health_bar_h);
 }

@@ -28,6 +28,7 @@ struct ChocoRoach {
 	float width;
 	float height;
 	float speed;
+	float originalSpeed;
 	int health;
 	int maxHealth;
 	int dmg;

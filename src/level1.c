@@ -113,6 +113,13 @@ static int _get_exp(int health, float speed, int max_enemies) {
     return (int)((float)(health / speed) * (float)(max_enemies / 10.f));
 }
 
+#pragma region ally properties
+int allyCount = 0;
+enum AllyState currentAllyState = ALLY_IDLE;  // Declare and initialize
+CP_Vector allyPreviewPosition;    // Declare and initialize
+float allyH = 150.0f;
+float allyW = 100.0f;
+#pragma endregion
 void level_one_init(void) {
     isMovingToNextLevel = false;
     enableShooting = false;
@@ -144,14 +151,15 @@ void level_one_init(void) {
     playerLevel = 1;
     #pragma endregion
 
-    #pragma region Barrier_Init
-    // Init Barrier Properties
+#pragma region Barrier_Init
+    reset_barriers();  // Reset all barriers 
+    reset_allies();
     currentState = BARRIER_IDLE;
     barrierWidth = 50.0f;
     barrierHeight = 100.0f;
     barrier_rect_W = 50.0f;
     barrier_rect_H = 50.0f;
-    #pragma endregion
+#pragma endregion
 
     #pragma region Enemy_Spawn_Init
     memset(roaches, 0, sizeof(roaches));
@@ -200,6 +208,7 @@ void level_one_init(void) {
 
     init_sounds();
 }
+
 
 void level_one_update(void) {
     // PLACEHOLDER
@@ -361,34 +370,40 @@ void level_one_update(void) {
             }
         }
     }
-
-    update_camera(&cam, playerInstance, LEVEL_WIDTH, LEVEL_HEIGHT);
+ #pragma region ally_Init
+    update_allies(dt, roaches, roachesMax, cam);
+    
+    #pragma endregion
 
     #pragma region Place_Barriers
+    float barrier_butt_x = windowWidth - 1450.0f;
+    float barrier_butt_y = windowHeight - 100.0f;
+    update_camera(&cam, playerInstance, LEVEL_WIDTH, LEVEL_HEIGHT);
+
+    #pragma endregion
     switch (currentState) {
     case BARRIER_IDLE:
-
-        // Start preview mode with a key press, if we haven't reached max barriers
+        // Start preview mode when 'P' is pressed
         if (get_barrier_count() < MAX_BARRIERS && CP_Input_KeyTriggered(KEY_P)) {
+            printf("Switched to BARRIER_PREVIEW. Barrier count: %d\n", get_barrier_count());
             currentState = BARRIER_PREVIEW;
         }
         break;
 
     case BARRIER_PREVIEW:
-        enableShooting = false;
-        // Update the preview position to follow the mouse
-        previewPosition = get_world_pos_rel(CP_Vector_Set(mouseX, mouseY), cam);
+        // Update preview position for barrier
 
-        // Draw translucent preview rectangle
-        CP_Settings_RectMode(CP_POSITION_CENTER);
-        CP_Settings_Fill(CP_Color_Create(0, 0, 255, 128)); // Semi-transparent blue
-        CP_Graphics_DrawRect(mouseX, mouseY, barrierWidth, barrierHeight);
+        previewPosition = get_world_pos_rel(CP_Vector_Set(mouse_x, mouse_y), cam);
 
-        // Place the barrier on mouse click
+        // Render translucent barrier preview
+        CP_Settings_Fill(CP_Color_Create(0, 0, 255, 128));  // Semi-transparent blue
+        CP_Graphics_DrawRect(mouse_x, mouse_y, barrierWidth, barrierHeight);
+
+        // Place barrier when left mouse button is clicked
         if (CP_Input_MouseTriggered(MOUSE_BUTTON_LEFT)) {
             int barrierIndex = get_barrier_count();
             if (barrierIndex < MAX_BARRIERS) {
-                // Set the barrier properties
+                // Initialize barrier properties
                 set_barrier_properties(barrierIndex, previewPosition, barrierWidth, barrierHeight, BARRIER_INITIAL_HEALTH);
                 increment_barrier_count();
                 currentState = BARRIER_IDLE;
@@ -401,16 +416,46 @@ void level_one_update(void) {
         }
         break;
     }
-    #pragma endregion
 
-    // Damage the first active barrier when pressing 'B'
-    if (CP_Input_KeyTriggered(KEY_B)) {
-        barrier_take_damage(1);
+    switch (currentAllyState) {
+    case ALLY_IDLE:
+        // Start preview mode when 'I' is pressed
+        if (CP_Input_KeyTriggered(KEY_I)&& get_ally_count()< MAX_ALLIES) {
+            //printf("Switched to ALLY_PREVIEW. Ally count: %d\n", get_ally_count());
+            currentAllyState = ALLY_PREVIEW;
+        }
+        break;
+    case ALLY_PREVIEW:
+       // printf("DEBUG: In ALLY_PREVIEW. Ally count: %d\n", get_ally_count());
+        allyPreviewPosition = get_world_pos_rel(CP_Vector_Set(mouse_x, mouse_y), cam);
+
+        // Render translucent preview
+        CP_Settings_Fill(CP_Color_Create(0, 255, 0, 128));
+        CP_Image_Draw(get_ally_image(), mouse_x, mouse_y, allyW, allyH, 128);
+
+        if (CP_Input_MouseTriggered(MOUSE_BUTTON_LEFT)) {
+            int allyIndex = get_ally_count();
+            if (allyIndex < MAX_ALLIES) {
+                init_ally_properties(allyIndex, allyPreviewPosition, allyW, allyH, 5);
+                increment_ally_count();
+             //   printf("DEBUG: Placed Ally %d at position (%.2f, %.2f).\n", allyIndex, allyPreviewPosition.x, allyPreviewPosition.y);
+
+                // Transition back to IDLE
+
+            }
+            else {
+                printf("DEBUG: Max allies reached. Cannot place new ally.\n");
+            }
+            currentAllyState = ALLY_IDLE;
+        }
+        break;
     }
+
+    #pragma endregion
 
     #pragma region Shoot_Bullet
     lastShotTime += dt;
-    if (CP_Input_MouseDown(MOUSE_BUTTON_LEFT) && enableShooting) {
+    if (CP_Input_MouseDown(MOUSE_BUTTON_LEFT) && enableShooting) {  
         if (lastShotTime >= (1 / playerInstance.attackSpeed)) { // control fire rate
             // bullet direction is the vector of player with mouse pointer
             CP_Vector bulletDirection = CP_Vector_Subtract(CP_Vector_Set(mouseX, mouseY), get_cam_pos_rel(playerInstance.pos, cam));
@@ -448,7 +493,7 @@ void level_one_update(void) {
         }
     }
 
-    #pragma region Render_Barriers
+#pragma region Render_Barriers_And_Allies
     // Draw all placed barriers
     struct Barrier* barriers = get_barriers();
     CP_Settings_Fill(CP_Color_Create(0, 0, 255, 255)); // Solid blue
@@ -458,7 +503,11 @@ void level_one_update(void) {
             CP_Graphics_DrawRect(vec.x, vec.y, barriers[i].width, barriers[i].height);
         }
     }
-    #pragma endregion
+
+
+  
+    render_allies(cam);
+#pragma endregion
 
     // Update and render bullets
     for (int i = 0; i < MAX_BULLET_COUNT; i++) {
@@ -576,6 +625,20 @@ void level_one_update(void) {
             }
     #pragma endregion
         }
+            for (int a = 0; a < get_ally_count(); a++) {  // Loop through all allies
+                struct Ally* ally = &get_allies()[a];    // Get a reference to the current ally
+                for (int j = 0; j < MAX_BULLET_COUNT; j++) {  // Loop through each ally's bullets
+                    if (ally->bullets[j].isShooting) {
+                        struct Circle bullet = { .pos = ally->bullets[j].pos, .diameter = ally->bullets[j].diameter };
+                        if (are_circle_rect_intersecting(bullet, roaches[i].hitbox)) {
+                            enemy_take_damage(&roaches[i], ally->bullets[j].dmg);
+                            ally->bullets[j].isShooting = FALSE;
+                        }
+                    }
+                }
+            }
+           
+        } 
         // can use else statement here for dying animation...
     }
 
