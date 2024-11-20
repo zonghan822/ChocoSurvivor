@@ -6,6 +6,7 @@
 #include "cprocessing.h"
 #include "mainmenu.h"
 #include "level1.h"
+#include "level2.h"
 #include "player.h"
 #include "enemy.h"
 #include "tower.h"

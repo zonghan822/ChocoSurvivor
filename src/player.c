@@ -40,7 +40,7 @@ int player_take_damage(struct ChocoShooter* player, int damage) {
     return 0;
 }
 
-void init_player(CP_Vector pos, float speed, float maxHealth, int atk, float fireRate) {
+struct ChocoShooter init_player(CP_Vector pos, float speed, float maxHealth, int atk, float fireRate) {
     _isDashing = FALSE;
     _dashProgress = 0.0;
     _lastDash = 2.1;
@@ -66,7 +66,7 @@ void init_player(CP_Vector pos, float speed, float maxHealth, int atk, float fir
     player.hitbox.width = player.width / 1.4f;
     player.hitbox.height = player.height / 1.4f;
 
-    playerInstance = player;
+    return player;
 }
 
 void move_player(struct ChocoShooter *player, float dt, float level_width, float level_height) {

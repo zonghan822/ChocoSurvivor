@@ -147,7 +147,7 @@ void update_allies(float dt, struct ChocoRoach* enemies, int enemyCount, struct 
         float closestDistance = 500.0f;
 
         for (int j = 0; j < enemyCount; j++) {
-            if (enemies[j].currentState == STATE_DIED) continue;
+            if (enemies[j].currentState == ENEMY_STATE_DIED) continue;
 
             float distance = CP_Vector_Distance(allies[i].position, enemies[j].pos);
             if (distance < closestDistance) {
