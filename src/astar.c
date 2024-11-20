@@ -6,22 +6,26 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static int _nodeCountX, _nodeCountY;
-static float _nodeWidth , _nodeHeight;
 
-int init_grid(PathNode* grid, float levelWidth, float levelHeight, float nodeWidth, float nodeHeight) {
+void init_grid(Grid* grid, float levelWidth, float levelHeight, float nodeWidth, float nodeHeight) {
+	grid->nodeCountX = (int)(levelWidth / nodeWidth);
+	grid->nodeCountY = (int)(levelHeight / nodeHeight);
+	grid->nodeCount = grid->nodeCountX * grid->nodeCountY;
+	grid->nodeWidth = nodeWidth;
+	grid->nodeHeight = nodeHeight;
+	grid->nodes = (PathNode*)malloc(grid->nodeCount * sizeof(PathNode));
+	if (grid->nodes == NULL) {
+		fprintf(stderr, "Memory allocation failed\n");
+		return;
+	}
+
 	float paddingX = nodeWidth / 2;
 	float paddingY = nodeHeight / 2;
-	_nodeCountX = (int)(levelWidth / nodeWidth);
-	_nodeCountY = (int)(levelHeight / nodeHeight);
-	_nodeWidth = nodeWidth;
-	_nodeHeight = nodeHeight;
-	float marginX = paddingX + (levelWidth - (nodeWidth * _nodeCountX))/2;
-	float marginY = paddingY + (levelHeight - (nodeHeight * _nodeCountY))/2;
-	int nodeCount = 0;
+	float marginX = paddingX + (levelWidth - (nodeWidth * grid->nodeCountX))/2;
+	float marginY = paddingY + (levelHeight - (nodeHeight * grid->nodeCountY))/2;
 
-	for (int i = 0; i < _nodeCountX; i++) {
-		for (int j = 0; j < _nodeCountY; j++) {
+	for (int i = 0; i < grid->nodeCountX; i++) {
+		for (int j = 0; j < grid->nodeCountY; j++) {
 			CP_Vector nodePos = { marginX + nodeWidth * i , marginY + nodeHeight * j };
 			/****************************************** 
 			grid indexes are stored in following order:
@@ -32,16 +36,14 @@ int init_grid(PathNode* grid, float levelWidth, float levelHeight, float nodeWid
 			[3, 4, 5]		[0, 1, 2]		[1, 1, 1]
 			[6, 7, 8]		[0, 1, 2]		[2, 2, 2]
 			******************************************/
-			int nodeIndex = i + j * _nodeCountX;
-			grid[nodeIndex].pos = nodePos;
-			nodeCount++;
+			int nodeIndex = i + j * grid->nodeCountX;
+			grid->nodes[nodeIndex].pos = nodePos;
 		}
 	}
-	return nodeCount;
 }
 
-static bool is_valid_node(PathNode node, struct Rectangle* worldClips, int clipsSize){
-	struct Rectangle currentRect = { node.pos, .width = _nodeWidth, .height = _nodeHeight };
+static bool is_valid_node(PathNode node, float nodeWidth, float nodeHeight, struct Rectangle* worldClips, int clipsSize){
+	struct Rectangle currentRect = { node.pos, .width = nodeWidth, .height = nodeHeight };
 	for (int clipIndex = 0; clipIndex < clipsSize; clipIndex++) {
 		if (are_rects_intersecting(currentRect, worldClips[clipIndex])) {
 			return false;
@@ -51,7 +53,7 @@ static bool is_valid_node(PathNode node, struct Rectangle* worldClips, int clips
 	return true;
 }
 
-void update_grid(PathNode* grid, struct Rectangle* worldClips, int clipsSize, struct Rectangle* enemyClips, int enemyClipsSize) {
+void update_grid(Grid* grid, struct Rectangle* worldClips, int clipsSize, struct Rectangle* enemyClips, int enemyClipsSize) {
 	int size = clipsSize + enemyClipsSize;
 	struct Rectangle* tempArray = (struct Rectangle*)malloc((unsigned long)size * sizeof(struct Rectangle));
 	if (tempArray == NULL) {
@@ -67,26 +69,26 @@ void update_grid(PathNode* grid, struct Rectangle* worldClips, int clipsSize, st
 	}
 
 	// Connection to 8 directions (up, down, left, right, and diagonals)
-	for (int i = 0; i < _nodeCountX; i++) {
-		for (int j = 0; j < _nodeCountY; j++) {
-			int nodeIndex = i + j * _nodeCountX;
-			grid[nodeIndex].connectionCount = 0;
+	for (int i = 0; i < grid->nodeCountX; i++) {
+		for (int j = 0; j < grid->nodeCountY; j++) {
+			int nodeIndex = i + j * grid->nodeCountX;
+			grid->nodes[nodeIndex].connectionCount = 0;
 
-			if (is_valid_node(grid[nodeIndex], tempArray, size)){
+			if (is_valid_node(grid->nodes[nodeIndex], grid->nodeWidth, grid->nodeHeight, tempArray, size)){
 
 				int connectionStartIndexI = max(0, i - 1);
 				int connectionStartIndexJ = max(0, j - 1);
-				int connectionEndIndexI = min(i + 1, _nodeCountX - 1);
-				int connectionEndIndexJ = min(j + 1, _nodeCountY - 1);
+				int connectionEndIndexI = min(i + 1, grid->nodeCountX - 1);
+				int connectionEndIndexJ = min(j + 1, grid->nodeCountY - 1);
 				int connectionIndex = 0;
 
 				for (int cI = connectionStartIndexI; cI <= connectionEndIndexI; cI++) {
 					for (int cJ = connectionStartIndexJ; cJ <= connectionEndIndexJ; cJ++) {
-						int neighbourIndex = cI + cJ * _nodeCountX;
+						int neighbourIndex = cI + cJ * grid->nodeCountX;
 						if (nodeIndex == neighbourIndex) continue;
-						if (is_valid_node(grid[neighbourIndex], tempArray, size)) {
-							grid[nodeIndex].connections[connectionIndex] = neighbourIndex;
-							grid[nodeIndex].connectionCount++;
+						if (is_valid_node(grid->nodes[neighbourIndex], grid->nodeWidth, grid->nodeHeight, tempArray, size)) {
+							grid->nodes[nodeIndex].connections[connectionIndex] = neighbourIndex;
+							grid->nodes[nodeIndex].connectionCount++;
 							connectionIndex++;
 						}
 					}
@@ -125,34 +127,34 @@ int get_nearest_node_index(PathNode* grid, int nodeCount, CP_Vector position) {
 	return closestNodeIndex;
 }
 
-static void init_list(AStarList list, int size) {
-
+static void init_list(AStarList* nodeList, int size) {
+	nodeList->list = (AStarNode *)malloc(size * sizeof(AStarNode));
+	nodeList->nodeCount = 0;
+	nodeList->size = size;
 }
 
-static void append_list() {
-
+static void append_list(AStarList* nodeList, AStarNode node) {
+	if (nodeList->nodeCount == nodeList->size) {
+		nodeList->size++;
+		nodeList->list = realloc(nodeList->list, nodeList->size * sizeof(AStarNode));
+	}
+	nodeList->list[nodeList->nodeCount++] = node;
 }
 
-static void pop_list() {
-
-}
-
-
-static int remove_node(AStarNode* AStarList, int nodeIndex, int nodeCount) {
-	for (int i = 0; i < nodeCount; i++) {
-		if (AStarList[i].nodeIndex == nodeIndex) {
-			int remainingCount = nodeCount - i;
+static void pop_list(AStarList* nodeList, AStarNode node) {
+	for (int i = 0; i < nodeList->nodeCount; i++) {
+		if (nodeList->list[i].nodeIndex == node.nodeIndex) {
+			int remainingCount = nodeList->nodeCount - i;
 			while (--remainingCount) {
-				AStarNode temp = AStarList[i];
-				AStarList[i] = AStarList[i + 1];
-				AStarList[i + 1] = temp;
+				AStarNode temp = nodeList->list[i];
+				nodeList->list[i] = nodeList->list[i+1];
+				nodeList->list[i + 1] = temp;
 				i++;
 			}
-			nodeCount--;
+			nodeList->nodeCount--;
 			break;
 		}
 	}
-	return nodeCount;
 }
 
 static void reverse_array(int* array, int arrayCount) {
@@ -164,32 +166,33 @@ static void reverse_array(int* array, int arrayCount) {
 }
 
 int find_astar_path(PathNode* grid, int nodeCount, int startNodeIndex, int endNodeIndex, int *pathArray) {
-	
+
 	AStarNode startNode = { .nodeIndex = startNodeIndex, .fCost = 0.f, .gCost = 0.f, .hCost = 0.f, .parentNode = NULL };
 	AStarNode endNode = { .nodeIndex = endNodeIndex, .fCost = 0.f, .gCost = 0.f, .hCost = 0.f, .parentNode = NULL };
 
 	// Initialize open and closed list
-	AStarNode openList[MAX_NODE_SIZE] = {0};
-	AStarNode closedList[MAX_NODE_SIZE] = {0};
+	AStarList openList;
+	AStarList closedList;
+	init_list(&openList, 5);
+	init_list(&closedList, 5);
 
 	// Add start node to open list
-	int openListCount = 0, closedListCount = 0;
-	openList[openListCount++] = startNode;
+	append_list(&openList, startNode);
 
 	// loop until find end
-	while (openListCount > 0 && openListCount < nodeCount) {
+	while (openList.nodeCount > 0 && openList.nodeCount < nodeCount) {
 		
 		// Get the current Node which has the least f cost.
-		AStarNode currentNode = openList[0];
-		for (int i = 1; i < openListCount; i++) {
-			if (openList[i].fCost < currentNode.fCost) {
-				currentNode = openList[i];
+		AStarNode currentNode = openList.list[0];
+		for (int i = 1; i < openList.nodeCount; i++) {
+			if (openList.list[i].fCost < currentNode.fCost) {
+				currentNode = openList.list[i];
 			}
 		}
 
 		// remove current node from open list and add it to closed list
-		openListCount = remove_node(openList, currentNode.nodeIndex, openListCount);
-		closedList[closedListCount++] = currentNode;
+		pop_list(&openList, currentNode);
+		append_list(&closedList, currentNode);
 
 		// Goal is found
 		if (currentNode.nodeIndex == endNode.nodeIndex) {
@@ -202,6 +205,8 @@ int find_astar_path(PathNode* grid, int nodeCount, int startNodeIndex, int endNo
 				current = *(current.parentNode);
 			}
 			reverse_array(pathArray, pathNodeCount);
+			free(openList.list);
+			free(closedList.list);
 			return pathNodeCount;
 		}
 		
@@ -210,15 +215,15 @@ int find_astar_path(PathNode* grid, int nodeCount, int startNodeIndex, int endNo
 			
 			// ignore if neighbour node in closed list
 			bool isNeighbourInClosed = false;
-			for (int closedListIndex = 0; closedListIndex < closedListCount; closedListIndex++) {
-				if (closedList[closedListIndex].nodeIndex == grid[currentNode.nodeIndex].connections[i]) {
+			for (int closedListIndex = 0; closedListIndex < closedList.nodeCount; closedListIndex++) {
+				if (closedList.list[closedListIndex].nodeIndex == grid[currentNode.nodeIndex].connections[i]) {
 					isNeighbourInClosed = true;
 					break;
 				}
 			}
 
 			if (!isNeighbourInClosed) {
-				AStarNode* parentNode = (struct AStarNode*)malloc(sizeof(struct AStarNode));
+				AStarNode* parentNode = (AStarNode*)malloc(sizeof(AStarNode));
 
 				parentNode->nodeIndex = currentNode.nodeIndex;
 				parentNode->fCost = currentNode.fCost;
@@ -236,14 +241,14 @@ int find_astar_path(PathNode* grid, int nodeCount, int startNodeIndex, int endNo
 
 
 				bool addNeighbourToOpen = true;
-				for (int openListIndex = 0; openListIndex < openListCount; openListIndex++) {
-					if ((openList[i].nodeIndex == neighbourNode.nodeIndex) && (openList[i].gCost < neighbourNode.gCost)) {
+				for (int openListIndex = 0; openListIndex < openList.nodeCount; openListIndex++) {
+					if ((openList.list[i].nodeIndex == neighbourNode.nodeIndex) && (openList.list[i].gCost < neighbourNode.gCost)) {
 						addNeighbourToOpen = false;
 					}
 				}
 				
 				if (addNeighbourToOpen)
-					openList[openListCount++] = neighbourNode;
+					append_list(&openList, neighbourNode);
 			}
 		}
 	}

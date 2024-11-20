@@ -25,6 +25,9 @@ struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth,
     chocoRoach.hitbox.pos.y = chocoRoach.pos.y + ENEMY_HITBOX_OFFSET_Y(chocoRoach.height);
     chocoRoach.hitbox.width = 0.8 * chocoRoach.width;
     chocoRoach.hitbox.height = 0.75 * chocoRoach.height;
+    chocoRoach.healthBarDisplayTime = 0.f;
+    chocoRoach.barrierAttack = -1;
+    chocoRoach.isTakingDamage = FALSE;
     return chocoRoach;
 }
 
@@ -46,22 +49,32 @@ void enemy_move_to_target(struct ChocoRoach* roach, struct Rectangle hitbox, flo
             printf("No path!\n");
         }
     }
-
+    if (roach->moveDirection.x < 0.f) {
+        if (roach->width > 0.f) {
+            roach->width = -roach->width;
+        }
+    }
+    else {
+        if (roach->width < 0.f) {
+            roach->width = -roach->width;
+        }
+    }
     roach->pos.x += roach->moveDirection.x * roach->speed * dt;
     roach->pos.y += roach->moveDirection.y * roach->speed * dt;
 }
 
 void render_enemy_health_bar(struct ChocoRoach* roach, struct Camera cam) {
+    
     // get relative position after camera transformation
     CP_Vector vec = get_cam_pos_rel(roach->pos, cam);
 
     // Set position of health bar
-    float health_bar_x = vec.x;
-    float health_bar_y = (vec.y) - (roach->height / 2) - 10.f;
-    float health_bar_w = roach->width * 0.8;
+    float health_bar_w = roach->width;
     float health_bar_h = 15.f;
+    float health_bar_x = vec.x - (health_bar_w / 2);
+    float health_bar_y = (vec.y) - (roach->height / 2) - 20.f;
 
-    CP_Settings_RectMode(CP_POSITION_CENTER);
+    CP_Settings_RectMode(CP_POSITION_CORNER);
 
     // Draw health bar rect
     CP_Settings_Fill(CP_Color_Create(255, 0, 0, 255));
@@ -96,8 +109,8 @@ static int _comp(const void* a, const void* b)
         return 1;
     if (!(((struct ChocoRoach*)b)->currentState))
         return -1;
-    if (((struct ChocoRoach*)a)->pos.y == ((struct ChocoRoach*)b)->pos.y)
-        return ((struct ChocoRoach*)a)->pos.x - ((struct ChocoRoach*)b)->pos.x;
+    /*if (((struct ChocoRoach*)a)->pos.y == ((struct ChocoRoach*)b)->pos.y)
+        return ((struct ChocoRoach*)a)->pos.x - ((struct ChocoRoach*)b)->pos.x;*/
     return ((struct ChocoRoach*)a)->pos.y - ((struct ChocoRoach*)b)->pos.y;
 }
 
@@ -111,6 +124,8 @@ int enemy_take_damage(struct ChocoRoach* roach, int dmg) {
     roach->isTakingDamage = TRUE;
     if (roach->health <= 0) {
         roach->currentState = ENEMY_STATE_DIED;
+        // set element to 0
+        memset(roach, 0, sizeof(roach));
         return 1;
     }
     return 0;

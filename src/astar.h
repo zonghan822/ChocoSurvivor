@@ -11,6 +11,12 @@ typedef struct PathNode {
 	int connectionCount;
 }PathNode;
 
+typedef struct Grid {
+	PathNode* nodes;
+	int nodeCount;
+	int nodeCountX, nodeCountY;
+	float nodeWidth, nodeHeight;
+}Grid;
 
 typedef struct AStarNode {
 	int nodeIndex;
@@ -29,22 +35,23 @@ typedef struct AStarNodeList {
 
 /****************************************************
  @brief generate grid based on map size
- @param grid - array passed in to store the node of the
+ @param grid - grid passed in to store the node of the
 	map grid
  @param nodeWidth, nodeHeight - size of the node
- @return the count of node in the grid
+ @param levelWidth, levelHeight - size of the map
 *****************************************************/
-int init_grid(PathNode* grid, float levelWidth, float levelHeight, float nodeWidth, float nodeHeight);
+void init_grid(Grid* grid, float levelWidth, float levelHeight, float nodeWidth, float nodeHeight);
 
 /****************************************************
  @brief update the connection of nodes in the grid.
 	Non-movable path will not have connection.
- @param grid - array containing the path node of the
-	map grid
- @param worldClips - array of non-movable path
- @param clipsSize - size of worldClips array
+ @param grid - grid containing the path node of the
+	map grid, count of nodes and size of nodes
+ @param worldClips, enemyClips - array of non-movable path
+ @param clipsSize, enemyClipsSize - size of worldClips 
+	array
 *****************************************************/
-void update_grid(PathNode* grid, struct Rectangle* worldClips, int clipsSize, struct Rectangle* enemyClips, int enemyClipsSize);
+void update_grid(Grid* grid, struct Rectangle* worldClips, int clipsSize, struct Rectangle* enemyClips, int enemyClipsSize);
 
 void draw_grid(PathNode* grid, int nodeCount, struct Camera cam); // draw grid for debugging
 
