@@ -393,7 +393,7 @@ void level_one_update(void) {
     case BARRIER_PREVIEW:
         // Update preview position for barrier
 
-        previewPosition = get_world_pos_rel(CP_Vector_Set(mouse_x, mouse_y), cam);
+        previewPosition = get_world_pos_rel(CP_Vector_Set(mouseX, mouseY), cam);
 
         // Render translucent barrier preview
         CP_Settings_Fill(CP_Color_Create(0, 0, 255, 128));  // Semi-transparent blue
