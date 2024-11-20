@@ -407,7 +407,7 @@ void level_one_update(void) {
 
         // Render translucent barrier preview
         CP_Settings_Fill(CP_Color_Create(0, 0, 255, 128));  // Semi-transparent blue
-        CP_Graphics_DrawRect(mouse_x, mouse_y, barrierWidth, barrierHeight);
+        CP_Graphics_DrawRect(mouseX, mouseY, barrierWidth, barrierHeight);
 
         // Place barrier when left mouse button is clicked
         if (CP_Input_MouseTriggered(MOUSE_BUTTON_LEFT)) {
@@ -438,11 +438,11 @@ void level_one_update(void) {
         break;
     case ALLY_PREVIEW:
        // printf("DEBUG: In ALLY_PREVIEW. Ally count: %d\n", get_ally_count());
-        allyPreviewPosition = get_world_pos_rel(CP_Vector_Set(mouse_x, mouse_y), cam);
+        allyPreviewPosition = get_world_pos_rel(CP_Vector_Set(mouseX, mouseY), cam);
 
         // Render translucent preview
         CP_Settings_Fill(CP_Color_Create(0, 255, 0, 128));
-        CP_Image_Draw(get_ally_image(), mouse_x, mouse_y, allyW, allyH, 128);
+        CP_Image_Draw(get_ally_image(), mouseX, mouseY, allyW, allyH, 128);
 
         if (CP_Input_MouseTriggered(MOUSE_BUTTON_LEFT)) {
             int allyIndex = get_ally_count();
