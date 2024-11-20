@@ -11,6 +11,7 @@
 // to bring over to next level (map)
 extern int playerMaxExp;
 extern int playerLevel;
+extern struct ChocoShooter playerInstance;
 
 enum BuffType {
     NO_BUFF,
@@ -64,7 +65,7 @@ struct ChocoShooter {
 
 #pragma region Player
 int player_take_damage(struct ChocoShooter* player, int damage);
-struct ChocoShooter init_player(CP_Vector pos, float speed, float maxHealth, int attackPower, float attackSpeed);
+void init_player(CP_Vector pos, float speed, float maxHealth, int attackPower, float attackSpeed);
 void move_player(struct ChocoShooter* player, float dt, float level_width, float level_height);
 void render_player(struct ChocoShooter player, float alpha, struct Camera cam);
 #pragma endregion

@@ -16,6 +16,7 @@ static CP_Vector _dashTo;
 
 int playerMaxExp = 20;
 int playerLevel = 1;
+struct ChocoShooter playerInstance;
 
 #pragma region Player
 // Returns 1 if still alive, 0 if not
@@ -37,7 +38,7 @@ int player_take_damage(struct ChocoShooter* player, int damage) {
     return 0;
 }
 
-struct ChocoShooter init_player(CP_Vector pos, float speed, float maxHealth, int atk, float fireRate) {
+void init_player(CP_Vector pos, float speed, float maxHealth, int atk, float fireRate) {
     _isDashing = FALSE;
     _dashProgress = 0.0;
     _lastDash = 2.1;
@@ -65,7 +66,7 @@ struct ChocoShooter init_player(CP_Vector pos, float speed, float maxHealth, int
     player.hitbox.width = player.width / 1.4f;
     player.hitbox.height = player.height / 1.4f;
 
-    return player;
+    playerInstance = player;
 }
 
 void move_player(struct ChocoShooter *player, float dt, float level_width, float level_height) {

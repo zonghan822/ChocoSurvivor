@@ -6,6 +6,7 @@
 #include "cprocessing.h"
 #include "mainmenu.h"
 #include "level1.h"
+#include "level2.h"
 #include "player.h"
 #include "enemy.h"
 #include "tower.h"
@@ -24,8 +25,7 @@
 #define LEVEL_WIDTH 2000.f
 #define LEVEL_HEIGHT 900.f
 
-CP_Image levelBg,
-cursor, gameOverImage;
+CP_Image levelBg, cursor;
 
 float windowWidth, windowHeight;
 
@@ -34,7 +34,7 @@ static float spawnMinY = 0.f, spawnMaxY = 0.f, spawnWidth = 0.f;
 static float spawnInterval = 0.0f, spawnTimer = 0.f; // Spawn interval
 static float waveDelay = 0.f, waveTimer = 0.f; // Wave delay
 static int enemySpawnIndex = 0;
-enum SpawnWave {
+static enum SpawnWave {
     WAVE_1 = 1,
     WAVE_2 = 2,
     WAVE_3 = 3
@@ -43,64 +43,62 @@ static enum SpawnWave currentWave = WAVE_1;
 #pragma endregion
 
 #pragma region Enemy Properties
-enum AttackTarget {
+static enum AttackTarget {
     NONE,
     PLAYER,
     TOWER,
     BARRIER
 };
-enum AttackTarget enemyAttackTarget = NONE;
+static enum AttackTarget enemyAttackTarget = NONE;
 static unsigned short int roachesMax = 0;
 static struct ChocoRoach roaches[MAX_ENEMY_COUNT];
-float healthBarDisplayTime = 0.f;
-int deadEnemies = 0;
-struct Boss bossInstance;
+static float healthBarDisplayTime = 0.f;
+static int deadEnemies = 0;
+static struct Boss bossInstance;
 #pragma endregion
 
 #pragma region Player_Properties
-struct ChocoShooter playerInstance;
-struct DefenseTarget towerInstance;
-struct Camera cam;
-enum BulletType bulletType = NORMAL_BULLET;
-float bulletSpeed = 0.f, bulletDiameter = 0.f;
-float lastShotTime = 0;
-bool enableShooting = false;
-CP_Vector respawnVec;
+static struct DefenseTarget towerInstance;
+static struct Camera cam;
+static enum BulletType bulletType = NORMAL_BULLET;
+static float bulletSpeed = 650.f, bulletDiameter = 14.f;
+static float lastShotTime = 0;
+static bool enableShooting = false;
+static CP_Vector respawnVec;
 #pragma endregion
 
 #pragma region HP/BUFF bar properties
-float meterX = 0;
-float meterY = 0;
-float meterWidth = 0;
-float meterHeight = 0;
-float fillSpeed = 0.0f;
-float fillWidth = 0;
-float targetFillWidth = 0;
-int activeBuffSlot = 0;          // 0 means no active buff, 1-3 represent the buff slots
+static float meterX = 0;
+static float meterY = 0;
+static float meterWidth = 0;
+static float meterHeight = 0;
+static float fillSpeed = 0.0f;
+static float fillWidth = 0;
+static float targetFillWidth = 0;
+static int activeBuffSlot = 0;          // 0 means no active buff, 1-3 represent the buff slots
 //float activeBuffDuration = 0.0f;  // Duration in seconds for the active buff (10s when active)
 #pragma endregion
 
 #pragma region Obstacle/Barrier Properties
-struct Rectangle obstacles[80] = { 0 };
-struct Rectangle playerBarricades[10];
-enum BarrierState currentState = BARRIER_IDLE;
-CP_Vector previewPosition;
-CP_Vector finalPosition;
-float barrierWidth = 0.0f;
-float barrierHeight = 0.0f;
-float barrier_rect_W = 0.0f, barrier_rect_H = 0.0f;
+static struct Rectangle playerBarricades[10];
+static enum BarrierState currentState = BARRIER_IDLE;
+static CP_Vector previewPosition;
+static CP_Vector finalPosition;
+static float barrierWidth = 0.0f;
+static float barrierHeight = 0.0f;
+static float barrier_rect_W = 0.0f, barrier_rect_H = 0.0f;
 #pragma endregion
 
 #pragma region Map Properties
-struct Rectangle worldClips[100];
-struct Rectangle playerClips[1];
-struct Rectangle enemyClips[1];
-int worldClipsCount = 0;
-PathNode grid[MAX_NODE_SIZE];
-int nodeCount = 0;
+static struct Rectangle worldClips[6];
+static struct Rectangle enemyClips[1];
+static int worldClipsCount = 0;
+static PathNode grid[MAX_NODE_SIZE];
+static int nodeCount = 0;
 #pragma endregion
 
-struct Button menuButton;
+static struct Button menuButton;
+static bool isMovingToNextLevel;
 
 static void _render_cursor(float mouse_x, float mouse_y) {
     CP_Settings_ImageMode(CP_POSITION_CORNER);
@@ -116,11 +114,11 @@ static int _get_exp(int health, float speed, int max_enemies) {
 }
 
 void level_one_init(void) {
+    isMovingToNextLevel = false;
     enableShooting = false;
     cursor = CP_Image_Load("Assets/cursor.png");
     CP_System_ShowCursor(FALSE);
     levelBg = CP_Image_Load("Assets/Levels/level1.png");
-    gameOverImage = CP_Image_Load("Assets/gg.png");
 
     windowWidth = (float)CP_System_GetWindowWidth();
     windowHeight = (float)CP_System_GetWindowHeight();
@@ -139,11 +137,9 @@ void level_one_init(void) {
     #pragma region Player_Init
     // Init Player Properties
     respawnVec = CP_Vector_Set(towerInstance.pos.x / 1.15f, towerInstance.pos.y);
-    playerInstance = init_player(respawnVec, 350.0f, 100, 18, 4.2f);
+    init_player(respawnVec, 350.0f, 100, 18, 4.2f);
     playerInstance.flickerState.isVisible = TRUE; // set initial flickering states
     bulletType = NORMAL_BULLET;
-    bulletSpeed = 650.f;
-    bulletDiameter = 14.f;
     playerMaxExp = 20;
     playerLevel = 1;
     #pragma endregion
@@ -194,9 +190,6 @@ void level_one_init(void) {
     worldClips[4] = missesClip;
     worldClips[5] = columnClip;
     worldClipsCount = 6;
-    for (int i = 0; worldClips[i].width; i++) {
-        worldClips[worldClipsCount++] = obstacles[i];
-    }
 
     cam = init_camera(playerInstance, windowWidth, windowHeight);
     nodeCount = init_grid(grid, LEVEL_WIDTH, LEVEL_HEIGHT, 75, 100);
@@ -209,12 +202,19 @@ void level_one_init(void) {
 }
 
 void level_one_update(void) {
+    // PLACEHOLDER
+    // TODO: REMOVE
+    if (CP_Input_KeyTriggered(KEY_O)) {
+        isMovingToNextLevel = true;
+        CP_Engine_SetNextGameState(level_two_init, level_two_update, level_two_exit);
+    }
+
     float dt = CP_System_GetDt();
     float mouseX = CP_Input_GetMouseWorldX(),
         mouseY = CP_Input_GetMouseWorldY();
 
-    // PH
     // Handler for game over
+    // TODO: Complete this code
     if (towerInstance.health <= 0) {
         CP_Graphics_ClearBackground(CP_Color_Create(15, 15, 15, 255));
         CP_Settings_TextSize(175.f);
@@ -302,7 +302,7 @@ void level_one_update(void) {
     #pragma endregion
 
     #pragma region Enemy_Movement_Logic
-        if (waveTimer < waveDelay) {
+    if (waveTimer < waveDelay) {
         #pragma region Show_Spawning_Time
         char buffer[256];
         sprintf_s(buffer, sizeof(buffer), "Enemy coming in %d !!!", (int)(waveDelay - waveTimer));
@@ -418,15 +418,6 @@ void level_one_update(void) {
             shoot_bullet(&playerInstance, &bullet);
             lastShotTime = 0;
         }
-    }
-    #pragma endregion
-
-    #pragma region Render_Obstacles
-    CP_Settings_RectMode(CP_POSITION_CENTER);
-    CP_Settings_Fill(CP_Color_Create(150, 150, 150, 255));
-    for (int i = 0; obstacles[i].width; i++) {
-        CP_Vector vec = get_cam_pos_rel(obstacles[i].pos, cam);
-        CP_Graphics_DrawRect(vec.x, vec.y, obstacles[i].width, obstacles[i].height);
     }
     #pragma endregion
 
@@ -573,7 +564,9 @@ void level_one_update(void) {
                                     waveTimer = 0.f; // Reset wave timer to start next wave
                                 }
                                 else {
-                                    // next level or something
+                                    // TODO: Do a proper transition
+                                    isMovingToNextLevel = true;
+                                    CP_Engine_SetNextGameState(level_two_init, level_two_update, level_two_exit);
                                 }
                             }
                         }
@@ -742,15 +735,6 @@ void level_one_update(void) {
     }
     #pragma endregion
 
-    if (towerInstance.health <= 0) {
-        // Draw the Game Over image in the center of the screen
-        float gameOverX = windowWidth / 2.f,
-            gameOverY = windowHeight / 2.f;
-        float ggWidth = windowWidth * 3.f / 4.f;
-        float ggHeight = get_preserved_heightf(CP_Image_GetWidth(gameOverImage), CP_Image_GetHeight(gameOverImage), ggWidth);
-        CP_Image_Draw(gameOverImage, gameOverX, gameOverY, ggWidth, ggHeight, 255); // Adjust size as needed
-    }
-
     #pragma region Render_UI
     {
         CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255));
@@ -784,10 +768,10 @@ void level_one_update(void) {
 }
 
 void level_one_exit(void) {
-    CP_Image_Free(&playerInstance.img);
+    if (!isMovingToNextLevel)
+        CP_Image_Free(&playerInstance.img);
     CP_Image_Free(&levelBg);
     CP_Image_Free(&cursor);
-    CP_Image_Free(&gameOverImage);
 
     for (int i = 0; i < roachesMax; i++) {
         struct ChocoRoach roach = roaches[i];
@@ -796,5 +780,6 @@ void level_one_exit(void) {
     }
     if (bossInstance.img != NULL)
         CP_Image_Free(&bossInstance.img);
-    CP_Image_Free(&cursor);
+    dispose_sounds();
+    dispose_button(&menuButton);
 }
