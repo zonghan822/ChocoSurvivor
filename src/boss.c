@@ -62,9 +62,10 @@ static void _move_to_target(struct Boss* boss, struct Rectangle hitbox, float dt
 		else
 			boss->moveDirection = CP_Vector_Zero();
 	}
+
+	boss->width = (boss->moveDirection.x < 0.f && boss->width > 0.f) || (boss->moveDirection.x > 0.f && boss->width < 0.f) ? -boss->width : boss->width;
 	boss->pos.x += boss->moveDirection.x * boss->speed * dt;
 	boss->pos.y += boss->moveDirection.y * boss->speed * dt;
-
 	update_rect_hitbox(&boss->hitbox, 0.f, 0.f, boss->pos);
 }
 
@@ -189,11 +190,11 @@ void boss_one_pri_atk(struct Boss *boss, struct ChocoShooter* player, float dt) 
 }
 
 int can_boss_one_pri_atk(struct Boss boss, struct ChocoShooter player) {
-	// 125 is min range to snapshot the player's pos for the attack,
+	// 75 is min range to snapshot the player's pos for the attack,
 	// then add half width (distance from center origin of both entities)
 	// You want to the boss to attack as soon as the edge of its hitbox is as close
 	// to the edge of the player's hitbox (rather than the center origin)
-	float minDistance = 125 + (boss.hitbox.width / 2) + (player.hitbox.width / 2);
+	float minDistance = 75 + (boss.hitbox.width / 2) + (player.hitbox.width / 2);
 	return (CP_Vector_Distance(boss.hitbox.pos, player.hitbox.pos) <= minDistance
 		|| boss.state == BOSS_STATE_ATTACKING_PRIMARY);
 }
@@ -239,8 +240,8 @@ void boss_one_sec_atk(struct Boss *boss, struct ChocoShooter* player, float dt) 
 }
 
 int can_boss_one_sec_atk(struct Boss boss, struct ChocoShooter player) {
-	// 275 is for charging distance
-	float minDistance = 275 + (boss.hitbox.width / 2) + (player.hitbox.width / 2);
+	// 175 is for charging distance
+	float minDistance = 175 + (boss.hitbox.width / 2) + (player.hitbox.width / 2);
 	return (CP_Vector_Distance(boss.hitbox.pos, player.hitbox.pos) <= minDistance && _secAtkCooldown >= 15.f) ||
 		boss.state == BOSS_STATE_ATTACKING_SECONDARY;
 }
@@ -300,7 +301,7 @@ void boss_two_pri_atk(struct Boss* boss, struct ChocoShooter* player, float dt) 
 }
 
 int can_boss_two_pri_atk(struct Boss boss, struct ChocoShooter player) {
-	float minDistance = 145 + (boss.hitbox.width / 2) + (player.hitbox.width / 2);
+	float minDistance = 100 + (boss.hitbox.width / 2) + (player.hitbox.width / 2);
 	return CP_Vector_Distance(boss.hitbox.pos, player.hitbox.pos) <= minDistance
 		|| boss.state == BOSS_STATE_ATTACKING_PRIMARY;
 }

@@ -308,7 +308,7 @@ void render_bullet(struct Bullet bullet, struct Camera cam) {
 void apply_buff(struct ChocoShooter* player, enum BuffType buff) {
     switch (buff) {
     case ATTACK_UP:
-        player->attackPower += 10;  // Increase player's attack power
+        player->attackPower += 5;  // Increase player's attack power
         player->buffs.attackPowerLevel++;  // Increase the attackPowerLevel in playerBuff
         printf("Attack Power Level: %d\n", player->buffs.attackPowerLevel);
         if (player->buffs.attackPowerLevel <= 1) {

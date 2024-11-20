@@ -145,7 +145,7 @@ void level_one_init(void) {
     #pragma region Player_Init
     // Init Player Properties
     respawnVec = CP_Vector_Set(towerInstance.pos.x / 1.15f, towerInstance.pos.y);
-    playerInstance = init_player(respawnVec, 350.0f, 100, 18, 4.2f);
+    playerInstance = init_player(respawnVec, 350.0f, 100, 16, 4.1f);
     bulletType = NORMAL_BULLET;
     playerMaxExp = 20;
     playerLevel = 1;
@@ -308,10 +308,10 @@ void level_one_update(void) {
                 enemyDmg = 15;
                 roachesMax = 45;
                 nextSpawnDelayIndex = 6;
-                nextSpawnDelay = -0.55f;
+                nextSpawnDelay = -0.65f;
                 break;
             }
-            totalEnemies += roachesMax;
+            totalEnemies = roachesMax + (bossInstance.state == BOSS_STATE_UNSPAWNED ? 0 : 1);
             if (enemySpawnIndex < roachesMax) {
                 roaches[enemySpawnIndex++] = init_enemy(spawnMinY, spawnMaxY, spawnWidth, enemySpeed, enemyMaxHealth, enemyDmg);
                 spawnTimer = 0.f;
@@ -701,11 +701,24 @@ void level_one_update(void) {
             CP_Engine_SetNextGameState(level_two_init, level_two_update, level_two_exit);
         }
     }
+
+    CP_Settings_Fill(CP_Color_Create(0, 0, 0, 85));
+    CP_Graphics_DrawRect(1460, meterY - 5.f, 225, 80);
     
     // Draw the empty part of the meter (white)
     CP_Settings_RectMode(CP_POSITION_CORNER);
     CP_Settings_Fill(CP_Color_Create(255, 255, 255, 255));
     CP_Graphics_DrawRect(meterX, meterY, meterWidth, meterHeight);
+
+    // Draw level
+    CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_RIGHT, CP_TEXT_ALIGN_V_MIDDLE);
+    CP_Settings_TextSize(30.f);
+    CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255));
+    char levelStr[10];
+    sprintf_s(levelStr, sizeof(levelStr), "Lvl. %d", playerLevel);
+    CP_Font_DrawText(levelStr, meterX - 25.f, meterY + 8.f);
+    CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_CENTER, CP_TEXT_ALIGN_V_MIDDLE);
+
     if (fillWidth >= meterWidth) {
         CP_Settings_Fill(CP_Color_Create(200, 0, 255, 255)); // purple for maxed-out meter
     }
@@ -818,7 +831,7 @@ void level_one_update(void) {
         if (fillWidth < targetFillWidth) fillWidth = targetFillWidth;
     }
 
-     render_health_bar(&playerInstance, dt, windowWidth, windowHeight, meterX, meterY, meterWidth, meterHeight);
+    render_health_bar(&playerInstance, dt, windowWidth, windowHeight, meterX, meterY, meterWidth, meterHeight);
 
     CP_Settings_RectMode(CP_POSITION_CENTER);
 

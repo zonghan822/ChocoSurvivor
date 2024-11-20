@@ -5,7 +5,7 @@
 #include "camera.h"
 #include "astar.h"
 
-#define BOSS_WIDTH 150.f
+#define BOSS_WIDTH 225.f
 
 enum BossState {
     BOSS_STATE_UNSPAWNED = -1,
