@@ -551,7 +551,7 @@ void level_one_update(void) {
                             // set element to 0
                             memset(&roaches[i], 0, sizeof(roaches[i]));
 
-                            // Apply the buff if one was granted
+                             //Apply the buff if one was granted
                             if (randomBuff != 0) {
                                 apply_buff(&playerInstance, randomBuff);
                             }
@@ -704,6 +704,9 @@ void level_one_update(void) {
             }
         }
     }
+   
+    
+
     // Set targetFillWidth based on updated exp
     targetFillWidth = (playerInstance.exp / (float)playerMaxExp) * meterWidth;
     fillWidth = CP_Math_ClampFloat(fillWidth, 0, meterWidth); // Clamp to the actual visual width
@@ -716,6 +719,9 @@ void level_one_update(void) {
         fillWidth -= fillSpeed * dt;
         if (fillWidth < targetFillWidth) fillWidth = targetFillWidth;
     }
+
+     render_health_bar(&playerInstance, dt, windowWidth, windowHeight, meterX, meterY, meterWidth, meterHeight);
+
     CP_Settings_RectMode(CP_POSITION_CENTER);
 
     sort_enemies(roaches, roachesMax); // Sort enemy based on pos asc
