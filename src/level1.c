@@ -258,8 +258,6 @@ void level_one_update(void) {
             int nextSpawnDelayIndex = 0;
             switch (currentWave) {
             case WAVE_1:
-                if (bossInstance.state == BOSS_STATE_UNSPAWNED)
-                    spawn_boss(&bossInstance, -650.f, 650.f);
                 spawnInterval = 1.65f;
                 enemySpeed = 90.f;
                 enemyMaxHealth = 175;
@@ -786,7 +784,6 @@ void level_one_update(void) {
 }
 
 void level_one_exit(void) {
-    enableShooting = false;
     CP_Image_Free(&playerInstance.img);
     CP_Image_Free(&levelBg);
     CP_Image_Free(&cursor);
