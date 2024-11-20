@@ -275,15 +275,19 @@ int update_buff_meter(struct ChocoShooter* player, int expGained) {
     printf("Current Buff Exp: %d / %d\n", player->buffs.buffExp, player->buffs.maxBuffMeter);
 
     // Check if buffExp has reached or exceeded maxBuffMeter
-    if (player->buffs.buffExp >= player->buffs.maxBuffMeter) {
+    if (player->buffs.buffExp == player->buffs.maxBuffMeter) {
+        // Buff meter is full but not exceeding; handle this case separately
+        printf("Buff Meter Full! Waiting for reset or user action...\n");
+        enum BuffType randomBuff = CP_Random_RangeInt(1, 3);
+        return randomBuff;
+    }
+    else if (player->buffs.buffExp > player->buffs.maxBuffMeter) {
         // Wrap around the excess experience
         player->buffs.buffExp -= player->buffs.maxBuffMeter;
         printf("Buff Meter Full! Granting buff...\n");
 
         // Generate a random buff and return it
-        enum BuffType randomBuff = CP_Random_RangeInt(1, 3);
         
-        return randomBuff;
     }
 
     return 0; // Return 0 if no buff is granted

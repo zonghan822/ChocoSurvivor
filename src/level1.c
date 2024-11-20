@@ -140,13 +140,13 @@ void level_one_init(void) {
     spawnWidth = 500.f;
     
     // TODO 3: exp_perkill is placeholder
-    exp_perkill = 6;//exp for buff bar per roachy
+    exp_perkill = 5;//exp for buff bar per roachy
     current_exp = 0;
     meterX = windowWidth - 150;//  buff bar properties
     meterY = windowHeight - 50;
     meterWidth = 100;
     meterHeight = 20;
-    fillSpeed = 0.05f;
+    fillSpeed = 120.0f;
 
     cam = init_camera(playerInstance, windowWidth, windowHeight);
 
@@ -461,7 +461,13 @@ void level_one_update(void) {
         // can use else statement here for dying animation...
     }
 
-    
+      CP_Settings_RectMode(CP_POSITION_CORNER);
+
+
+
+    // Draw the empty part of the meter (white)
+    CP_Settings_Fill(CP_Color_Create(255, 255, 255, 255));
+    CP_Graphics_DrawRect(meterX, meterY, meterWidth, meterHeight);
     if (fillWidth >= meterWidth) {
         CP_Settings_Fill(CP_Color_Create(255, 0, 0, 255)); // Red for maxed-out meter
     }
@@ -469,9 +475,6 @@ void level_one_update(void) {
         CP_Settings_Fill(CP_Color_Create(0, 0, 255, 255)); // Blue for normal meter
     }
     CP_Graphics_DrawRect(meterX, meterY, fillWidth, meterHeight);
-
-    // Draw the empty part of the meter (white)
-    CP_Settings_RectMode(CP_POSITION_CORNER);
 
     if (enemyKilled) {
         int expGained = exp_perkill * enemyKilled;
@@ -486,10 +489,7 @@ void level_one_update(void) {
         enemyKilled = 0;
     }
     
-    CP_Settings_Fill(CP_Color_Create(255, 255, 255, 255));
-    CP_Graphics_DrawRect(meterX, meterY, meterWidth, meterHeight);
-    CP_Settings_Fill(CP_Color_Create(0, 0, 255, 255));
-    CP_Graphics_DrawRect(meterX, meterY, fillWidth, meterHeight);
+
 
 
     CP_Settings_TextSize(20.0f);
@@ -591,7 +591,7 @@ void level_one_update(void) {
 
     if (fillWidth < targetFillWidth) {
         fillWidth += fillSpeed * dt; // Use delta time for smooth updates
-        if (fillWidth > targetFillWidth) fillWidth = targetFillWidth; // Avoid overshooting
+        if (fillWidth >= targetFillWidth) fillWidth = targetFillWidth; // Avoid overshooting
     }
     else if (fillWidth > targetFillWidth) {
         fillWidth -= fillSpeed * dt;
