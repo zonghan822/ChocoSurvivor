@@ -20,13 +20,16 @@ enum BuffType {
     HEALTH_UP,
     HEAL,
     ALLYLVL_UP,
+    BARRIERLVL_UP
 };
 
 struct Buffs {
-    enum BuffType type[3];   // Current buff type (can be set to the latest buff type obtained)
+    enum BuffType type[5];   // Current buff type (can be set to the latest buff type obtained)
     int attackPowerLevel;
     int attackSpeedLevel;
     int healthLevel;
+    int allyLevel;
+    int barrierLevel;
 };
 
 enum BulletType {
@@ -81,7 +84,7 @@ void render_bullet(struct Bullet bullet, struct Camera cam);
 #pragma endregion
 
 #pragma region Buffs
-void apply_buff(struct ChocoShooter* player, enum BuffType buff);
+void apply_buff(struct ChocoShooter* player, enum BuffType buff, struct Barrier* barrier, struct Ally* allies);
 int update_buff_meter(struct ChocoShooter* player, int expGained);
 void activate_buff_from_slot(struct ChocoShooter* player, int slot);
 void assign_buff_to_slot(struct ChocoShooter* player, enum BuffType buffType);

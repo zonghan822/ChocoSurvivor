@@ -5,6 +5,7 @@
 #include "camera.h"
 #include "flicker.h"
 #include "level1.h"
+#include "barrier.h"
 
 static const float DASH_COOLDOWN = 1.f,
     DASH_DISTANCE = 150.f, DASH_SPEED = 20.f;
@@ -305,7 +306,8 @@ void render_bullet(struct Bullet bullet, struct Camera cam) {
 #pragma endregion
 
 #pragma region Buff
-void apply_buff(struct ChocoShooter* player, enum BuffType buff) {
+void apply_buff(struct ChocoShooter* player, enum BuffType buff, struct Barrier* barrier, struct Ally* allies ) {
+  
     switch (buff) {
     case ATTACK_UP:
         player->attackPower += 5;  // Increase player's attack power
@@ -343,12 +345,16 @@ void apply_buff(struct ChocoShooter* player, enum BuffType buff) {
          }
          break;
      case ALLYLVL_UP:
-         player->health += 10;
-         printf("YOU ARE HEALED MY BOY");
-         if (player->health > player->maxHealth)
-         {
-             player->health = player->maxHealth;
-         }
+         allies->attackPower += 5;
+         player->buffs.allyLevel++;
+         printf("allies leveled up");
+        
+         break;
+     case BARRIERLVL_UP:
+         barrier->health += 10;
+         player->buffs.barrierLevel++;
+         printf("barrier leveled up");
+   
          break;
 
 
@@ -371,7 +377,7 @@ int update_buff_meter(struct ChocoShooter* player, int expGained) {
             player->exp -= playerMaxExp;
             playerMaxExp *= EXP_INCREASE_MULTIPLIER;
         }
-        enum BuffType randomBuff = CP_Random_RangeInt(1, 4);
+        enum BuffType randomBuff = CP_Random_RangeInt(1, 6);
         return randomBuff;
     }
 

@@ -27,6 +27,7 @@ enum BarrierState {
 // Functions for managing barriers
 void barrier_take_damage(int damage);
 int get_barrier_count(void);
+CP_Image get_barrier_image(int barrierLevel);
 void increment_barrier_count(void);
 void set_barrier_properties(int index, CP_Vector position, float width, float height, int health);
 struct Barrier* get_barriers(void);  // Add this line
