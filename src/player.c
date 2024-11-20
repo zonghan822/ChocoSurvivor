@@ -24,7 +24,7 @@ struct ChocoShooter playerInstance;
 // Returns 1 if still alive, 0 if not
 int player_take_damage(struct ChocoShooter* player, int damage) {
     if (player->flickerState.isFlickering) {
-        printf("chocoshooter is invincible and cannot take damage right now.\n");
+        //printf("chocoshooter is invincible and cannot take damage right now.\n");
         return 1;  // Skip the rest of the function if flickering
     }
 
@@ -54,9 +54,7 @@ void init_player(CP_Vector pos, float speed, float maxHealth, int atk, float fir
         .maxHealth = maxHealth,
         .img = CP_Image_Load("Assets/choco_shooter.png"),
         .movement = STOPPED,
-        .hitbox.width = player.width = 100.f,
-        .hitbox.height = player.height = get_preserved_heightf((float)CP_Image_GetWidth(player.img),
-            (float)CP_Image_GetHeight(player.img), player.width),
+        .width = 100.f,
         .bullets[0].isShooting = FALSE,
         .attackSpeed = fireRate,
         .attackPower = atk,

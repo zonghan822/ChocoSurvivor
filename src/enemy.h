@@ -10,7 +10,7 @@
 #define ENEMY_WIDTH 60.f
 #define ENEMY_HITBOX_OFFSET_X(enemyWidth) (- 1 / 33.f * enemyWidth)
 #define ENEMY_HITBOX_OFFSET_Y(enemyHeight) (- 8.f / 77.f * enemyHeight)
-#define ENEMY_HEALTHBAR_DISPLAY_TIME 2.f
+#define ENEMY_HEALTHBAR_DISPLAY_TIME 3.f
 
 enum EnemyState {
 	ENEMY_STATE_DIED = 0,
@@ -36,6 +36,8 @@ struct ChocoRoach {
 	enum EnemyState currentState;
 	struct Rectangle hitbox;
 	BOOL isTakingDamage;
+	float healthBarDisplayTime;
+	int barrierAttack; // index of barrier to attack
 };
 
 // Takes in single enemy
