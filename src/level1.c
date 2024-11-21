@@ -97,6 +97,13 @@ static int worldClipsCount = 0;
 static Grid enemyGrid, bossGrid;
 #pragma endregion
 
+#pragma region Ally Properties
+static enum AllyState currentAllyState = ALLY_IDLE;  // Declare and initialize
+static CP_Vector allyPreviewPosition;    // Declare and initialize
+static float allyH = 150.0f;
+static float allyW = 100.0f;
+#pragma endregion
+
 static struct Button menuButton;
 static bool isMovingToNextLevel;
 
@@ -123,14 +130,6 @@ static void _draw_shadows(float x, float y, float width, float height) {
 static int _get_exp(int health, float speed, int max_enemies) {
     return (int)((float)(health / speed) * (float)(max_enemies / 10.f));
 }
-
-#pragma region Ally Properties
-static enum AllyState currentAllyState = ALLY_IDLE;  // Declare and initialize
-static CP_Vector allyPreviewPosition;    // Declare and initialize
-static float allyH = 150.0f;
-static float allyW = 100.0f;
-#pragma endregion
-
 
 void level_one_init(void) {
     isMovingToNextLevel = false;
