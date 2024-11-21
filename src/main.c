@@ -5,6 +5,7 @@
 // Keep 1600x900 for now, will change to fullscreen afterwards
 int main(void)
 {
+	CP_System_SetWindowTitle("Choco Survivor");
 	CP_Engine_SetNextGameState(main_menu_init, main_menu_update, main_menu_exit);
 	CP_System_SetWindowSize(1600, 900);
 #if _DEBUG

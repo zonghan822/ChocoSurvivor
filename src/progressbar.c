@@ -120,7 +120,7 @@ void render_progressbar(struct ProgressBar progressBar) {
     // Then, adjust the track size to account for edges
     const float trackEdgeWidth = 4.f;
     const float trackEdgeHeight = 4.f;
-    float innerTrackHeight = fabsf(progressBar.track.height - 2 * trackEdgeHeight);
+    float innerTrackHeight = fabsf(progressBar.track.height - 2.f * trackEdgeHeight);
 
     // Fill length
     float fillLength = progressBar.value * progressBar.track.width;

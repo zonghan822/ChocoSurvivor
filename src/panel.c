@@ -3,9 +3,14 @@
 #include "panel.h"
 #include "gui.h"
 
+static void _resize(float* width, float* height, int divisor) {
+    *width = resize_by_divisor(*width, divisor);
+    *height = resize_by_divisor(*height, divisor);
+}
+
+// General panel
 void render_panel(float width, float height, float x, float y) {
-    width = resize_by_divisor(width, 4);
-    height = resize_by_divisor(height, 4);
+    _resize(&width, &height, 4);
     float uStart = 33.f, vStart = 0;
 
     float leftWidth, rightWidth, topHeight, bottomHeight;
@@ -49,8 +54,65 @@ void render_panel(float width, float height, float x, float y) {
                 u1 = uStart + uCoords[col + 1],
                 v1 = vStart + vCoords[row + 1];
 
-            // Draw the patch
-            CP_Image_DrawSubImage(tilemapLarge, drawX, drawY, patchWidth, patchHeight, u0, v0, u1, v1, 255);
+            CP_Image_DrawSubImage(tilemapLarge,
+                drawX, drawY,
+                patchWidth, patchHeight,
+                u0, v0, u1, v1,
+                255);
+        }
+    }
+}
+
+// For more specific use cases
+void render_panel_stats(float width, float height, float x, float y, float alpha) {
+    _resize(&width, &height, 4);
+    float uStart = 66.f, vStart = 66.f;
+
+    float leftWidth, rightWidth, topHeight, bottomHeight;
+    leftWidth = rightWidth = topHeight = bottomHeight = 12.0f;
+
+    // Center stretchable area — remaining part after accounting for corners and edges
+    float centerWidth = width - (leftWidth + rightWidth),
+        centerHeight = height - (topHeight + bottomHeight);
+
+    float uCoords[4] = { 0.0f, 10.0f, 22.0f, 32.0f }, 
+        vCoords[4] = { 0.0f, 10.0f, 22.0f, 32.0f };
+
+    float xPos[4] = {
+        x - width / 2.0f,               // Left
+        x - width / 2.0f + leftWidth,   // Center start
+        x + width / 2.0f - rightWidth,  // Center end (right)
+        x + width / 2.0f                // Right
+    };
+
+    float yPos[4] = {
+        y - height / 2.0f,                // Top
+        y - height / 2.0f + topHeight,    // Center start
+        y + height / 2.0f - bottomHeight, // Center end (bottom)
+        y + height / 2.0f                 // Bottom
+    };
+
+    for (int row = 0; row < 3; row++) {
+        for (int col = 0; col < 3; col++) {
+            float patchWidth = (col == 1) ? centerWidth : leftWidth;
+            float patchHeight = (row == 1) ? centerHeight : topHeight;
+
+            // Calculate draw position (the center of each patch,
+            // since the CP_Image_DrawSubImage() function centers it)
+            float drawX = (xPos[col] + xPos[col + 1]) / 2.0f,
+                drawY = (yPos[row] + yPos[row + 1]) / 2.0f;
+
+            // Calculate the UV coordinates within the sprite for this patch
+            float u0 = uStart + uCoords[col],
+                v0 = vStart + vCoords[row],
+                u1 = uStart + uCoords[col + 1],
+                v1 = vStart + vCoords[row + 1];
+
+            CP_Image_DrawSubImage(tilemapLarge,
+                drawX, drawY,
+                patchWidth, patchHeight,
+                u0, v0, u1, v1,
+                alpha);
         }
     }
 }
