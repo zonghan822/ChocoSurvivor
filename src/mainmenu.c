@@ -24,7 +24,6 @@ static bool _isOptionsActive = false;
 static float _musicVol, _sfxVol, _uiVol;
 static struct Button _applyButton, _defaultButton;
 static struct Slider _musicVolSlider, _sfxVolSlider, _uiVolSlider;
-static struct ProgressBar _progBar;
 static struct Rectangle _optionsPanel = { .width = 800, .height = 550 };
 
 void main_menu_init(void) {
@@ -71,8 +70,6 @@ void main_menu_init(void) {
 	_musicVolSlider = init_slider(sliderLength, 16, _optionsPanel.pos.x, sliderY, 26.5f);
 	_sfxVolSlider = init_slider(sliderLength, 16, _optionsPanel.pos.x, sliderY * 1.2f, 26.5f);
 	_uiVolSlider = init_slider(sliderLength, 16, _optionsPanel.pos.x, sliderY * 1.4f, 26.5f);
-
-	_progBar = init_progressbar(600.f, 30.f, _windowWidth / 2.f, _windowHeight / 2.f, CP_Color_Create(170, 170, 170, 255));
 }
 
 void main_menu_update(void) {
@@ -194,9 +191,6 @@ void main_menu_update(void) {
 		if (_quitButton.state == BUTTON_STATE_CLICKED)
 			CP_Engine_Terminate();
 	}
-
-	update_progressbar(&_progBar, 20.f, 100.f);
-	render_progressbar(_progBar);
 
 	CP_Settings_ImageMode(CP_POSITION_CORNER);
 	float cursorWidth = 60.f;
