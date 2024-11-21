@@ -48,6 +48,7 @@ void set_barrier_properties(int index, CP_Vector position, float width, float he
         barriers[index].height = barriers[index].hitbox.height = height;
         barriers[index].health = barriers[index].maxHealth = health;
         barriers[index].isTakingDamage = false;
+        barriers[index].healthBarDisplayTime = 0.f;
         printf("Barrier %d set at position (%.2f, %.2f) with health %d\n", index, position.x, position.y, health);
     }
 }
@@ -98,30 +99,6 @@ void dispose_barriers(void) {
     }
     barrierCount = 0;
     memset(barriers, 0, sizeof(barriers));
-}
-
-void render_barriers_health_bar(struct Barrier* barrier, struct Camera cam) {
-
-    // get relative position after camera transformation
-    CP_Vector vec = get_cam_pos_rel(barrier->position, cam);
-
-    // Set position of health bar
-    float health_bar_w = barrier->width;
-    float health_bar_h = 15.f;
-    float health_bar_x = vec.x - (health_bar_w / 2);
-    float health_bar_y = (vec.y) - (barrier->height / 2) - 20.f;
-
-    CP_Settings_RectMode(CP_POSITION_CORNER);
-
-    // Draw health bar rect
-    CP_Settings_Fill(CP_Color_Create(255, 0, 0, 255));
-    CP_Graphics_DrawRect(health_bar_x, health_bar_y, health_bar_w, health_bar_h);
-
-    float health_gap_x = health_bar_x + ((float)barrier->health / (float)barrier->maxHealth) * health_bar_w;
-    float health_gap_w = health_bar_w * (1.f - ((float)barrier->health / (float)barrier->maxHealth));
-
-    CP_Settings_Fill(CP_Color_Create(100, 100, 100, 255));
-    CP_Graphics_DrawRect(health_gap_x, health_bar_y, health_gap_w, health_bar_h);
 }
 
 

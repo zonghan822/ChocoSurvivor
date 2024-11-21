@@ -5,10 +5,12 @@
 
 #define MAX_BARRIERS 3
 #define BARRIER_INITIAL_HEALTH 100
+#define BARRIER_HEALTHBAR_DISPLAY_TIME 3.f
+#define MAX_BARRIER_IMAGES 4
+
 #define MAX_ALLIES_BULLET_COUNT 20
 #define MAX_ALLIES 3
 #define ALLY_BULLET_SPEED 800.0f
-#define MAX_BARRIER_IMAGES 4
 #define MAX_ALLIES_IMAGES 1
 
 struct Barrier {
@@ -19,6 +21,7 @@ struct Barrier {
     int maxHealth;
     struct Rectangle hitbox;
     bool isTakingDamage;
+    float healthBarDisplayTime;
 };
 
 enum BarrierState {
@@ -38,7 +41,6 @@ void increment_barrier_count(void);
 void set_barrier_properties(int index, CP_Vector position, float width, float height, int health);
 void render_barriers(struct Camera cam);
 void dispose_barriers(void);
-void render_barriers_health_bar(struct Barrier* barrier, struct Camera cam);
 #pragma endregion
 
 extern struct Ally allies[MAX_ALLIES];

@@ -58,30 +58,6 @@ void enemy_move_to_target(struct ChocoRoach* roach, struct Rectangle hitbox, flo
     roach->pos.y += roach->moveDirection.y * roach->speed * dt;
 }
 
-void render_enemy_health_bar(struct ChocoRoach* roach, struct Camera cam) {
-    
-    // get relative position after camera transformation
-    CP_Vector vec = get_cam_pos_rel(roach->pos, cam);
-
-    // Set position of health bar
-    float health_bar_w = roach->width;
-    float health_bar_h = 15.f;
-    float health_bar_x = vec.x - (health_bar_w / 2);
-    float health_bar_y = (vec.y) - (roach->height / 2) - 20.f;
-
-    CP_Settings_RectMode(CP_POSITION_CORNER);
-
-    // Draw health bar rect
-    CP_Settings_Fill(CP_Color_Create(255, 0, 0, 255));
-    CP_Graphics_DrawRect(health_bar_x, health_bar_y, health_bar_w, health_bar_h);
-
-    float health_gap_x = health_bar_x + ((float)roach->health / (float)roach->maxHealth) * health_bar_w;
-    float health_gap_w = health_bar_w * (1.f - ((float)roach->health / (float)roach->maxHealth));
-
-    CP_Settings_Fill(CP_Color_Create(100, 100, 100, 255));
-    CP_Graphics_DrawRect(health_gap_x, health_bar_y, health_gap_w, health_bar_h);
-}
-
 void render_enemies(struct ChocoRoach* roaches, struct Camera cam, int size) {
     for (int i = 0; i < size; i++) {
         if (roaches[i].currentState != ENEMY_STATE_DIED) {

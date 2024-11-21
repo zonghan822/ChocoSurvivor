@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include "cprocessing.h"
 #include "utils.h"
+#include "camera.h"
 
 float get_preserved_widthf(float width, float height, float new_height) {
 	float aspectRatio = width / height;
@@ -58,19 +59,44 @@ float resize_by_divisor(float dimension, int divisor) {
     return dimension;
 }
 
+void render_health_bar_rel(struct Rectangle entity, int health, int maxHealth, struct Camera cam) {
 
-//float get_diagonal_dist(float dist) {
-//	return (float)sqrt((dist * dist)/2);
-//}
-// 
-//void resize_by_width_preservef(float* width, float* height, float new_width) {
-//	float aspectRatio = *width / *height;
-//	*width = new_width;
-//	*height = new_width / aspectRatio;
-//}
-//
-//void resize_by_height_preservef(float* width, float* height, float new_height) {
-//	float aspectRatio = *width / *height;
-//	*height = new_height;
-//	*width = new_height / aspectRatio;
-//}
+    // get relative position after camera transformation
+    CP_Vector vec = get_cam_pos_rel(entity.pos, cam);
+
+    // Set position of health bar
+    float health_bar_w = entity.width;
+    float health_bar_h = 15.f;
+    float health_bar_x = vec.x - (health_bar_w / 2);
+    float health_bar_y = (vec.y) - (entity.height / 2) - 20.f;
+
+    CP_Settings_RectMode(CP_POSITION_CORNER);
+
+    // Draw health bar rect
+    CP_Settings_Fill(CP_Color_Create(255, 0, 0, 255));
+    CP_Graphics_DrawRect(health_bar_x, health_bar_y, health_bar_w, health_bar_h);
+
+    float health_gap_x = health_bar_x + ((float)health / (float)maxHealth) * health_bar_w;
+    float health_gap_w = health_bar_w * (1.f - ((float)health / (float)maxHealth));
+
+    CP_Settings_Fill(CP_Color_Create(100, 100, 100, 255));
+    CP_Graphics_DrawRect(health_gap_x, health_bar_y, health_gap_w, health_bar_h);
+}
+
+void render_health_heart_rel(struct Rectangle entity, int health, int maxHealth, struct Camera cam) {
+    
+    CP_Image img = CP_Image_Load("Assets/heart.png");
+
+    // get relative position after camera transformation
+    CP_Vector vec = get_cam_pos_rel(entity.pos, cam);
+
+    // Set position of the first health icon
+    float health_icon_w = 45.f;
+    float health_icon_h = get_preserved_heightf(CP_Image_GetWidth(img), CP_Image_GetHeight(img), health_icon_w);
+    float health_icon_y = (vec.y) - (entity.height / 2) - (health_icon_h/2)- 10.f;
+    float health_icon_gap = health_icon_w / 2;
+    for (int i = 0; i < health; i++) {
+        float health_icon_x = (vec.x - (entity.width / maxHealth)) + (i * (entity.width / maxHealth));
+        CP_Image_Draw(img, health_icon_x, health_icon_y, health_icon_w, health_icon_h, 255);
+    }
+}

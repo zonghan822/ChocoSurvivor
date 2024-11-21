@@ -479,6 +479,21 @@ void level_one_update(void) {
     render_allies(cam);
     #pragma endregion
 
+    #pragma region Render_Barriers_HealthBar
+    for (int i = 0; i < get_barrier_count(); i++) {
+        if (barriers[i].isTakingDamage) {
+            if (barriers[i].healthBarDisplayTime < BARRIER_HEALTHBAR_DISPLAY_TIME) {
+                render_health_bar_rel(barriers[i].hitbox, barriers[i].health, barriers[i].maxHealth, cam);
+                barriers[i].healthBarDisplayTime += dt;
+            }
+            else {
+                barriers[i].healthBarDisplayTime = 0;
+                barriers[i].isTakingDamage = false;
+            }
+        }
+    }
+    #pragma endregion
+
     #pragma region Render_Bullets
     // Update and render bullets
     for (int i = 0; i < MAX_BULLET_COUNT; i++) {
@@ -490,8 +505,10 @@ void level_one_update(void) {
     #pragma region Render_Tower
     // Render Defense Target
     update_flicker(&towerInstance.flickerState, dt);
-    if (towerInstance.flickerState.isVisible)
+    if (towerInstance.flickerState.isVisible) {
         render_tower(towerInstance, cam);
+        render_health_heart_rel(get_tower_hitbox(towerInstance), towerInstance.health, towerInstance.maxHealth, cam);
+    }
     #pragma endregion
 
     #pragma region Render_Enemies
@@ -509,7 +526,8 @@ void level_one_update(void) {
     for (int i = 0; roaches[i].currentState; i++) {
         if (roaches[i].isTakingDamage) {
             if (roaches[i].healthBarDisplayTime < ENEMY_HEALTHBAR_DISPLAY_TIME) {
-                render_enemy_health_bar(&roaches[i], cam);
+                struct Rectangle roachRect = {roaches[i].pos, roaches[i].width, roaches[i].height};
+                render_health_bar_rel(roachRect, roaches[i].health, roaches[i].maxHealth, cam);
                 roaches[i].healthBarDisplayTime += dt;
             }
             else {
@@ -645,6 +663,7 @@ void level_one_update(void) {
             #pragma region Enemy Movement And Attack 
             int barriersDestroyed[MAX_BARRIERS] = { 0 };
             int barriersDestroyedCount = 0;
+            bool isDestroyed = false;
             roaches[i].attackCooldown = max(0, roaches[i].attackCooldown-dt);
             switch (roaches[i].currentState) {
             case ENEMY_STATE_MOVING_TO_TOWER: {
@@ -678,9 +697,9 @@ void level_one_update(void) {
                 case BARRIER:{
                     for (int j = 0; j < barriersDestroyedCount; j++) {
                         if (barriersDestroyed[j] == roaches[i].barrierAttack)
-                            break;
+                            isDestroyed = true;
                     }
-                    if (roaches[i].attackCooldown<=0) {
+                    if (roaches[i].attackCooldown<=0 && !isDestroyed) {
                         roaches[i].attackCooldown = enemyMaxAttackCD;
                         if (!barrier_take_damage(roaches[i].barrierAttack, roaches[i].dmg)) {
                             barriersDestroyed[barriersDestroyedCount++] = roaches[i].barrierAttack;

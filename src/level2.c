@@ -834,7 +834,8 @@ void level_two_update(void) {
     for (int i = 0; roaches[i].currentState; i++) {
         if (roaches[i].isTakingDamage) {
             if (roaches[i].healthBarDisplayTime < ENEMY_HEALTHBAR_DISPLAY_TIME) {
-                render_enemy_health_bar(&roaches[i], cam);
+                struct Rectangle roachRect = { roaches[i].pos, roaches[i].width, roaches[i].height };
+                render_health_bar_rel(roachRect, roaches[i].health, roaches[i].maxHealth, cam);
                 roaches[i].healthBarDisplayTime += dt;
             }
             else {
