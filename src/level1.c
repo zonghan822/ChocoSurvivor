@@ -19,6 +19,7 @@
 #include "boss.h"
 #include "button.h"
 #include "audio.h"
+#include "gui.h"
 
 #define MAX_ENEMY_COUNT 100
 #define LEVEL_WIDTH 2000.f
@@ -107,6 +108,8 @@ static float allyW = 100.0f;
 
 static struct Button menuButton;
 static bool isMovingToNextLevel;
+static bool hasPlayedGameOverMusic,
+    hasPlayedNewWaveMusic;
 
 static void _render_cursor(float mouse_x, float mouse_y) {
     CP_Settings_ImageMode(CP_POSITION_CORNER);
@@ -133,7 +136,10 @@ static int _get_exp(int health, float speed, int max_enemies) {
 }
 
 void level_one_init(void) {
+    init_tilemap();
     isMovingToNextLevel = false;
+    hasPlayedGameOverMusic = false;
+    hasPlayedNewWaveMusic = false;
     enableShooting = false;
     cursor = CP_Image_Load("Assets/cursor.png");
     CP_System_ShowCursor(FALSE);
@@ -183,7 +189,7 @@ void level_one_init(void) {
     #pragma region Enemy_Spawn_Init
     memset(roaches, 0, sizeof(roaches));
     // Reset spawn properties
-    waveDelay = 5.0f; // Give player some buffer
+    waveDelay = 10.0f; // Give player some buffer
     currentWave = WAVE_1;
     enemySpawnIndex = 0;
     waveTimer = 0.f;
@@ -232,10 +238,11 @@ void level_one_init(void) {
     update_grid(&bossGridNB, worldClips, worldClipsCount, enemyClips, 1);
     #pragma endregion
 
-    menuButton = init_button_image(windowWidth / 2.f, windowHeight / 1.25f, 250.f, 75.f,
+    menuButton = init_button(windowWidth / 2.f, windowHeight / 1.25f, 250.f, 75.f,
         BUTTON_TYPE_DEFAULT, "Back to Menu", CP_Color_Create(0, 0, 0, 255), 45.f);
 
     init_sounds();
+    play_sound_advanced(SOUND_MUSIC_NEW_MAP_LEVEL, 1.f, 0);
 }
 
 void level_one_update(void) {
@@ -254,6 +261,7 @@ void level_one_update(void) {
     // New wave
     if (deadEnemies == totalEnemies && totalEnemies != 0) {
         if (currentWave < WAVE_3) {
+            hasPlayedNewWaveMusic = false;
             deadEnemies = 0; // Reset
             currentWave++;
             waveTimer = 0.f; // Reset wave timer to start next wave
@@ -278,6 +286,11 @@ void level_one_update(void) {
         update_button_state(&menuButton, mouseX, mouseY);
         _render_cursor(mouseX, mouseY);
 
+        if (!hasPlayedGameOverMusic) {
+            play_sound_advanced(SOUND_MUSIC_GAME_OVER, 1.f, 0);
+            hasPlayedGameOverMusic = true;
+        }
+
         if (menuButton.state == BUTTON_STATE_CLICKED)
             CP_Engine_SetNextGameState(main_menu_init, main_menu_update, main_menu_exit);
         return;
@@ -298,6 +311,11 @@ void level_one_update(void) {
         if (spawnInterval > spawnTimer)
             spawnTimer += dt;
         else {
+            if (!hasPlayedNewWaveMusic) {
+                play_sound_advanced(SOUND_MUSIC_NEW_WAVE_START, 1.f, 0);
+                hasPlayedNewWaveMusic = true;
+            }
+
             float enemySpeed = 0.f;
             int enemyMaxHealth = 0, enemyDmg = 0;
             float nextSpawnDelay = 0.f;
@@ -318,7 +336,7 @@ void level_one_update(void) {
                 spawnInterval = 1.35f;
                 enemySpeed = 105.f;
                 enemyMaxHealth = 250;
-                enemyDmg = 30;
+                enemyDmg = 35;
                 enemyMaxAttackCD = 1.5f;
                 roachesMax = 55;
                 nextSpawnDelayIndex = 6;
@@ -802,6 +820,7 @@ void level_one_update(void) {
     #pragma endregion
 
     
+    
 
     // TODO: Move bars to its own class?
     // TODO: Move, placeholder
@@ -964,4 +983,5 @@ void level_one_exit(void) {
     free(bossGridNB.nodes);
     dispose_barriers();
     dispose_allies();
+    dispose_tilemap();
 }

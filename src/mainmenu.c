@@ -7,6 +7,8 @@
 #include "button.h"
 #include "panel.h"
 #include "slider.h"
+#include "progressbar.h"
+#include "gui.h"
 
 #include <stdio.h>
 
@@ -21,11 +23,12 @@ static bool _isOptionsActive = false;
 // Options Menu
 static float _musicVol, _sfxVol, _uiVol;
 static struct Button _applyButton, _defaultButton;
-static struct Panel _optionsPanel;
 static struct Slider _musicVolSlider, _sfxVolSlider, _uiVolSlider;
+static struct Rectangle _optionsPanel = { .width = 800, .height = 550 };
 
-void main_menu_init(void){
+void main_menu_init(void) {
 	init_sounds();
+	init_tilemap();
 	_cursor = CP_Image_Load("Assets/cursor.png");
 	CP_System_ShowCursor(false);
 
@@ -44,29 +47,29 @@ void main_menu_init(void){
 	_buttonRectWidth = 300.0f;
 
 	CP_Color black = CP_Color_Create(0, 0, 0, 255);
-	_playButton = init_button_image(_buttonRectX, _buttonRectY - (_buttonRectHeight * 2.f), _buttonRectWidth, _buttonRectHeight, BUTTON_TYPE_SUCCESS,
+	_playButton = init_button(_buttonRectX, _buttonRectY - (_buttonRectHeight * 2.f), _buttonRectWidth, _buttonRectHeight, BUTTON_TYPE_SUCCESS,
 		"Play", black, 55.f);
 
-	_optionsButton = init_button_image(_buttonRectX, _buttonRectY, _buttonRectWidth, _buttonRectHeight, BUTTON_TYPE_DEFAULT,
+	_optionsButton = init_button(_buttonRectX, _buttonRectY, _buttonRectWidth, _buttonRectHeight, BUTTON_TYPE_DEFAULT,
 		"Options", black, 55.f);
 
-	_quitButton = init_button_image(_buttonRectX, _buttonRectY + (_buttonRectHeight * 2.f), _buttonRectWidth, _buttonRectHeight, BUTTON_TYPE_WARNING,
+	_quitButton = init_button(_buttonRectX, _buttonRectY + (_buttonRectHeight * 2.f), _buttonRectWidth, _buttonRectHeight, BUTTON_TYPE_WARNING,
 		"Quit", black, 55.f);
 
-	// Options
-	_optionsPanel = init_panel(800, 550, _windowWidth / 2.f, _windowHeight / 2.f);
+	_optionsPanel.pos.x = _windowWidth / 2.f;
+	_optionsPanel.pos.y = _windowHeight / 2.f;
 
 	float buttonWidth = 125.f;
-	_applyButton = init_button_image(_optionsPanel.rect.pos.x + _optionsPanel.rect.width / 2.65f, _optionsPanel.rect.pos.y + _optionsPanel.rect.height / 2.35f,
+	_applyButton = init_button(_optionsPanel.pos.x + _optionsPanel.width / 2.65f, _optionsPanel.pos.y + _optionsPanel.height / 2.35f,
 		buttonWidth, 40.f, BUTTON_TYPE_DEFAULT, "Apply", black, 20.f);
-	_defaultButton = init_button_image(_applyButton.rect.pos.x - (buttonWidth * 1.25f), _applyButton.rect.pos.y,
+	_defaultButton = init_button(_applyButton.rect.pos.x - (buttonWidth * 1.25f), _applyButton.rect.pos.y,
 		buttonWidth, 40.f, BUTTON_TYPE_WARNING, "Default", black, 20.f);
 
-	float sliderLength = _optionsPanel.rect.width / 2.5f,
-		sliderY = (_optionsPanel.rect.pos.y - _optionsPanel.rect.height / 2.f) * 2.25f;
-	_musicVolSlider = init_slider(sliderLength, 16, _optionsPanel.rect.pos.x, sliderY, 26.5f);
-	_sfxVolSlider = init_slider(sliderLength, 16, _optionsPanel.rect.pos.x, sliderY * 1.2f, 26.5f);
-	_uiVolSlider = init_slider(sliderLength, 16, _optionsPanel.rect.pos.x, sliderY * 1.4f, 26.5f);
+	float sliderLength = _optionsPanel.width / 2.5f,
+		sliderY = (_optionsPanel.pos.y - _optionsPanel.height / 2.f) * 2.25f;
+	_musicVolSlider = init_slider(sliderLength, 16, _optionsPanel.pos.x, sliderY, 26.5f);
+	_sfxVolSlider = init_slider(sliderLength, 16, _optionsPanel.pos.x, sliderY * 1.2f, 26.5f);
+	_uiVolSlider = init_slider(sliderLength, 16, _optionsPanel.pos.x, sliderY * 1.4f, 26.5f);
 }
 
 void main_menu_update(void) {
@@ -96,7 +99,7 @@ void main_menu_update(void) {
 		CP_Graphics_DrawRect(0, 0, _windowWidth, _windowHeight);
 		CP_Settings_RectMode(CP_POSITION_CENTER);
 
-		render_panel(_optionsPanel);
+		render_panel(_optionsPanel.width, _optionsPanel.height, _optionsPanel.pos.x, _optionsPanel.pos.y);
 		
 		render_slider(_musicVolSlider);
 		render_slider(_sfxVolSlider);
@@ -106,7 +109,7 @@ void main_menu_update(void) {
 		render_button(_defaultButton);
 
 		CP_Settings_TextSize(65.0f);
-		CP_Font_DrawText("SETTINGS", _optionsPanel.rect.pos.x, (_optionsPanel.rect.pos.y - _optionsPanel.rect.height / 2.f) * 1.55f);
+		CP_Font_DrawText("SETTINGS", _optionsPanel.pos.x, (_optionsPanel.pos.y - _optionsPanel.height / 2.f) * 1.55f);
 
 		CP_Settings_TextSize(30.0f);
 		CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_RIGHT, CP_TEXT_ALIGN_V_MIDDLE);
@@ -201,16 +204,5 @@ void main_menu_exit(void) {
 	CP_Image_Free(&_cursor);
 
 	dispose_sounds();
-
-	dispose_button(&_playButton);
-	dispose_button(&_optionsButton);
-	dispose_button(&_quitButton);
-	dispose_button(&_applyButton);
-	dispose_button(&_defaultButton);
-
-	dispose_panel(&_optionsPanel);
-
-	dispose_slider(&_musicVolSlider);
-	dispose_slider(&_sfxVolSlider);
-	dispose_slider(&_uiVolSlider);
+	dispose_tilemap();
 }

@@ -19,6 +19,7 @@
 #include "boss.h"
 #include "button.h"
 #include "audio.h"
+#include "gui.h"
 
 #define MAX_ENEMY_COUNT 100
 #define LEVEL_WIDTH 2400.0f
@@ -131,6 +132,7 @@ static int _get_exp(int health, float speed, int max_enemies) {
 
 
 void level_two_init(void) {
+    init_tilemap();
     enableShooting = false;
     cursor = CP_Image_Load("Assets/cursor.png");
     CP_System_ShowCursor(FALSE);
@@ -222,10 +224,11 @@ void level_two_init(void) {
     update_grid(&bossGridNB, worldClips, worldClipsCount, enemyClips, 1);
     #pragma endregion
 
-    menuButton = init_button_image(windowWidth / 2.f, windowHeight / 1.25f, 250.f, 75.f,
+    menuButton = init_button(windowWidth / 2.f, windowHeight / 1.25f, 250.f, 75.f,
         BUTTON_TYPE_DEFAULT, "Back to Menu", CP_Color_Create(0, 0, 0, 255), 45.f);
 
     init_sounds();
+    play_sound_advanced(SOUND_MUSIC_NEW_MAP_LEVEL, 1.f, 0);
 }
 
 void level_two_update(void) {
@@ -894,4 +897,5 @@ void level_two_exit(void) {
     free(bossGridNB.nodes);
     dispose_barriers();
     dispose_allies();
+    dispose_tilemap();
 }

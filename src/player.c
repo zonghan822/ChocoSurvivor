@@ -6,20 +6,22 @@
 #include "flicker.h"
 #include "level1.h"
 #include "placeables.h"
+#include "audio.h"
 
 static const float DASH_COOLDOWN = 1.f,
     DASH_DISTANCE = 150.f, DASH_SPEED = 20.f;
-
 static const float EXP_INCREASE_MULTIPLIER = 1.35f;
+static const float WALK_SOUND_INTERVAL = 0.5f;
 
 static BOOL _isDashing = FALSE;
 static float _dashProgress, _lastDash;
 static CP_Vector _dashTo;
+static float _walkSoundTimer;
+static bool _hasPlayedLevelUpMusic;
 
 int playerMaxExp = 20;
 int playerLevel = 1;
 struct ChocoShooter playerInstance;
-
 
 #pragma region Player
 // Returns 1 if still alive, 0 if not
@@ -34,6 +36,7 @@ int player_take_damage(struct ChocoShooter* player, int damage) {
 
     if (player->health > 0) {
         printf("Player took %d damage, health is now %d\n", damage, player->health);
+        play_sound(SOUND_PLAYER_HURT);
         return 1;
     }
 
@@ -46,6 +49,7 @@ struct ChocoShooter init_player(CP_Vector pos, float speed, float maxHealth, int
     _dashProgress = 0.0;
     _lastDash = 2.1;
     _dashTo = CP_Vector_Zero();
+    _walkSoundTimer = WALK_SOUND_INTERVAL;
 
     struct ChocoShooter player = {
         .pos = pos,
@@ -71,6 +75,8 @@ struct ChocoShooter init_player(CP_Vector pos, float speed, float maxHealth, int
 }
 
 void move_player(struct ChocoShooter *player, float dt, float level_width, float level_height) {
+    if (_walkSoundTimer < WALK_SOUND_INTERVAL)
+        _walkSoundTimer += dt;
     CP_Vector moveDirection = CP_Vector_Zero();
 
     // Player movement and setting movement
@@ -162,6 +168,12 @@ void move_player(struct ChocoShooter *player, float dt, float level_width, float
 
     player->pos.x = CP_Math_ClampFloat(player->pos.x, halfWidth, level_width - halfWidth);
     player->pos.y = CP_Math_ClampFloat(player->pos.y, halfHeight, level_height - halfHeight);
+
+    // Movement sounds
+    if (_walkSoundTimer >= WALK_SOUND_INTERVAL && player->movement != STOPPED) {
+        play_sound(SOUND_PLAYER_WALK);
+        _walkSoundTimer = 0.f;
+    }
 }
 
 void render_player(struct ChocoShooter player, float alpha, struct Camera cam) {
@@ -340,6 +352,10 @@ int update_buff_meter(struct ChocoShooter* player, int expGained) {
     // Full or exceeded EXP
     if (player->exp >= playerMaxExp) {
         playerLevel++;
+        if (!_hasPlayedLevelUpMusic) {
+            play_sound_advanced(SOUND_MUSIC_LEVEL_UP, 1.f, 0);
+            _hasPlayedLevelUpMusic = true;
+        }
         // Do nothing if EXP == playerMaxExp
         // But do return the buff
         // Wrap around only if exceeding
@@ -351,6 +367,8 @@ int update_buff_meter(struct ChocoShooter* player, int expGained) {
         enum BuffType randomBuff = CP_Random_RangeInt(1, 6);
         return randomBuff;
     }
+    else if (_hasPlayedLevelUpMusic)
+        _hasPlayedLevelUpMusic = false;
 
     return 0; // Return 0 if no buff is granted
 }
