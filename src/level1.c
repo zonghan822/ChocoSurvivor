@@ -109,6 +109,17 @@ static void _render_cursor(float mouse_x, float mouse_y) {
     CP_Settings_ImageMode(CP_POSITION_CENTER);
 }
 
+// TODO: Move to utils
+static void _draw_shadows(float x, float y, float width, float height) {
+    CP_Vector vec = get_cam_pos_rel(CP_Vector_Set(x, y + (height / 2.f)), cam);
+    CP_Settings_StrokeWeight(0.f);
+    CP_Settings_Fill(CP_Color_Create(0, 0, 0, 105));
+    CP_Graphics_DrawEllipse(vec.x, vec.y, width, height / 3.5f);
+
+    // Reset
+    CP_Settings_StrokeWeight(3.f);
+}
+
 static int _get_exp(int health, float speed, int max_enemies) {
     return (int)((float)(health / speed) * (float)(max_enemies / 10.f));
 }
@@ -263,6 +274,15 @@ void level_one_update(void) {
         playerInstance.width = playerInstance.width > 0 ? -playerInstance.width : playerInstance.width;
     else
         playerInstance.width = playerInstance.width < 0 ? -playerInstance.width : playerInstance.width;
+
+    _draw_shadows(playerInstance.pos.x, playerInstance.pos.y, playerInstance.width, playerInstance.height);
+    for (int i = 0; roaches[i].currentState; i++) {
+        struct ChocoRoach roach = roaches[i];
+        _draw_shadows(roach.pos.x, roach.pos.y, roach.width, roach.height);
+    }
+    if (bossInstance.state != BOSS_STATE_UNSPAWNED) {
+        _draw_shadows(bossInstance.pos.x, bossInstance.pos.y, bossInstance.width, bossInstance.height);
+    }
 
     // draw_grid(enemyGrid.nodes, enemyGrid.nodeCount, cam); // draw enemy grid for debugging
     // draw_grid(bossGrid.nodes, bossGrid.nodeCount, cam); // draw boss grid for debugging
@@ -702,6 +722,9 @@ void level_one_update(void) {
         }
     }
 
+    // TODO: Move bars to its own class?
+    // TODO: Move, placeholder
+    CP_Settings_RectMode(CP_POSITION_CENTER);
     CP_Settings_Fill(CP_Color_Create(0, 0, 0, 85));
     CP_Graphics_DrawRect(1460, meterY - 5.f, 225, 80);
     
