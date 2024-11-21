@@ -15,7 +15,7 @@
 #include "enemy.h"
 #include "utils.h"
 #include "flicker.h"
-#include "barrier.h" 
+#include "placeables.h" 
 #include "astar.h"
 #include "boss.h"
 #include "button.h"
@@ -168,8 +168,8 @@ void level_two_init(void) {
     allyW = 100.0f;
 
     #pragma region Barrier_Init
-    reset_barriers();  // Reset all barriers 
-    reset_allies();
+    init_barrier_images();
+    init_ally_images();
     currentState = BARRIER_IDLE;
     barrierWidth = 50.0f;
     barrierHeight = 100.0f;
@@ -389,7 +389,6 @@ void level_two_update(void) {
         }
     }
 
-
     #pragma region Place_Barriers
     switch (currentState) {
     case BARRIER_IDLE:
@@ -419,7 +418,6 @@ void level_two_update(void) {
                 currentState = BARRIER_IDLE;
 
                 // store the barrier in worldClips
-                struct Barrier* barriers = get_barriers();
                 worldClips[worldClipsCount++] = barriers[barrierIndex].hitbox;
                 update_grid(&enemyGrid, worldClips, worldClipsCount, enemyClips, 1);
                 update_grid(&bossGrid, worldClips, worldClipsCount, enemyClips, 1);
@@ -447,12 +445,12 @@ void level_two_update(void) {
 
         // Render translucent preview
         CP_Settings_Fill(CP_Color_Create(0, 255, 0, 128));
-        CP_Image_Draw(get_ally_image(), mouseX, mouseY, allyW, allyH, 128);
+        CP_Image_Draw(get_ally_image(playerInstance.buffs.allyLevel), mouseX, mouseY, allyW, allyH, 128);
 
         if (CP_Input_MouseTriggered(MOUSE_BUTTON_LEFT)) {
             int allyIndex = get_ally_count();
             if (allyIndex < MAX_ALLIES) {
-                init_ally_properties(allyIndex, allyPreviewPosition, allyW, allyH, 5);
+                init_ally(allyIndex, allyPreviewPosition, allyW, allyH);
                 increment_ally_count();
                 //   printf("DEBUG: Placed Ally %d at position (%.2f, %.2f).\n", allyIndex, allyPreviewPosition.x, allyPreviewPosition.y);
 
@@ -511,8 +509,6 @@ void level_two_update(void) {
 
     #pragma region Render_Barriers_And_Allies
     // Draw all placed barriers
-    struct Barrier* barriers = get_barriers();
-    struct Ally* ally = get_allies();    // Get a reference to the current ally
     CP_Settings_Fill(CP_Color_Create(0, 0, 255, 255)); // Solid blue
     for (int i = 0; i < get_barrier_count(); i++) {
         if (barriers[i].health > 0) {  // Only draw if health is greater than zero
@@ -613,7 +609,7 @@ void level_two_update(void) {
 
                             // Apply the buff if one was granted
                             if (randomBuff != 0) {
-                                apply_buff(&playerInstance, randomBuff, barriers, ally);
+                                apply_buff(&playerInstance, randomBuff, barriers, allies);
                             }
                         }
                         playerInstance.bullets[j].isShooting = FALSE;
@@ -622,22 +618,22 @@ void level_two_update(void) {
             }
 
             for (int a = 0; a < get_ally_count(); a++) {  // Loop through all allies
-                struct Ally* ally = &get_allies()[a];    // Get a reference to the current ally
+                struct Ally ally = allies[a];    // Get a reference to the current ally
                 for (int j = 0; j < MAX_BULLET_COUNT; j++) {  // Loop through each ally's bullets
-                    if (ally->bullets[j].isShooting) {
-                        struct Circle bullet = { .pos = ally->bullets[j].pos, .diameter = ally->bullets[j].diameter };
+                    if (ally.bullets[j].isShooting) {
+                        struct Circle bullet = { .pos = ally.bullets[j].pos, .diameter = ally.bullets[j].diameter };
                         if (are_circle_rect_intersecting(bullet, roaches[i].hitbox)) {
-                            if (enemy_take_damage(&roaches[i], ally->bullets[j].dmg)) {
+                            if (enemy_take_damage(&roaches[i], ally.bullets[j].dmg)) {
                                 deadEnemies++;
                                 int expGained = _get_exp(roaches[i].maxHealth, roaches[i].speed, roachesMax);
                                 enum BuffType randomBuff = update_buff_meter(&playerInstance, expGained);
 
                                 // Apply the buff if one was granted
                                 if (randomBuff != 0) {
-                                    apply_buff(&playerInstance, randomBuff, barriers, ally);
+                                    apply_buff(&playerInstance, randomBuff, barriers, allies);
                                 }
                             }
-                            ally->bullets[j].isShooting = FALSE;
+                            ally.bullets[j].isShooting = FALSE;
                         }
                     }
                 }
@@ -659,7 +655,7 @@ void level_two_update(void) {
 
                     // Apply the buff if one was granted
                     if (randomBuff != 0) {
-                        apply_buff(&playerInstance, randomBuff, barriers, ally);
+                        apply_buff(&playerInstance, randomBuff, barriers, allies);
                     }
                     dispose_boss(&bossInstance);
                 }
@@ -669,23 +665,23 @@ void level_two_update(void) {
     }
 
     for (int a = 0; a < get_ally_count(); a++) {  // Loop through all allies
-        struct Ally* ally = &get_allies()[a];    // Get a reference to the current ally
+        struct Ally ally = allies[a];    // Get a reference to the current ally
         for (int j = 0; j < MAX_BULLET_COUNT; j++) {  // Loop through each ally's bullets
-            if (ally->bullets[j].isShooting) {
-                struct Circle bullet = { .pos = ally->bullets[j].pos, .diameter = ally->bullets[j].diameter };
+            if (ally.bullets[j].isShooting) {
+                struct Circle bullet = { .pos = ally.bullets[j].pos, .diameter = ally.bullets[j].diameter };
                 if (are_circle_rect_intersecting(bullet, bossInstance.hitbox)) {
-                    if (boss_take_damage(&bossInstance, ally->bullets[j].dmg)) {
+                    if (boss_take_damage(&bossInstance, ally.bullets[j].dmg)) {
                         deadEnemies++;
                         int expGained = _get_exp(bossInstance.maxHealth, bossInstance.speed, 1);
                         enum BuffType randomBuff = update_buff_meter(&playerInstance, expGained * 12);
 
                         // Apply the buff if one was granted
                         if (randomBuff != 0) {
-                            apply_buff(&playerInstance, randomBuff, barriers, ally);
+                            apply_buff(&playerInstance, randomBuff, barriers, allies);
                         }
                         dispose_boss(&bossInstance);
                     }
-                    ally->bullets[j].isShooting = FALSE;
+                    ally.bullets[j].isShooting = FALSE;
                 }
             }
         }
@@ -887,4 +883,6 @@ void level_two_exit(void) {
         CP_Image_Free(&bossInstance.img);
     dispose_sounds();
     dispose_button(&menuButton);
+    dispose_barriers();
+    dispose_allies();
 }

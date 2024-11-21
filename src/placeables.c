@@ -1,27 +1,32 @@
-#include "barrier.h"
+#include "placeables.h"
 #include <stdio.h>
 #include <float.h>
+#include <stdlib.h>
 #include "hittest.h"
 #include "enemy.h"
 #include "level1.h"
 #include "camera.h"
 
 // Barrier variables
-static struct Barrier barriers[MAX_BARRIERS];
+struct Barrier barriers[MAX_BARRIERS];
 static int barrierCount = 0;
+CP_Image barrierImages[MAX_BARRIER_IMAGES] = { 0 };
 
 // Ally variables
-static struct Ally allies[MAX_ALLIES];
+struct Ally allies[MAX_ALLIES];
 static int allyCount = 0;
 static enum AllyState currentAllyState = ALLY_IDLE;
 static CP_Vector allyPreviewPosition = { 0, 0 };
-static CP_Image allyImage = NULL;  // Static variable to store the ally image
-static CP_Image barrierImages[4] = { NULL };
+CP_Image allyImages[MAX_ALLIES_IMAGES] = { 0 };
+
+void init_barrier_images(void) {
+    barrierImages[0] = CP_Image_Load("Assets/barrier_1.png");
+    barrierImages[1] = CP_Image_Load("Assets/barrier_2.png");
+    barrierImages[2] = CP_Image_Load("Assets/barrier_3.png");
+    barrierImages[3] = CP_Image_Load("Assets/barrier_4.png");
+}
 
 // Barrier Functions
-struct Barrier* get_barriers(void) {
-    return barriers;
-}
 
 int get_barrier_count(void) {
     return barrierCount;
@@ -47,17 +52,8 @@ void set_barrier_properties(int index, CP_Vector position, float width, float he
     }
 }
 
-void reset_barriers() {
-    for (int i = 0; i < MAX_BARRIERS; i++) {
-        barriers[i].position = CP_Vector_Set(0, 0);
-        barriers[i].width = 0.0f;
-        barriers[i].height = 0.0f;
-        barriers[i].health = 0; // Reset health to zero
-        barriers[i].cooldownTimer = 0.0f;
-        barriers[i].hitbox = (struct Rectangle){ 0 };
-    }
-    barrierCount = 0; // Reset the active barrier count
-    printf("All barriers reset.\n");
+CP_Image get_barrier_image(int barrierLevel) {
+    return barrierImages[barrierLevel];
 }
 
 void check_barrier_collision(struct ChocoRoach* roach, float dt) {
@@ -107,10 +103,36 @@ void check_barrier_collision(struct ChocoRoach* roach, float dt) {
     //  printf("DEBUG: No collision detected. Roach speed reset to %.2f.\n", roach->originalSpeed);
 }
 
+void render_barriers(struct Camera cam) {
+    CP_Settings_Fill(CP_Color_Create(0, 0, 255, 255)); // Solid blue
+    for (int i = 0; i < get_barrier_count(); i++) {
+        if (barriers[i].health > 0) {  // Only draw if health is greater than zero
+            CP_Vector vec = get_cam_pos_rel(barriers[i].position, cam);
+            CP_Image_Draw(get_barrier_image(playerInstance.buffs.barrierLevel),
+                vec.x, vec.y,
+                barriers[i].width, barriers[i].height,
+                255);
+        }
+    }
+}
+
+void dispose_barriers(void) {
+    for (int i = 0; i < MAX_BARRIER_IMAGES; i++) {
+        if (barrierImages[i] != NULL) {
+            CP_Image_Free(&barrierImages[i]);
+        }
+    }
+    barrierCount = 0;
+    memset(barriers, 0, sizeof(barriers));
+}
+
 
 // Ally Functions
-struct Ally* get_allies(void) {
-    return allies;
+void init_ally_images(void) {
+    allyImages[0] = CP_Image_Load("Assets/ally_lvl1.png");
+    /*allyImages[1] = CP_Image_Load("Assets/barrier_2.png");
+    allyImages[2] = CP_Image_Load("Assets/barrier_3.png");
+    allyImages[3] = CP_Image_Load("Assets/barrier_4.png");*/
 }
 
 int get_ally_count(void) {
@@ -127,18 +149,14 @@ void increment_ally_count(void) {
     }
 }
 
-void init_ally_properties(int index, CP_Vector position, float width, float height, int health) {
+void init_ally(int index, CP_Vector position, float width, float height) {
     if (index < MAX_ALLIES) {
         allies[index].position = position;
         allies[index].width = width;
         allies[index].height = height;
-        allies[index].health = health;
-        allies[index].maxHealth = health;
         allies[index].attackSpeed = 2.0f; // in milliseconds
         allies[index].attackPower = 20;
         allies[index].lastShotTime = 0.0f;
-
-        allies[index].image = get_ally_image();
 
         // Initialize bullets
         for (int i = 0; i < MAX_BULLET_COUNT; i++) {
@@ -152,44 +170,19 @@ void init_ally_properties(int index, CP_Vector position, float width, float heig
     }
 }
 
-CP_Image get_ally_image(void) {
-    if (allyImage == NULL) {
-        allyImage = CP_Image_Load("Assets/ally_lvl1.png");
-    }
-
-    return allyImage;
-}
-
-CP_Image get_barrier_image(int barrierLevel) {
-    barrierLevel = CP_Math_ClampInt(barrierLevel, 0, 3);
-    char lvl[22];
-    sprintf_s(lvl, sizeof(lvl), "Assets/barrier_%d.png", barrierLevel);
-    return CP_Image_Load(lvl);
-}
-
-void free_barrier_images() {
-    for (int i = 0; i < 4; i++) {
-        if (barrierImages[i] != NULL) {
-            CP_Image_Free(&barrierImages[i]);
-            barrierImages[i] = NULL;
-        }
-    }
-}
-
 void render_allies(struct Camera cam) {
-    struct Ally* allies = get_allies();
     for (int i = 0; i < get_ally_count(); i++) {
-        if (allies[i].health > 0) {
+        if (!allies[i].state) {
             CP_Vector vec = get_cam_pos_rel(allies[i].position, cam);
-            CP_Image_Draw(allies[i].image, vec.x, vec.y, allies[i].width, allies[i].height, 255);
-        }
-        else {
-           // printf("DEBUG: Ally %d is inactive. Skipping render.\n", i);
+            CP_Image_Draw(get_ally_image(playerInstance.buffs.allyLevel),
+                vec.x, vec.y,
+                allies[i].width, allies[i].height,
+                255);
         }
     }
 }
 
-void render_abullet(struct Bullet bullet, struct Camera cam) {
+void render_ally_bullet(struct Bullet bullet, struct Camera cam) {
     if (bullet.isShooting) { // Only render bullets that are active
         CP_Vector screenPos = get_cam_pos_rel(bullet.pos, cam); // Convert world to screen coordinates
         CP_Settings_Fill(CP_Color_Create(255, 0, 0, 255));      // Red color for bullets
@@ -201,10 +194,8 @@ void render_abullet(struct Bullet bullet, struct Camera cam) {
 
 void update_allies(float dt, struct ChocoRoach* enemies, int enemyCount, struct Camera cam) {
     for (int i = 0; i < allyCount; i++) {
-        if (allies[i].health <= 0) {
-            printf("DEBUG: Ally %d is inactive. Skipping update.\n", i);
+        if (allies[i].state < ALLY_IDLE)
             continue;
-        }
 
         // Update time since last shot
         allies[i].lastShotTime += dt;
@@ -268,12 +259,16 @@ void update_allies(float dt, struct ChocoRoach* enemies, int enemyCount, struct 
         for (int k = 0; k < MAX_BULLET_COUNT; k++) {
             if (allies[i].bullets[k].isShooting) {
                 update_pos_bullet(&allies[i].bullets[k], dt);
-                render_abullet(allies[i].bullets[k], cam); // Render the bullet
+                render_ally_bullet(allies[i].bullets[k], cam); // Render the bullet
                 printf("DEBUG: Bullet %d for Ally %d is moving. Position=(%.2f, %.2f)\n",
                     k, i, allies[i].bullets[k].pos.x, allies[i].bullets[k].pos.y);
             }
         }
     }
+}
+
+CP_Image get_ally_image(int allyLevel) {
+    return allyImages[allyLevel];
 }
 
 int find_bullet_slot(struct Bullet* bullets) {
@@ -285,24 +280,12 @@ int find_bullet_slot(struct Bullet* bullets) {
     return -1;
 }
 
-void reset_allies(void) {
-    for (int i = 0; i < MAX_ALLIES; i++) {
-        if (allies[i].health > 0) {
-           // printf("DEBUG: Skipping active ally %d during reset (health: %d).\n", i, allies[i].health);
-            continue; // Skip resetting active allies
+void dispose_allies(void) {
+    for (int i = 0; i < MAX_ALLIES_IMAGES; i++) {
+        if (allyImages[i] != NULL) {
+            CP_Image_Free(&allyImages[i]);
         }
-        allies[i].health = 0;
-        allies[i].width = 0;
-        allies[i].height = 0;
-        allies[i].position = CP_Vector_Set(0, 0); // Reset position to default
-        allies[i].lastShotTime = 0.0f;
-
-        // Reset bullets for each ally
-        for (int j = 0; j < MAX_BULLET_COUNT; j++) {
-            allies[i].bullets[j].isShooting = FALSE;
-        }
-
-        //printf("DEBUG: Reset Ally %d to default values.\n", i);
     }
-   // printf("DEBUG: All inactive allies reset. Total active allies: %d.\n", get_ally_count());
+    allyCount = 0;
+    memset(allies, 0, sizeof(allies));
 }

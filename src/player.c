@@ -5,7 +5,7 @@
 #include "camera.h"
 #include "flicker.h"
 #include "level1.h"
-#include "barrier.h"
+#include "placeables.h"
 
 static const float DASH_COOLDOWN = 1.f,
     DASH_DISTANCE = 150.f, DASH_SPEED = 20.f;
