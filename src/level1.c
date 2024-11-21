@@ -643,6 +643,8 @@ void level_one_update(void) {
     for (int i = 0; i < roachesMax; i++) {
         if (roaches[i].currentState) { // if enemy is alive
             #pragma region Enemy Movement And Attack 
+            int barriersDestroyed[MAX_BARRIERS] = { 0 };
+            int barriersDestroyedCount = 0;
             roaches[i].attackCooldown = max(0, roaches[i].attackCooldown-dt);
             switch (roaches[i].currentState) {
             case ENEMY_STATE_MOVING_TO_TOWER: {
@@ -674,9 +676,14 @@ void level_one_update(void) {
                     tower_take_damage(&towerInstance, 1);
                     break;
                 case BARRIER:{
+                    for (int j = 0; j < barriersDestroyedCount; j++) {
+                        if (barriersDestroyed[j] == roaches[i].barrierAttack)
+                            break;
+                    }
                     if (roaches[i].attackCooldown<=0) {
                         roaches[i].attackCooldown = enemyMaxAttackCD;
                         if (!barrier_take_damage(roaches[i].barrierAttack, roaches[i].dmg)) {
+                            barriersDestroyed[barriersDestroyedCount++] = roaches[i].barrierAttack;
                             int worldClipsIndex = obstaclesCount + roaches[i].barrierAttack;
                             if (worldClipsIndex != worldClipsCount - 1) {
                                 struct Rectangle tmp = worldClips[worldClipsCount - 1];
@@ -699,7 +706,6 @@ void level_one_update(void) {
                 roaches[i].moveDirection = CP_Vector_Zero();
                 break;
             }
-
             CP_Vector hitboxPos = { roaches[i].pos.x + ENEMY_HITBOX_OFFSET_X(roaches[i].width), roaches[i].pos.y + ENEMY_HITBOX_OFFSET_Y(roaches[i].height) };
             update_rect_hitbox(&roaches[i].hitbox, 0.0f, 0.0f, hitboxPos); // Update hitbox of enemy
             #pragma endregion
@@ -976,7 +982,6 @@ void level_one_exit(void) {
     if (bossInstance.img != NULL)
         CP_Image_Free(&bossInstance.img);
     dispose_sounds();
-    dispose_button(&menuButton);
     free(enemyGrid.nodes);
     free(enemyGridNB.nodes);
     free(bossGrid.nodes);

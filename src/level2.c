@@ -890,7 +890,6 @@ void level_two_exit(void) {
     if (bossInstance.img != NULL)
         CP_Image_Free(&bossInstance.img);
     dispose_sounds();
-    dispose_button(&menuButton);
     free(enemyGrid.nodes);
     free(enemyGridNB.nodes);
     free(bossGrid.nodes);
