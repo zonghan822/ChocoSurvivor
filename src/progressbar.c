@@ -28,8 +28,10 @@ void update_progressbar(struct ProgressBar* progressbar, float value, float max)
     progressbar->value = value;
 }
 
-void render_progressbar_custom(float width, float height, float x, float y, CP_Color baseColor) {
-    render_progressbar(init_progressbar(width, height, x, y, baseColor));
+void render_progressbar_custom(float width, float height, float x, float y, CP_Color baseColor, float value, float max) {
+    struct ProgressBar progBar = init_progressbar(width, height, x, y, baseColor);
+    update_progressbar(&progBar, value, max);
+    render_progressbar(progBar);
 }
 
 void render_progressbar(struct ProgressBar progressBar) {
