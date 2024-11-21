@@ -155,7 +155,7 @@ void level_one_init(void) {
     #pragma region Player_Init
     // Init Player Properties
     respawnVec = CP_Vector_Set(towerInstance.pos.x / 1.15f, towerInstance.pos.y);
-    playerInstance = init_player(respawnVec, 350.0f, 100, 16, 4.1f);
+    playerInstance = init_player(respawnVec, 350.0f, 100, 18, 4.2f);
     bulletType = NORMAL_BULLET;
     playerMaxExp = 20;
     playerLevel = 1;
@@ -172,8 +172,8 @@ void level_one_init(void) {
     reset_barriers();  // Reset all barriers 
     reset_allies();
     currentState = BARRIER_IDLE;
-    barrierWidth = 100.0f;
-    barrierHeight = 150.0f;
+    barrierWidth = 50.0f;
+    barrierHeight = 100.0f;
     barrier_rect_W = 50.0f;
     barrier_rect_H = 50.0f;
     #pragma endregion
@@ -330,7 +330,7 @@ void level_one_update(void) {
                 nextSpawnDelay = -0.65f;
                 break;
             }
-            totalEnemies = roachesMax + (bossInstance.state == BOSS_STATE_UNSPAWNED ? 0 : 1);
+            totalEnemies += roachesMax;
             if (enemySpawnIndex < roachesMax) {
                 roaches[enemySpawnIndex++] = init_enemy(spawnMinY, spawnMaxY, spawnWidth, enemySpeed, enemyMaxHealth, enemyDmg);
                 spawnTimer = 0.f;
@@ -349,7 +349,7 @@ void level_one_update(void) {
         CP_Settings_Fill(CP_Color_Create(255, 0, 0, 255));
         CP_Settings_TextSize(100.0f);
         CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_CENTER, CP_TEXT_ALIGN_V_MIDDLE);
-        CP_Font_DrawText(buffer, (float)CP_System_GetWindowWidth() / 2, (float)CP_System_GetWindowHeight() * 1 / 5);
+        CP_Font_DrawText(buffer, (float)windowWidth / 2, (float)windowHeight * 1 / 5);
         #pragma endregion
         enemySpawnIndex = 0;
         waveTimer += dt;
@@ -371,10 +371,17 @@ void level_one_update(void) {
             continue;
         }
 
-        //if (barrierAttack) {
-        //    roaches[i].currentState = STATE_ATTACKING;
-        //    enemyAttackTarget = BARRIER;
-        //}
+        struct Barrier* barriers = get_barriers();
+        for (int j = 0; j < get_barrier_count(); j++) {
+            if (are_rects_intersecting(roaches[i].hitbox, barriers[j].hitbox)) {
+                roaches[i].currentState = ENEMY_STATE_ATTACKING;
+                enemyAttackTarget = BARRIER;
+                roaches[i].barrierAttack = j;
+                break;
+            }
+        }
+        if (roaches[i].barrierAttack>=0)
+            continue;
 
         struct Circle radarRoach = { .pos = roaches[i].pos, .diameter = 5 * fabs(roaches[i].width) }; // define enemy radar
         if (are_circle_rect_intersecting(radarRoach, playerInstance.hitbox)) { // Check enemy near with player
@@ -441,7 +448,6 @@ void level_one_update(void) {
         }
         break;
     }
-
     #pragma endregion
 
     #pragma region Ally_Init
@@ -456,6 +462,7 @@ void level_one_update(void) {
         }
         break;
     case ALLY_PREVIEW:
+        enableShooting = false;
        // printf("DEBUG: In ALLY_PREVIEW. Ally count: %d\n", get_ally_count());
         allyPreviewPosition = get_world_pos_rel(CP_Vector_Set(mouseX, mouseY), cam);
 
@@ -597,9 +604,13 @@ void level_one_update(void) {
                 case TOWER:
                     tower_take_damage(&towerInstance, 1);
                     break;
-                case BARRIER:
-                    //barrierTakeDamage...
+                case BARRIER:{
+                    struct Barrier* barriers = get_barriers();
+                    if (!barrier_take_damage(&barriers[roaches[i].barrierAttack], roaches[i].dmg)) {
+                        roaches[i].barrierAttack = -1;
+                    }
                     break;
+                }
                 }
                 break;
             }

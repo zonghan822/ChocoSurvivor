@@ -442,6 +442,7 @@ void level_two_update(void) {
         }
         break;
     case ALLY_PREVIEW:
+        enableShooting = false;
         // printf("DEBUG: In ALLY_PREVIEW. Ally count: %d\n", get_ally_count());
         allyPreviewPosition = get_world_pos_rel(CP_Vector_Set(mouseX, mouseY), cam);
 

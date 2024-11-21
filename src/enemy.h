@@ -28,7 +28,6 @@ struct ChocoRoach {
 	float width;
 	float height;
 	float speed;
-	float originalSpeed;
 	int health;
 	int maxHealth;
 	int dmg;
@@ -37,7 +36,8 @@ struct ChocoRoach {
 	struct Rectangle hitbox;
 	BOOL isTakingDamage;
 	float healthBarDisplayTime;
-	int barrierAttack; // index of barrier to attack
+	int *previousValidPath;
+	int barrierAttack;
 };
 
 // Takes in single enemy
