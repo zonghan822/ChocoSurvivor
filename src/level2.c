@@ -268,8 +268,8 @@ void level_two_update(void) {
         _draw_shadows(bossInstance.pos.x, bossInstance.pos.y, bossInstance.width, bossInstance.height);
     }
 
-    draw_grid(enemyGrid.nodes, enemyGrid.nodeCount, cam); // draw enemy grid for debugging
-    draw_grid(bossGrid.nodes, bossGrid.nodeCount, cam); // draw boss grid for debugging
+    // draw_grid(enemyGrid.nodes, enemyGrid.nodeCount, cam); // draw enemy grid for debugging
+    // draw_grid(bossGrid.nodes, bossGrid.nodeCount, cam); // draw boss grid for debugging
 
     #pragma region Enemy Spawning Logic
     // Enemy spawner
