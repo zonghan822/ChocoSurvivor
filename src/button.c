@@ -102,7 +102,7 @@ void update_button_state(struct Button* button, float mouse_x, float mouse_y) {
     if (is_mouse_on_rect(button->rect, mouse_x, mouse_y)) {
         // Trigger once
         if (button->state != BUTTON_STATE_HOVERED && button->state != BUTTON_STATE_CLICKED) {
-            play_sound(UI_BUTTON_HOVER);
+            play_sound(SOUND_UI_BUTTON_HOVER);
             // Anything else
         }
 
@@ -111,10 +111,10 @@ void update_button_state(struct Button* button, float mouse_x, float mouse_y) {
             switch (button->type) {
             default:
             case BUTTON_TYPE_SUCCESS:
-                play_sound(UI_BUTTON_CONFIRM_CLICK);
+                play_sound(SOUND_UI_BUTTON_CONFIRM_CLICK);
                 break;
             case BUTTON_TYPE_WARNING:
-                play_sound(UI_BUTTON_BACK_CLICK);
+                play_sound(SOUND_UI_BUTTON_BACK_CLICK);
                 break;
             }
             button->state = BUTTON_STATE_CLICKED;

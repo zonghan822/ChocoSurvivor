@@ -224,6 +224,7 @@ void level_two_init(void) {
         BUTTON_TYPE_DEFAULT, "Back to Menu", CP_Color_Create(0, 0, 0, 255), 45.f);
 
     init_sounds();
+    play_sound_advanced(SOUND_MUSIC_NEW_MAP_LEVEL, 1.f, 0);
 }
 
 void level_two_update(void) {
