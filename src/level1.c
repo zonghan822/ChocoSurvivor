@@ -94,7 +94,7 @@ static struct Rectangle worldClips[100];
 static struct Rectangle playerClips[1];
 static struct Rectangle enemyClips[1];
 static int worldClipsCount = 0;
-static Grid enemyGrid, bossGrid;
+static Grid enemyGrid, bossGrid, enemyGridNB, bossGridNB;
 #pragma endregion
 
 #pragma region Ally Properties
@@ -223,6 +223,11 @@ void level_one_init(void) {
     init_grid(&bossGrid, LEVEL_WIDTH, LEVEL_HEIGHT, BOSS_WIDTH, bossHeight);
     update_grid(&enemyGrid, worldClips, worldClipsCount, enemyClips, 1);
     update_grid(&bossGrid, worldClips, worldClipsCount, enemyClips, 1);
+
+    init_grid(&enemyGridNB, LEVEL_WIDTH, LEVEL_HEIGHT, ENEMY_WIDTH, enemyHeight);
+    init_grid(&bossGridNB, LEVEL_WIDTH, LEVEL_HEIGHT, BOSS_WIDTH, bossHeight);
+    update_grid(&enemyGridNB, worldClips, worldClipsCount, enemyClips, 1);
+    update_grid(&bossGridNB, worldClips, worldClipsCount, enemyClips, 1);
     #pragma endregion
 
     menuButton = init_button_image(windowWidth / 2.f, windowHeight / 1.25f, 250.f, 75.f,
@@ -273,6 +278,7 @@ void level_one_update(void) {
         playerInstance.width = playerInstance.width > 0 ? -playerInstance.width : playerInstance.width;
     else
         playerInstance.width = playerInstance.width < 0 ? -playerInstance.width : playerInstance.width;
+
 
     _draw_shadows(playerInstance.pos.x, playerInstance.pos.y, playerInstance.width, playerInstance.height);
     for (int i = 0; roaches[i].currentState; i++) {
@@ -330,8 +336,8 @@ void level_one_update(void) {
                 nextSpawnDelay = -0.65f;
                 break;
             }
-            totalEnemies += roachesMax;
             if (enemySpawnIndex < roachesMax) {
+                totalEnemies++;
                 roaches[enemySpawnIndex++] = init_enemy(spawnMinY, spawnMaxY, spawnWidth, enemySpeed, enemyMaxHealth, enemyDmg);
                 spawnTimer = 0.f;
                 printf("Enemy spawned. Spawn count: %d | Remaining: %d\n", enemySpawnIndex, enemySpawnIndex - deadEnemies);
@@ -371,6 +377,7 @@ void level_one_update(void) {
             continue;
         }
 
+        // Attack barrier when collide
         struct Barrier* barriers = get_barriers();
         for (int j = 0; j < get_barrier_count(); j++) {
             if (are_rects_intersecting(roaches[i].hitbox, barriers[j].hitbox)) {
@@ -577,12 +584,12 @@ void level_one_update(void) {
             #pragma region Enemy Movement And Attack    
             switch (roaches[i].currentState) {
             case ENEMY_STATE_MOVING_TO_TOWER: {
-                enemy_move_to_target(&roaches[i], get_tower_hitbox(towerInstance), dt, enemyGrid.nodes, enemyGrid.nodeCount);
+                enemy_move_to_target(&roaches[i], get_tower_hitbox(towerInstance), dt, enemyGrid.nodes, enemyGridNB.nodes, enemyGrid.nodeCount);
                 break;
             }
                 
             case ENEMY_STATE_MOVING_TO_PLAYER: {
-                enemy_move_to_target(&roaches[i], playerInstance.hitbox, dt, enemyGrid.nodes, enemyGrid.nodeCount);
+                enemy_move_to_target(&roaches[i], playerInstance.hitbox, dt, enemyGrid.nodes, enemyGridNB.nodes, enemyGrid.nodeCount);
                 break;
             }
 
@@ -933,4 +940,8 @@ void level_one_exit(void) {
         CP_Image_Free(&bossInstance.img);
     dispose_sounds();
     dispose_button(&menuButton);
+    free(enemyGrid.nodes);
+    free(enemyGridNB.nodes);
+    free(bossGrid.nodes);
+    free(bossGridNB.nodes);
 }

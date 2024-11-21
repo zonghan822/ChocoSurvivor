@@ -27,12 +27,11 @@ struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth,
     chocoRoach.healthBarDisplayTime = 0.f;
     chocoRoach.isTakingDamage = FALSE;
     chocoRoach.barrierAttack = -1;
-    chocoRoach.previousValidPath = NULL;
     return chocoRoach;
 }
 
-void enemy_move_to_target(struct ChocoRoach* roach, struct Rectangle hitbox, float dt, PathNode* grid, int nodeCount) {
-    int *pathArray = (int*)malloc(50*sizeof(int));
+void enemy_move_to_target(struct ChocoRoach* roach, struct Rectangle hitbox, float dt, PathNode* grid, PathNode* gridNoBarrier, int nodeCount) {
+    int pathArray[50];
     int pathNodeCount = 0;
     int startNodeIndex = get_nearest_node_index(grid, nodeCount, roach->pos);
     int endNodeIndex = get_nearest_node_index(grid, nodeCount, hitbox.pos);
@@ -42,24 +41,12 @@ void enemy_move_to_target(struct ChocoRoach* roach, struct Rectangle hitbox, flo
         pathNodeCount = find_astar_path(grid, nodeCount, startNodeIndex, endNodeIndex, pathArray);
         
         if (pathNodeCount) {
-            if (!roach->previousValidPath) {
-                free(roach->previousValidPath);
-            }
             roach->moveDirection = CP_Vector_Normalize((CP_Vector_Subtract(grid[pathArray[0]].pos, roach->pos)));
             // printf("Move Direction (%lf, %lf)\n", roach->moveDirection.x, roach->moveDirection.y);
-            roach->previousValidPath = pathArray;
         }
         else {
-            // printf("No path! Continuing previous path...\n");
-            if (roach->previousValidPath) {
-                if (CP_Vector_Distance(grid[roach->previousValidPath[0]].pos, roach->pos) < 1.f) {
-                    roach->previousValidPath++;
-                }
-                roach->moveDirection = CP_Vector_Normalize((CP_Vector_Subtract(grid[roach->previousValidPath[0]].pos, roach->pos)));
-            }
-            else {
-                roach->moveDirection = CP_Vector_Zero();
-            }
+            find_astar_path(gridNoBarrier, nodeCount, startNodeIndex, endNodeIndex, pathArray);
+            roach->moveDirection = CP_Vector_Normalize((CP_Vector_Subtract(grid[pathArray[0]].pos, roach->pos)));
         }
     }
     roach->width = (roach->moveDirection.x < 0.f && roach->width > 0.f) || (roach->moveDirection.x > 0.f && roach->width < 0.f) ? -roach->width: roach->width;

@@ -205,6 +205,16 @@ int find_astar_path(PathNode* grid, int nodeCount, int startNodeIndex, int endNo
 				current = *(current.parentNode);
 			}
 			reverse_array(pathArray, pathNodeCount);
+			while (--(openList.nodeCount) >= 0) {
+				if (openList.list[openList.nodeCount].parentNode) {
+					free(openList.list[openList.nodeCount].parentNode);
+				}
+			}
+			while (--(closedList.nodeCount) >= 0) {
+				if (closedList.list[closedList.nodeCount].parentNode) {
+					free(closedList.list[closedList.nodeCount].parentNode);
+				}
+			}
 			free(openList.list);
 			free(closedList.list);
 			return pathNodeCount;

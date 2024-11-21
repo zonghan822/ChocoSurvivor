@@ -94,7 +94,7 @@ static struct Rectangle worldClips[100];
 static struct Rectangle playerClips[1];
 static struct Rectangle enemyClips[1];
 static int worldClipsCount = 0;
-static Grid enemyGrid, bossGrid;
+static Grid enemyGrid, bossGrid, enemyGridNB, bossGridNB;
 #pragma endregion
 
 #pragma region Ally Properties
@@ -216,6 +216,11 @@ void level_two_init(void) {
     init_grid(&bossGrid, LEVEL_WIDTH, LEVEL_HEIGHT, BOSS_WIDTH, bossHeight);
     update_grid(&enemyGrid, worldClips, worldClipsCount, enemyClips, 1);
     update_grid(&bossGrid, worldClips, worldClipsCount, enemyClips, 1);
+
+    init_grid(&enemyGridNB, LEVEL_WIDTH, LEVEL_HEIGHT, ENEMY_WIDTH, enemyHeight);
+    init_grid(&bossGridNB, LEVEL_WIDTH, LEVEL_HEIGHT, BOSS_WIDTH, bossHeight);
+    update_grid(&enemyGridNB, worldClips, worldClipsCount, enemyClips, 1);
+    update_grid(&bossGridNB, worldClips, worldClipsCount, enemyClips, 1);
     #pragma endregion
 
     menuButton = init_button_image(windowWidth / 2.f, windowHeight / 1.25f, 250.f, 75.f,
@@ -557,12 +562,12 @@ void level_two_update(void) {
             #pragma region Enemy Movement And Attack 
             switch (roaches[i].currentState) {
             case ENEMY_STATE_MOVING_TO_TOWER: {
-                enemy_move_to_target(&roaches[i], get_tower_hitbox(towerInstance), dt, enemyGrid.nodes, enemyGrid.nodeCount);
+                enemy_move_to_target(&roaches[i], get_tower_hitbox(towerInstance), dt, enemyGrid.nodes, enemyGridNB.nodes,enemyGrid.nodeCount);
                 break;
             }
 
             case ENEMY_STATE_MOVING_TO_PLAYER: {
-                enemy_move_to_target(&roaches[i], playerInstance.hitbox, dt, enemyGrid.nodes, enemyGrid.nodeCount);
+                enemy_move_to_target(&roaches[i], playerInstance.hitbox, dt, enemyGrid.nodes, enemyGridNB.nodes, enemyGrid.nodeCount);
                 break;
             }
 
@@ -888,4 +893,8 @@ void level_two_exit(void) {
         CP_Image_Free(&bossInstance.img);
     dispose_sounds();
     dispose_button(&menuButton);
+    free(enemyGrid.nodes);
+    free(enemyGridNB.nodes);
+    free(bossGrid.nodes);
+    free(bossGridNB.nodes);
 }
