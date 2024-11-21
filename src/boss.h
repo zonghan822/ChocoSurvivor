@@ -35,7 +35,7 @@ struct Boss {
     struct Rectangle hitbox;
     float attackSpeed;
     int attackPower;
-    BOOL isTakingDamage;
+    bool isTakingDamage;
 };
 
 struct Boss init_boss_one(float width, float speed, int health, int attack_power, float attack_speed);

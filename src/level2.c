@@ -12,7 +12,6 @@
 #include "tower.h"
 #include "camera.h"
 #include "hittest.h"
-#include "enemy.h"
 #include "utils.h"
 #include "flicker.h"
 #include "placeables.h" 
@@ -292,7 +291,7 @@ void level_two_update(void) {
                 spawnInterval = 1.65f;
                 enemySpeed = 90.f;
                 enemyMaxHealth = 175;
-                enemyDmg = 7;
+                enemyDmg = 20;
                 roachesMax = 35;
                 nextSpawnDelayIndex = 6;
                 nextSpawnDelay = -0.05f;
@@ -301,7 +300,7 @@ void level_two_update(void) {
                 spawnInterval = 1.35f;
                 enemySpeed = 105.f;
                 enemyMaxHealth = 250;
-                enemyDmg = 10;
+                enemyDmg = 30;
                 roachesMax = 55;
                 nextSpawnDelayIndex = 6;
                 nextSpawnDelay = -0.15f;
@@ -314,7 +313,7 @@ void level_two_update(void) {
                 spawnInterval = 1.65f;
                 enemySpeed = 75.f;
                 enemyMaxHealth = 300;
-                enemyDmg = 15;
+                enemyDmg = 30;
                 roachesMax = 45;
                 nextSpawnDelayIndex = 6;
                 nextSpawnDelay = -0.55f;
@@ -837,7 +836,7 @@ void level_two_update(void) {
             }
             else {
                 roaches[i].healthBarDisplayTime = 0;
-                roaches[i].isTakingDamage = FALSE;
+                roaches[i].isTakingDamage = false;
             }
         }
     }

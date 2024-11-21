@@ -137,7 +137,7 @@ void spawn_boss(struct Boss* boss, float x, float y) {
 
 int boss_take_damage(struct Boss* boss, int damage) {
 	boss->health = CP_Math_ClampInt(boss->health - damage, 0, boss->maxHealth);
-	boss->isTakingDamage = TRUE;
+	boss->isTakingDamage = true;
 
 	if (boss->health <= 0) {
 		printf("Boss has been defeated!\n");

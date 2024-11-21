@@ -46,8 +46,8 @@ void set_barrier_properties(int index, CP_Vector position, float width, float he
         barriers[index].position = barriers[index].hitbox.pos = position;
         barriers[index].width = barriers[index].hitbox.width = width;
         barriers[index].height = barriers[index].hitbox.height = height;
-        barriers[index].health = health;
-        barriers[index].cooldownTimer = 0.0f;
+        barriers[index].health = barriers[index].maxHealth = health;
+        barriers[index].isTakingDamage = false;
         printf("Barrier %d set at position (%.2f, %.2f) with health %d\n", index, position.x, position.y, health);
     }
 }
@@ -57,26 +57,21 @@ CP_Image get_barrier_image(int barrierLevel) {
 }
 
 // Returns 1 if still alive, 0 if not
-int barrier_take_damage(struct Barrier* barrier, int damage) {
-    if (barrier->cooldownTimer > 0) {
-        return 1;  // Skip the rest of the function
-    }
+int barrier_take_damage(int barrierIndex, int damage) {
+    barriers[barrierIndex].isTakingDamage = true;
+    barriers[barrierIndex].health = CP_Math_ClampInt(barriers[barrierIndex].health - damage, 0, barriers[barrierIndex].maxHealth);
 
-    barrier->health = CP_Math_ClampInt(barrier->health - damage, 0, barrier->maxHealth);
-
-    if (barrier->health > 0) {
-        printf("Barrier took %d damage, health is now %d\n", damage, barrier->health);
+    if (barriers[barrierIndex].health > 0) {
+        printf("Barrier took %d damage, health is now %d\n", damage, barriers[barrierIndex].health);
         return 1;
     }
 
     printf("Barrier destroyed!\n");
 
-    for (int i = 0; i < barrierCount-1; i++) {
-        if (barriers[i].health <= 0) {
-            struct Barrier tmp = barriers[i];
-            barriers[i] = barriers[barrierCount - 1];
-            barriers[barrierCount - 1] = tmp;
-        }
+    if (barrierIndex != barrierCount - 1) {
+        struct Barrier tmp = barriers[barrierIndex];
+        barriers[barrierIndex] = barriers[barrierCount - 1];
+        barriers[barrierCount - 1] = tmp;
     }
     barrierCount--;
     return 0;

@@ -30,10 +30,11 @@ struct ChocoRoach {
 	int health;
 	int maxHealth;
 	int dmg;
+	float attackCooldown;
 	CP_Vector moveDirection;
 	enum EnemyState currentState;
 	struct Rectangle hitbox;
-	BOOL isTakingDamage; // for healthbar rendering
+	bool isTakingDamage; // for healthbar rendering
 	float healthBarDisplayTime;
 	int barrierAttack;
 };

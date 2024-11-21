@@ -6,6 +6,7 @@
 #include "enemy.h"
 #include "camera.h"
 
+
 struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth, float speed, int maxHealth, int dmg) {
     srand((unsigned int)time(NULL));
     struct ChocoRoach chocoRoach;
@@ -18,6 +19,7 @@ struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth,
     chocoRoach.health = maxHealth;
     chocoRoach.maxHealth = maxHealth;
     chocoRoach.dmg = dmg;
+    chocoRoach.attackCooldown = 0.f;
     chocoRoach.moveDirection = CP_Vector_Zero();
     chocoRoach.currentState = ENEMY_STATE_IDLE;
     chocoRoach.hitbox.pos.x = chocoRoach.pos.x + ENEMY_HITBOX_OFFSET_X(chocoRoach.width);
@@ -25,7 +27,7 @@ struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth,
     chocoRoach.hitbox.width = 0.8 * chocoRoach.width;
     chocoRoach.hitbox.height = 0.75 * chocoRoach.height;
     chocoRoach.healthBarDisplayTime = 0.f;
-    chocoRoach.isTakingDamage = FALSE;
+    chocoRoach.isTakingDamage = false;
     chocoRoach.barrierAttack = -1;
     return chocoRoach;
 }
@@ -45,7 +47,9 @@ void enemy_move_to_target(struct ChocoRoach* roach, struct Rectangle hitbox, flo
             // printf("Move Direction (%lf, %lf)\n", roach->moveDirection.x, roach->moveDirection.y);
         }
         else {
-            find_astar_path(gridNoBarrier, nodeCount, startNodeIndex, endNodeIndex, pathArray);
+            int startNodeIndexNB = get_nearest_node_index(gridNoBarrier, nodeCount, roach->pos);
+            int endNodeIndexNB = get_nearest_node_index(gridNoBarrier, nodeCount, hitbox.pos);
+            find_astar_path(gridNoBarrier, nodeCount, startNodeIndexNB, endNodeIndexNB, pathArray);
             roach->moveDirection = CP_Vector_Normalize((CP_Vector_Subtract(grid[pathArray[0]].pos, roach->pos)));
         }
     }
@@ -111,7 +115,7 @@ void sort_enemies(struct ChocoRoach* roaches, int size) {
 // return 1 if enemy is killed, 0 otherwise
 int enemy_take_damage(struct ChocoRoach* roach, int dmg) {
     roach->health = CP_Math_ClampInt(roach->health - dmg, 0, roach->maxHealth);
-    roach->isTakingDamage = TRUE;
+    roach->isTakingDamage = true;
     if (roach->health <= 0) {
         roach->currentState = ENEMY_STATE_DIED;
         // set element to 0

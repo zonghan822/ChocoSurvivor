@@ -18,7 +18,7 @@ struct Barrier {
     int health;
     int maxHealth;
     struct Rectangle hitbox;
-    float cooldownTimer;
+    bool isTakingDamage;
 };
 
 enum BarrierState {
@@ -30,7 +30,7 @@ extern struct Barrier barriers[MAX_BARRIERS];
 
 #pragma region Barrier
 // Functions for managing barriers
-int barrier_take_damage(struct Barrier* barrier, int damage);
+int barrier_take_damage(int barrierIndex, int damage);
 void init_barrier_images(void);
 CP_Image get_barrier_image(int barrierLevel);
 int get_barrier_count(void);
