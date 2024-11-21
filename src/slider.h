@@ -2,10 +2,16 @@
 #include "hittest.h"
 #include "cprocessing.h"
 
+enum SliderState {
+	SLIDER_STATE_NONE,
+	SLIDER_STATE_HELD
+};
+
 struct Slider {
 	struct Rectangle track;
 	struct Circle thumb;
 	CP_Image tileMap;
+	enum SliderState state;
 	float value;
 };
 
