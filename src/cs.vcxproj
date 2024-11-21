@@ -21,7 +21,7 @@
   <ItemGroup>
     <ClCompile Include="audio.c" />
     <ClCompile Include="astar.c" />
-    <ClCompile Include="barrier.c" />
+    <ClCompile Include="placeables.c" />
     <ClCompile Include="boss.c" />
     <ClCompile Include="button.c" />
     <ClCompile Include="camera.c" />
@@ -41,7 +41,7 @@
   <ItemGroup>
     <ClInclude Include="audio.h" />
     <ClInclude Include="astar.h" />
-    <ClInclude Include="barrier.h" />
+    <ClInclude Include="placeables.h" />
     <ClInclude Include="boss.h" />
     <ClInclude Include="button.h" />
     <ClInclude Include="camera.h" />
