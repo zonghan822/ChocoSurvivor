@@ -2,6 +2,7 @@
 #include "cprocessing.h"
 #include "slider.h"
 #include <math.h>
+#include "gui.h"
 
 struct Slider init_slider(float width, float height, float x, float y, float diameter) {
     float w = resize_by_divisor(width, 4),
@@ -17,7 +18,6 @@ struct Slider init_slider(float width, float height, float x, float y, float dia
             .pos = CP_Vector_Set(x - w / 2.f, y - h / 2.f),
             .diameter = diameter
         },
-        .tileMap = CP_Image_Load("Assets/GUI/tilemap.png"),
         .value = 0,
         .state = 0
     };
@@ -109,7 +109,7 @@ void render_slider(struct Slider slider) {
             float v1 = baseVStart + baseVCoords[row + 1];
 
             // Render this patch of the base
-            CP_Image_DrawSubImage(slider.tileMap,
+            CP_Image_DrawSubImage(tilemap,
                 drawX, drawY,
                 patchWidth, patchHeight,
                 u0, v0, u1, v1,
@@ -176,7 +176,7 @@ void render_slider(struct Slider slider) {
             float v1 = trackVStart + vCoords[row + 1];
 
             // Render this patch of the track
-            CP_Image_DrawSubImage(slider.tileMap,
+            CP_Image_DrawSubImage(tilemap,
                 drawX, drawY,
                 patchWidth, patchHeight,
                 u0, v0, u1, v1,
@@ -187,15 +187,11 @@ void render_slider(struct Slider slider) {
 #pragma endregion
 
 #pragma region Thumb
-    CP_Image_DrawSubImage(slider.tileMap,
+    CP_Image_DrawSubImage(tilemap,
         slider.thumb.pos.x, slider.track.pos.y,             // Thumb position according to filled track and value
         slider.thumb.diameter, slider.thumb.diameter,       // Use the circle diameter
         thumbUStart, thumbVStart,
         thumbUStart + 14.f, thumbVStart + 14.f,             // 14 is the sprite size
         255);
 #pragma endregion
-}
-
-void dispose_slider(struct Slider* slider) {
-    CP_Image_Free(slider->tileMap);
 }

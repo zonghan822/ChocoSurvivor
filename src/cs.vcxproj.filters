@@ -58,6 +58,12 @@
     <ClCompile Include="slider.c">
       <Filter>Source Files\UI</Filter>
     </ClCompile>
+    <ClCompile Include="progressbar.c">
+      <Filter>Source Files\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="gui.c">
+      <Filter>Source Files\UI</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="boss.h">
@@ -109,6 +115,12 @@
       <Filter>Header Files\UI</Filter>
     </ClInclude>
     <ClInclude Include="slider.h">
+      <Filter>Header Files\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="progressbar.h">
+      <Filter>Header Files\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="gui.h">
       <Filter>Header Files\UI</Filter>
     </ClInclude>
   </ItemGroup>
