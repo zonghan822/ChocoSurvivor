@@ -19,14 +19,14 @@ static enum AllyState currentAllyState = ALLY_IDLE;
 static CP_Vector allyPreviewPosition = { 0, 0 };
 CP_Image allyImages[MAX_ALLIES_IMAGES] = { 0 };
 
+
+// Barrier Functions
 void init_barrier_images(void) {
     barrierImages[0] = CP_Image_Load("Assets/barrier_1.png");
     barrierImages[1] = CP_Image_Load("Assets/barrier_2.png");
     barrierImages[2] = CP_Image_Load("Assets/barrier_3.png");
     barrierImages[3] = CP_Image_Load("Assets/barrier_4.png");
 }
-
-// Barrier Functions
 
 int get_barrier_count(void) {
     return barrierCount;
@@ -56,53 +56,6 @@ CP_Image get_barrier_image(int barrierLevel) {
     return barrierImages[barrierLevel];
 }
 
-//void check_barrier_collision(struct ChocoRoach* roach, float dt) {
-//    for (int i = 0; i < barrierCount; i++) {
-//        struct Rectangle barrierRect = {
-//            .pos = barriers[i].position,
-//            .width = barriers[i].width,
-//            .height = barriers[i].height
-//        };
-//
-//        // Debugging: Display barrier properties
-//      //  printf("DEBUG: Checking collision for Barrier %d: position=(%.2f, %.2f), width=%.2f, height=%.2f, health=%d\n",
-//           // i, barriers[i].position.x, barriers[i].position.y, barriers[i].width, barriers[i].height, barriers[i].health);
-//
-//        if (barriers[i].cooldownTimer > 0) {
-//            barriers[i].cooldownTimer -= dt;
-//            //     printf("DEBUG: Barrier %d is on cooldown. Timer: %.2f\n", i, barriers[i].cooldownTimer);
-//        }
-//
-//        if (are_rects_intersecting(roach->hitbox, barrierRect)) {
-//            //    printf("DEBUG: Roach collided with Barrier %d.\n", i);
-//
-//            if (barriers[i].health > 0 && barriers[i].cooldownTimer <= 0) {
-//                barriers[i].health -= roach->dmg;
-//                barriers[i].cooldownTimer = 500.0f;  // Cooldown time in milliseconds
-//                //      printf("DEBUG: Barrier %d took damage. New health: %d\n", i, barriers[i].health);
-//            }
-//
-//            if (barriers[i].health <= 0) {
-//                //    printf("DEBUG: Barrier %d destroyed.\n", i);
-//
-//                    // Shift remaining barriers down to maintain array order
-//                for (int j = i; j < barrierCount - 1; j++) {
-//                    barriers[j] = barriers[j + 1];
-//                }
-//                barrierCount--;
-//                i--;  // Recheck the barrier at this index after shifting
-//            }
-//
-//            roach->speed = 0;  // Stop the roach after collision
-//            return;  // Exit as roach can only hit one barrier at a time
-//        }
-//    }
-//
-//    // If no collision, reset the roach's speed
-//    roach->speed = roach->originalSpeed;
-//    //  printf("DEBUG: No collision detected. Roach speed reset to %.2f.\n", roach->originalSpeed);
-//}
-
 // Returns 1 if still alive, 0 if not
 int barrier_take_damage(struct Barrier* barrier, int damage) {
     if (barrier->cooldownTimer > 0) {
@@ -117,6 +70,15 @@ int barrier_take_damage(struct Barrier* barrier, int damage) {
     }
 
     printf("Barrier destroyed!\n");
+
+    for (int i = 0; i < barrierCount-1; i++) {
+        if (barriers[i].health <= 0) {
+            struct Barrier tmp = barriers[i];
+            barriers[i] = barriers[barrierCount - 1];
+            barriers[barrierCount - 1] = tmp;
+        }
+    }
+    barrierCount--;
     return 0;
 }
 
@@ -141,6 +103,30 @@ void dispose_barriers(void) {
     }
     barrierCount = 0;
     memset(barriers, 0, sizeof(barriers));
+}
+
+void render_barriers_health_bar(struct Barrier* barrier, struct Camera cam) {
+
+    // get relative position after camera transformation
+    CP_Vector vec = get_cam_pos_rel(barrier->position, cam);
+
+    // Set position of health bar
+    float health_bar_w = barrier->width;
+    float health_bar_h = 15.f;
+    float health_bar_x = vec.x - (health_bar_w / 2);
+    float health_bar_y = (vec.y) - (barrier->height / 2) - 20.f;
+
+    CP_Settings_RectMode(CP_POSITION_CORNER);
+
+    // Draw health bar rect
+    CP_Settings_Fill(CP_Color_Create(255, 0, 0, 255));
+    CP_Graphics_DrawRect(health_bar_x, health_bar_y, health_bar_w, health_bar_h);
+
+    float health_gap_x = health_bar_x + ((float)barrier->health / (float)barrier->maxHealth) * health_bar_w;
+    float health_gap_w = health_bar_w * (1.f - ((float)barrier->health / (float)barrier->maxHealth));
+
+    CP_Settings_Fill(CP_Color_Create(100, 100, 100, 255));
+    CP_Graphics_DrawRect(health_gap_x, health_bar_y, health_gap_w, health_bar_h);
 }
 
 

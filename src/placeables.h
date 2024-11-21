@@ -3,8 +3,8 @@
 #include "utils.h"
 #include "player.h"
 
-#define MAX_BARRIERS 1
-#define BARRIER_INITIAL_HEALTH 5
+#define MAX_BARRIERS 3
+#define BARRIER_INITIAL_HEALTH 100
 #define MAX_ALLIES_BULLET_COUNT 20
 #define MAX_ALLIES 3
 #define ALLY_BULLET_SPEED 800.0f
@@ -36,9 +36,9 @@ CP_Image get_barrier_image(int barrierLevel);
 int get_barrier_count(void);
 void increment_barrier_count(void);
 void set_barrier_properties(int index, CP_Vector position, float width, float height, int health);
-void check_barrier_collision(struct ChocoRoach* roach, float dt);
 void render_barriers(struct Camera cam);
 void dispose_barriers(void);
+void render_barriers_health_bar(struct Barrier* barrier, struct Camera cam);
 #pragma endregion
 
 extern struct Ally allies[MAX_ALLIES];

@@ -378,7 +378,6 @@ void level_one_update(void) {
         }
 
         // Attack barrier when collide
-        struct Barrier* barriers = get_barriers();
         for (int j = 0; j < get_barrier_count(); j++) {
             if (are_rects_intersecting(roaches[i].hitbox, barriers[j].hitbox)) {
                 roaches[i].currentState = ENEMY_STATE_ATTACKING;
@@ -495,7 +494,6 @@ void level_one_update(void) {
         }
         break;
     }
-
     #pragma endregion
 
     #pragma region Player_Shoot_Bullet
@@ -603,9 +601,12 @@ void level_one_update(void) {
                     tower_take_damage(&towerInstance, 1);
                     break;
                 case BARRIER:{
-                    struct Barrier* barriers = get_barriers();
                     if (!barrier_take_damage(&barriers[roaches[i].barrierAttack], roaches[i].dmg)) {
-                        roaches[i].barrierAttack = -1;
+                        roaches[i].barrierAttack = -1; // make index of barrier to attack to negative
+                        // store the barrier in worldClips
+                        worldClips[worldClipsCount++] = barriers[barrierIndex].hitbox;
+                        update_grid(&enemyGrid, worldClips, worldClipsCount, enemyClips, 1);
+                        update_grid(&bossGrid, worldClips, worldClipsCount, enemyClips, 1);
                     }
                     break;
                 }
