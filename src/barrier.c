@@ -161,33 +161,11 @@ CP_Image get_ally_image(void) {
 }
 
 CP_Image get_barrier_image(int barrierLevel) {
-    // Validate barrierLevel range (0 to 3)
-    if (barrierLevel < 0 || barrierLevel > 3) {
-        printf("Invalid barrier level: %d\n", barrierLevel);
-        return NULL; // Return NULL or a default image if desired
-    }
-
-    // Select and return the appropriate image based on barrierLevel
-    switch (barrierLevel) {
-    case 0:
-        printf("Returning image for barrier level 0.\n");
-        return CP_Image_Load("Assets/barrier_1.png");
-    case 1:
-        printf("Returning image for barrier level 1.\n");
-        return CP_Image_Load("Assets/barrier_2.png");
-    case 2:
-        printf("Returning image for barrier level 2.\n");
-        return CP_Image_Load("Assets/barrier_3.png");
-    case 3:
-        printf("Returning image for barrier level 3.\n");
-        return CP_Image_Load("Assets/barrier_4.png");
-    default:
-        // This case should never occur due to the earlier validation
-        printf("Unexpected error: barrier level %d is invalid.\n", barrierLevel);
-        return NULL;
-    }
+    barrierLevel = CP_Math_ClampInt(barrierLevel, 0, 3);
+    char lvl[22];
+    sprintf_s(lvl, sizeof(lvl), "Assets/barrier_%d.png", barrierLevel);
+    return CP_Image_Load(lvl);
 }
-
 
 void free_barrier_images() {
     for (int i = 0; i < 4; i++) {
