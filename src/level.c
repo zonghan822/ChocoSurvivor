@@ -206,6 +206,7 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
     return levelBg;
 }
 
+// Move to next wave or level, if possible
 void next_wave_or_level(void) {
     if (_deadEnemies == _totalEnemies && _totalEnemies != 0) {
         if (currentWave < WAVE_3) {
@@ -253,6 +254,7 @@ bool try_game_over(float window_width, float window_height, CP_Image cursor) {
     return false;
 }
 
+// Enemy spawning function
 void spawn_enemies(float dt) {
     if (_waveTimer >= _waveDelay) {
         if (_spawnInterval > _spawnTimer)
@@ -330,6 +332,7 @@ void spawn_enemies(float dt) {
     }
 }
 
+// Placeables function for player
 void player_placeables(float mouse_x, float mouse_y, float dt) {
     // Update allies
     update_allies(dt, _roaches, _roachesMax);
@@ -396,6 +399,10 @@ void player_placeables(float mouse_x, float mouse_y, float dt) {
     }
 }
 
+// **************************** //
+// *        Rendering         * //
+// **************************** //
+#pragma region Rendering
 void render_health_bars(float dt) {
 #pragma region Barrier
     for (int i = 0; i < get_barrier_count(); i++) {
@@ -616,7 +623,10 @@ void render_entities(float dt, float mouse_x) {
         render_player(playerInstance, 255);
 #pragma endregion
 }
+#pragma endregion
 
+// Check for collision
+// Currently it is just for player
 void check_collision(void) {
     // Prevent player and bullets move into non-movable path
     for (int i = 0; i < _worldClipsCount; i++) {
@@ -634,6 +644,7 @@ void check_collision(void) {
     }
 }
 
+// TODO: Need rework
 void enemy_move_attack(float dt) {
 #pragma region Enemy Attack State
     for (int i = 0; _roaches[i].currentState; i++) {
