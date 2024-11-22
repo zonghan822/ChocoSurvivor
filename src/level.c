@@ -560,7 +560,7 @@ void render_ui(float window_width, float window_height, float mouse_x, float mou
     CP_Settings_TextSize(30.f);
     CP_Settings_Fill(CP_Color_Create(255, 255, 255, 255));
     char levelStr[10];
-    sprintf_s(levelStr, sizeof(levelStr), "Lvl. %d", playerInstance.playerLevel);
++    sprintf_s(levelStr, sizeof(levelStr), "Lvl. %d", playerInstance.playerLevel);
     CP_Font_DrawText(levelStr, 25.f, 25.f);
     CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_CENTER, CP_TEXT_ALIGN_V_MIDDLE);
 }
@@ -671,7 +671,7 @@ void enemy_move_attack(float dt) {
                 break;
             }
         }
-        if (_roaches[i].barrierAttack >= 0)
+        if (_roaches[i].barrierAttack < MAX_BARRIERS)
             continue;
 
         struct Circle radarRoach = { .pos = _roaches[i].pos, .diameter = 5 * fabs(_roaches[i].width) }; // define enemy radar
@@ -683,17 +683,10 @@ void enemy_move_attack(float dt) {
     }
     #pragma endregion
 
-    int barriersDestroyed[MAX_BARRIERS];
-    int barriersDestroyedCount = 0;
-    bool isDestroyed = false;
-
     for (int i = 0; i < _roachesMax; i++) {
         if (_roaches[i].currentState) { // if enemy is alive
             
             #pragma region Enemy Movement & Attack 
-            int barriersDestroyed[MAX_BARRIERS] = { -1 };
-            int barriersDestroyedCount = 0;
-            bool isDestroyed = false;
             _roaches[i].attackCooldown = max(0, _roaches[i].attackCooldown - dt);
 
             switch (_roaches[i].currentState) {
@@ -727,22 +720,12 @@ void enemy_move_attack(float dt) {
                             tower_take_damage(&_tower, 1);
                             break;
                 
-                        case TARGET_BARRIER: {
-                            for (int j = 0; j < barriersDestroyedCount; j++) {
-                                if (barriersDestroyed[j] == _roaches[i].barrierAttack) {
-                                    isDestroyed = true;
-                                    _roaches[i].barrierAttack = -1;
-                                    break;
-                                }
-                            }
-                    
-                            if (_roaches[i].attackCooldown <= 0 && !isDestroyed) {
+                        case TARGET_BARRIER: 
+                            if (_roaches[i].attackCooldown <= 0) {
                                 _roaches[i].attackCooldown = _enemyMaxAttackCD;
                                 if (!barrier_take_damage(_roaches[i].barrierAttack, _roaches[i].dmg)) {
-                                    barriersDestroyed[barriersDestroyedCount++] = _roaches[i].barrierAttack;
-                                    
                                     int worldClipsIndex = _obstaclesCount + _roaches[i].barrierAttack;
-                                    if (worldClipsIndex != _worldClipsCount - 1) {
+                                    if (worldClipsIndex != (_worldClipsCount - 1)) {
                                         struct Rectangle tmp = _worldClips[_worldClipsCount - 1];
                                         _worldClips[_worldClipsCount - 1] = _worldClips[worldClipsIndex];
                                         _worldClips[worldClipsIndex] = tmp;
@@ -750,11 +733,10 @@ void enemy_move_attack(float dt) {
                                     _worldClipsCount--;
                                     update_grid(&_enemyGrid, _worldClips, _worldClipsCount, _enemyClips, 1);
                                     update_grid(&_bossGrid, _worldClips, _worldClipsCount, _enemyClips, 1);
-                                    _roaches[i].barrierAttack = -1; // make index of barrier to attack to negative
                                 }
                             }
+                            _roaches[i].barrierAttack = MAX_BARRIERS;
                             break;
-                        }
                     }
                     break;
                 }
@@ -885,7 +867,7 @@ void enemy_move_attack(float dt) {
 
 #if _DEBUG
 void debug_render_grid(void) {
-    // draw_grid(enemyGrid.nodes, enemyGrid.nodeCount, cam); // draw enemy grid for debugging
+    draw_grid(_enemyGrid.nodes, _enemyGrid.nodeCount); // draw enemy grid for debugging
     // draw_grid(bossGrid.nodes, bossGrid.nodeCount, cam); // draw boss grid for debugging
     // draw_grid(enemyGridNB.nodes, enemyGrid.nodeCount, cam); // draw enemy grid for debugging
     // draw_grid(bossGridNB.nodes, bossGrid.nodeCount, cam); // draw boss grid for debugging

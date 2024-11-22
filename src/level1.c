@@ -80,7 +80,7 @@ void level_one_update(void) {
                  Rendering
     **********************************/
 #if _DEBUG
-    // debug_render_grid();
+    //debug_render_grid();
 #endif
 
     render_barriers();
