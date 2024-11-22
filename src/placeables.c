@@ -61,6 +61,7 @@ CP_Image get_barrier_image(int barrierLevel) {
 int barrier_take_damage(int barrierIndex, int damage) {
     barriers[barrierIndex].isTakingDamage = true;
     barriers[barrierIndex].health = CP_Math_ClampInt(barriers[barrierIndex].health - damage, 0, barriers[barrierIndex].maxHealth);
+    barriers[barrierIndex].healthBarDisplayTime = 0;
 
     if (barriers[barrierIndex].health > 0) {
         printf("Barrier took %d damage, health is now %d\n", damage, barriers[barrierIndex].health);
@@ -68,14 +69,25 @@ int barrier_take_damage(int barrierIndex, int damage) {
     }
 
     printf("Barrier destroyed!\n");
-
-    if (barrierIndex != barrierCount - 1) {
-        struct Barrier tmp = barriers[barrierIndex];
-        barriers[barrierIndex] = barriers[barrierCount - 1];
-        barriers[barrierCount - 1] = tmp;
-    }
-    barrierCount--;
+    
+    barrierCount = max(0, barrierCount-1);
     return 0;
+}
+
+
+static int _comp(const void* a, const void* b)
+{
+    if (!(((struct Barrier*)a)->health) && !(((struct Barrier*)b)->health))
+        return -1;
+    if (!(((struct Barrier*)a)->health))
+        return 1;
+    if (!(((struct Barrier*)b)->health))
+        return -1;
+    return ((struct Barrier*)a)->position.y - ((struct Barrier*)b)->position.y;
+}
+
+void sort_barriers(void) {
+    qsort(barriers, MAX_BARRIERS, sizeof(struct Barrier), _comp);
 }
 
 void render_barriers(struct Camera cam) {

@@ -658,12 +658,13 @@ void level_one_update(void) {
     }
     #pragma endregion
 
+    int barriersDestroyed[MAX_BARRIERS];
+    int barriersDestroyedCount = 0;
+    bool isDestroyed = false;
+
     for (int i = 0; i < roachesMax; i++) {
         if (roaches[i].currentState) { // if enemy is alive
             #pragma region Enemy Movement And Attack 
-            int barriersDestroyed[MAX_BARRIERS] = { 0 };
-            int barriersDestroyedCount = 0;
-            bool isDestroyed = false;
             roaches[i].attackCooldown = max(0, roaches[i].attackCooldown-dt);
             switch (roaches[i].currentState) {
             case ENEMY_STATE_MOVING_TO_TOWER: {
@@ -696,8 +697,10 @@ void level_one_update(void) {
                     break;
                 case BARRIER:{
                     for (int j = 0; j < barriersDestroyedCount; j++) {
-                        if (barriersDestroyed[j] == roaches[i].barrierAttack)
+                        if (barriersDestroyed[j] == roaches[i].barrierAttack) {
                             isDestroyed = true;
+                            roaches[i].barrierAttack = -1;
+                        }        
                     }
                     if (roaches[i].attackCooldown<=0 && !isDestroyed) {
                         roaches[i].attackCooldown = enemyMaxAttackCD;
@@ -725,6 +728,7 @@ void level_one_update(void) {
                 roaches[i].moveDirection = CP_Vector_Zero();
                 break;
             }
+            sort_barriers();
             CP_Vector hitboxPos = { roaches[i].pos.x + ENEMY_HITBOX_OFFSET_X(roaches[i].width), roaches[i].pos.y + ENEMY_HITBOX_OFFSET_Y(roaches[i].height) };
             update_rect_hitbox(&roaches[i].hitbox, 0.0f, 0.0f, hitboxPos); // Update hitbox of enemy
             #pragma endregion

@@ -129,6 +129,10 @@ int get_nearest_node_index(PathNode* grid, int nodeCount, CP_Vector position) {
 
 static void init_list(AStarList* nodeList, int size) {
 	nodeList->list = (AStarNode *)malloc(size * sizeof(AStarNode));
+	if (nodeList->list == NULL) {
+		fprintf(stderr, "Memory allocation failed\n");
+		return;
+	}
 	nodeList->nodeCount = 0;
 	nodeList->size = size;
 }
@@ -137,6 +141,10 @@ static void append_list(AStarList* nodeList, AStarNode node) {
 	if (nodeList->nodeCount == nodeList->size) {
 		nodeList->size++;
 		nodeList->list = realloc(nodeList->list, nodeList->size * sizeof(AStarNode));
+		if (nodeList->list == NULL) {
+			fprintf(stderr, "Memory reallocation failed\n");
+			return;
+		}
 	}
 	nodeList->list[nodeList->nodeCount++] = node;
 }
@@ -211,7 +219,7 @@ int find_astar_path(PathNode* grid, int nodeCount, int startNodeIndex, int endNo
 				}
 			}
 			while (--(closedList.nodeCount) >= 0) {
-				if (closedList.list[closedList.nodeCount].parentNode != NULL) {
+				if (closedList.list[closedList.nodeCount].parentNode != NULL && closedList.list[closedList.nodeCount].parentNode->nodeIndex < 0) {
 					free(closedList.list[closedList.nodeCount].parentNode);
 				}
 			}
@@ -234,6 +242,10 @@ int find_astar_path(PathNode* grid, int nodeCount, int startNodeIndex, int endNo
 
 			if (!isNeighbourInClosed) {
 				AStarNode* parentNode = (AStarNode*)malloc(sizeof(AStarNode));
+				if (parentNode == NULL) {
+					fprintf(stderr, "Memory allocation failed\n");
+					return 0;
+				}
 
 				parentNode->nodeIndex = currentNode.nodeIndex;
 				parentNode->fCost = currentNode.fCost;

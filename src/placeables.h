@@ -41,6 +41,7 @@ void increment_barrier_count(void);
 void set_barrier_properties(int index, CP_Vector position, float width, float height, int health);
 void render_barriers(struct Camera cam);
 void dispose_barriers(void);
+void sort_barriers(void);
 #pragma endregion
 
 extern struct Ally allies[MAX_ALLIES];
