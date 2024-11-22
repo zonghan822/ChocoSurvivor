@@ -159,7 +159,10 @@ void init_ally(int index, CP_Vector pos, float width, float height) {
 void render_allies() {
     for (int i = 0; i < get_ally_count(); i++) {
         if (!allies[i].state) {
-            CP_Image_Draw(get_ally_image(playerInstance.buffs.allyLevel),
+            // PLACEHOLDER
+            // TODO: Remove
+            int allyLevel = playerInstance.buffs.allyLevel; // PH: Stored here until allies have upgrade images
+            CP_Image_Draw(get_ally_image(0),
                 allies[i].pos.x, allies[i].pos.y,
                 allies[i].width, allies[i].height,
                 255);

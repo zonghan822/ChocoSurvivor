@@ -146,7 +146,7 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
     default:
     case GAME_LEVEL_ONE:
         levelBg = CP_Image_Load("Assets/Levels/level1.png");
-        _boss = init_boss_one(BOSS_WIDTH, 40.f, 4500, 60, 0.6f);
+        _boss = init_boss_one(BOSS_WIDTH, 30.f, 4500, 60, 1.03f);
 
         // Init Defense Target Properties
         _tower.maxHealth = _tower.health = 3;
@@ -291,8 +291,8 @@ void spawn_enemies(float dt) {
                     enemyDmg = 35;
                     _enemyMaxAttackCD = 1.5f;
                     _roachesMax = 55;
-                    nextSpawnDelayIndex = 6;
-                    nextSpawnDelay = -0.15f;
+                    nextSpawnDelayIndex = 4;
+                    nextSpawnDelay = -0.4f;
                     break;
                 case WAVE_3:
                     if (_boss.state == BOSS_STATE_UNSPAWNED) {
@@ -305,8 +305,8 @@ void spawn_enemies(float dt) {
                     enemyDmg = 15;
                     _enemyMaxAttackCD = 1.5f;
                     _roachesMax = 45;
-                    nextSpawnDelayIndex = 6;
-                    nextSpawnDelay = -0.65f;
+                    nextSpawnDelayIndex = 5;
+                    nextSpawnDelay = -0.60f;
                     break;
                 }
 #pragma endregion
