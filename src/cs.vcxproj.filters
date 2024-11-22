@@ -60,6 +60,14 @@
     </ClCompile>
     <ClCompile Include="pausemenu.c">
       <Filter>Source Files</Filter>
+    <ClCompile Include="progressbar.c">
+      <Filter>Source Files\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="gui.c">
+      <Filter>Source Files\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="level.c">
+      <Filter>Source Files\Levels</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -116,6 +124,14 @@
     </ClInclude>
     <ClInclude Include="pausemenu.h">
       <Filter>Header Files</Filter>
+    <ClInclude Include="progressbar.h">
+      <Filter>Header Files\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="gui.h">
+      <Filter>Header Files\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="level.h">
+      <Filter>Header Files\Levels</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

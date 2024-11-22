@@ -22,6 +22,8 @@
     <ClCompile Include="audio.c" />
     <ClCompile Include="astar.c" />
     <ClCompile Include="pausemenu.c" />
+    <ClCompile Include="gui.c" />
+    <ClCompile Include="level.c" />
     <ClCompile Include="placeables.c" />
     <ClCompile Include="boss.c" />
     <ClCompile Include="button.c" />
@@ -35,6 +37,8 @@
     <ClCompile Include="mainmenu.c" />
     <ClCompile Include="panel.c" />
     <ClCompile Include="player.c" />
+    <ClCompile Include="progressbar.c" />
+    <ClCompile Include="projectile.c" />
     <ClCompile Include="slider.c" />
     <ClCompile Include="tower.c" />
     <ClCompile Include="utils.c" />
@@ -43,6 +47,8 @@
     <ClInclude Include="audio.h" />
     <ClInclude Include="astar.h" />
     <ClInclude Include="pausemenu.h" />
+    <ClInclude Include="gui.h" />
+    <ClInclude Include="level.h" />
     <ClInclude Include="placeables.h" />
     <ClInclude Include="boss.h" />
     <ClInclude Include="button.h" />
@@ -51,6 +57,8 @@
     <ClInclude Include="level1.h" />
     <ClInclude Include="level2.h" />
     <ClInclude Include="panel.h" />
+    <ClInclude Include="progressbar.h" />
+    <ClInclude Include="projectile.h" />
     <ClInclude Include="slider.h" />
     <ClInclude Include="tower.h" />
     <ClInclude Include="flicker.h" />

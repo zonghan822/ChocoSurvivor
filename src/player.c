@@ -6,20 +6,20 @@
 #include "flicker.h"
 #include "level1.h"
 #include "placeables.h"
+#include "audio.h"
 
 static const float DASH_COOLDOWN = 1.f,
     DASH_DISTANCE = 150.f, DASH_SPEED = 20.f;
-
 static const float EXP_INCREASE_MULTIPLIER = 1.35f;
+static const float WALK_SOUND_INTERVAL = 0.5f;
 
 static BOOL _isDashing = FALSE;
 static float _dashProgress, _lastDash;
 static CP_Vector _dashTo;
+static float _walkSoundTimer;
+static bool _hasPlayedLevelUpMusic;
 
-int playerMaxExp = 20;
-int playerLevel = 1;
-struct ChocoShooter playerInstance;
-
+struct ChocoShooter playerInstance; // Global variable, not private
 
 #pragma region Player
 // Returns 1 if still alive, 0 if not
@@ -34,6 +34,7 @@ int player_take_damage(struct ChocoShooter* player, int damage) {
 
     if (player->health > 0) {
         printf("Player took %d damage, health is now %d\n", damage, player->health);
+        play_sound(SOUND_PLAYER_HURT);
         return 1;
     }
 
@@ -46,6 +47,7 @@ struct ChocoShooter init_player(CP_Vector pos, float speed, float maxHealth, int
     _dashProgress = 0.0;
     _lastDash = 2.1;
     _dashTo = CP_Vector_Zero();
+    _walkSoundTimer = WALK_SOUND_INTERVAL;
 
     struct ChocoShooter player = {
         .pos = pos,
@@ -56,12 +58,11 @@ struct ChocoShooter init_player(CP_Vector pos, float speed, float maxHealth, int
         .img = CP_Image_Load("Assets/choco_shooter.png"),
         .movement = STOPPED,
         .width = 100.f,
-        .bullets[0].isShooting = FALSE,
         .attackSpeed = fireRate,
         .attackPower = atk,
         .buffs = {0},
         .flickerState.isVisible = TRUE,
-        .exp = 0
+        .exp = 0,
     };
     player.height = get_preserved_heightf((float)CP_Image_GetWidth(player.img), (float)CP_Image_GetHeight(player.img), player.width);
     player.hitbox.width = player.width / 1.4f;
@@ -71,6 +72,8 @@ struct ChocoShooter init_player(CP_Vector pos, float speed, float maxHealth, int
 }
 
 void move_player(struct ChocoShooter *player, float dt, float level_width, float level_height) {
+    if (_walkSoundTimer < WALK_SOUND_INTERVAL)
+        _walkSoundTimer += dt;
     CP_Vector moveDirection = CP_Vector_Zero();
 
     // Player movement and setting movement
@@ -155,6 +158,8 @@ void move_player(struct ChocoShooter *player, float dt, float level_width, float
             _isDashing = FALSE;
     }
 
+    update_camera(*player, dt);
+
     // Use hitbox instead because images can have whitespaces in them
     // Add some padding
     float halfWidth = (player->hitbox.width / 2.0f) + 2.0f,
@@ -162,42 +167,16 @@ void move_player(struct ChocoShooter *player, float dt, float level_width, float
 
     player->pos.x = CP_Math_ClampFloat(player->pos.x, halfWidth, level_width - halfWidth);
     player->pos.y = CP_Math_ClampFloat(player->pos.y, halfHeight, level_height - halfHeight);
-}
 
-void render_player(struct ChocoShooter player, float alpha, struct Camera cam) {
-    CP_Vector vec = get_cam_pos_rel(player.pos, cam);
-    CP_Image_Draw(player.img, vec.x, vec.y, player.width, player.height, alpha);
-}
-
-void render_health_bar_with_interpolation(struct ChocoShooter* player, float dt, float meterX, float meterY, float meterWidth) {
-    // Health bar properties
-    float barWidth = meterWidth;      // Match the buff bar width
-    float barHeight = 10.0f;          // Slightly smaller than the buff bar
-    float barOffsetY = meterY - 15.0f; // Position slightly above the buff bar
-    static float interpolatedHealthWidth = 0.0f; // Smooth interpolation width
-
-    // Calculate target width based on current health percentage
-    float targetHealthWidth = (player->health / (float)player->maxHealth) * barWidth;
-
-    // Interpolate the width towards the target
-    if (interpolatedHealthWidth != targetHealthWidth) {
-        float delta = targetHealthWidth - interpolatedHealthWidth;
-        interpolatedHealthWidth += delta * 10.0f * dt; // Adjust speed
-        interpolatedHealthWidth = CP_Math_ClampFloat(interpolatedHealthWidth, 0, barWidth);
+    // Movement sounds
+    if (_walkSoundTimer >= WALK_SOUND_INTERVAL && player->movement != STOPPED) {
+        play_sound(SOUND_PLAYER_WALK);
+        _walkSoundTimer = 0.f;
     }
+}
 
-    // Render the background of the health bar (gray)
-    CP_Settings_Fill(CP_Color_Create(50, 50, 50, 255));
-    CP_Graphics_DrawRect(meterX, barOffsetY, barWidth, barHeight);
-
-    // Render the interpolated health bar (green to red gradient)
-    CP_Settings_Fill(CP_Color_Create(
-        (1.0f - interpolatedHealthWidth / barWidth) * 255, // Red increases as health decreases
-        (interpolatedHealthWidth / barWidth) * 255,        // Green decreases as health decreases
-        0,                                                // Blue stays constant
-        255                                               // Full opacity
-    ));
-    CP_Graphics_DrawRect(meterX, barOffsetY, interpolatedHealthWidth, barHeight);
+void render_player(struct ChocoShooter player, float alpha) {
+    CP_Image_Draw(player.img, player.pos.x, player.pos.y, player.width, player.height, alpha);
 }
 
 void render_health_bar(struct ChocoShooter* player, float dt, float windowWidth, float windowHeight, float meterX, float meterY, float meterWidth, float meterHeight) {
@@ -218,6 +197,8 @@ void render_health_bar(struct ChocoShooter* player, float dt, float windowWidth,
         interpolatedHealthWidth = CP_Math_ClampFloat(interpolatedHealthWidth, 0, barWidth);
     }
 
+    CP_Settings_RectMode(CP_POSITION_CORNER);
+
     // Render the background of the health bar (gray)
     CP_Settings_Fill(CP_Color_Create(50, 50, 50, 255));
     CP_Graphics_DrawRect(meterX, barOffsetY, barWidth, meterHeight);
@@ -225,82 +206,6 @@ void render_health_bar(struct ChocoShooter* player, float dt, float windowWidth,
     // Render the interpolated health bar (green to red gradient)
     CP_Settings_Fill(CP_Color_Create(225, 0, 0, 255));
     CP_Graphics_DrawRect(meterX, barOffsetY, interpolatedHealthWidth, meterHeight);
-}
-
-#pragma endregion
-
-#pragma region Bullet
-struct Bullet init_bullet(enum BulletType bulletType, float bulletSpeed, float bulletDiameter, int dmg, CP_Vector bulletDirection) {
-    struct Bullet bullet = {
-        .isShooting = TRUE,
-        .shootRange = 1000.f,
-        .bulletType = bulletType,
-        .speed = bulletSpeed,
-        .diameter = bulletDiameter,
-        .dmg = dmg,
-        .shootDirection = bulletDirection
-    };
-    return bullet;
-}
-
-void shoot_bullet(struct ChocoShooter* player, struct Bullet* bullet) {
-    // x is the min or max x of player (extreme left or right of player)
-    float playerWidth = player->width < 0 ? -player->width : player->width;
-    bullet->pos.x = (bullet->shootDirection.x < 0) ? player->pos.x - (playerWidth / 2) : player->pos.x + (playerWidth / 2);
-    bullet->pos.y = player->pos.y;
-
-    int bulletCount = 0;
-    // check if the bullet is still moving
-    for (int i = 0; (player->bullets[i].isShooting || player->bullets[i + 1].isShooting); i++) {
-
-        // pop first index if finish shooting (push to the back of the last active bullet)
-        // e.g.: 
-        // before: [b1, b2, b3, b4, b5]->.ishooting = [False, True, True, True, False]
-        // after: [b2, b3, b4, b1, b5]->.ishooting = [True, True, True, False, False] , bulletCount = 3
-    
-        // if first bullet finish shooting and second bullet still shooting
-        if (!(player->bullets[i].isShooting) && (player->bullets[i + 1].isShooting)) {
-            // swap bullet
-            struct Bullet temp = player->bullets[i];
-            player->bullets[i] = player->bullets[i + 1];
-            player->bullets[i + 1] = temp;
-        }
-
-        // get the count of the active bullet
-        bulletCount++;
-        if (i + 2 == MAX_BULLET_COUNT) {
-            bulletCount = player->bullets[i + 1].isShooting ? bulletCount + 1 : bulletCount;
-            break;
-        }
-    }
-
-    // assign the next bullet to the next active bullet slot 
-    if (bulletCount < MAX_BULLET_COUNT) {
-        player->bullets[bulletCount] = *bullet;
-    }
-}
-
-void update_pos_bullet(struct Bullet* bullet, float dt) {
-
-    if (bullet->isShooting) {
-        if (bullet->shootRange > 0) {
-            bullet->shootDirection = CP_Vector_Normalize(bullet->shootDirection);
-            bullet->pos.x += bullet->shootDirection.x * bullet->speed * dt;
-            bullet->pos.y += bullet->shootDirection.y * bullet->speed * dt;
-            bullet->shootRange -= bullet->speed * dt;
-        }
-        else {
-            bullet->isShooting = FALSE;
-        }
-    }
-}
-
-void render_bullet(struct Bullet bullet, struct Camera cam) {
-    if (bullet.isShooting) {
-        CP_Vector vec = get_cam_pos_rel(bullet.pos, cam);
-        CP_Settings_Fill(CP_Color_Create(113, 54, 0, 128));
-        CP_Graphics_DrawCircle(vec.x, vec.y, bullet.diameter);
-    }
 }
 
 #pragma endregion
@@ -357,29 +262,34 @@ void apply_buff(struct ChocoShooter* player, enum BuffType buff, struct Barrier*
    
          break;
 
-
     }
 }
 
 // Sidenote: EXP would refer to buff meter
 int update_buff_meter(struct ChocoShooter* player, int expGained) {
     player->exp += expGained;
-    printf("Current Exp: %d / %d\n", player->exp, playerMaxExp);
+    printf("Current Exp: %d / %d\n", player->exp, playerInstance.playerMaxExp);
 
     // Full or exceeded EXP
-    if (player->exp >= playerMaxExp) {
-        playerLevel++;
+    if (player->exp >= playerInstance.playerMaxExp) {
+        playerInstance.playerLevel++;
+        if (!_hasPlayedLevelUpMusic) {
+            play_sound_advanced(SOUND_MUSIC_LEVEL_UP, 1.f, 0);
+            _hasPlayedLevelUpMusic = true;
+        }
         // Do nothing if EXP == playerMaxExp
         // But do return the buff
         // Wrap around only if exceeding
-        if (player->exp > playerMaxExp) {
+        if (player->exp > playerInstance.playerMaxExp) {
             // Wrap around then increase maxExp
-            player->exp -= playerMaxExp;
-            playerMaxExp *= EXP_INCREASE_MULTIPLIER;
+            player->exp -= playerInstance.playerMaxExp;
+            playerInstance.playerMaxExp *= EXP_INCREASE_MULTIPLIER;
         }
         enum BuffType randomBuff = CP_Random_RangeInt(1, 6);
         return randomBuff;
     }
+    else if (_hasPlayedLevelUpMusic)
+        _hasPlayedLevelUpMusic = false;
 
     return 0; // Return 0 if no buff is granted
 }

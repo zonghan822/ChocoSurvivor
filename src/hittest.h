@@ -1,7 +1,7 @@
 #pragma once
-
 #include "cprocessing.h"
 #include "utils.h"
+#include <stdbool.h>
 
 #pragma region Click
 int is_mouse_on_rect(struct Rectangle rect, float click_x, float click_y);
@@ -18,4 +18,5 @@ int is_rect_at_boundary(struct Rectangle rect, float screen_w, float screen_h);
 
 #pragma region Hitbox
 void update_rect_hitbox(struct Rectangle* rect, float resized_width, float resized_height, CP_Vector pos);
+bool is_same_hitbox(struct Rectangle lhs, struct Rectangle rhs);
 #pragma endregion

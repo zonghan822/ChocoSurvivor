@@ -5,6 +5,8 @@
 #include "cprocessing.h"
 #include "enemy.h"
 #include "camera.h"
+#include "placeables.h"
+
 
 struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth, float speed, int maxHealth, int dmg) {
     srand((unsigned int)time(NULL));
@@ -18,6 +20,7 @@ struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth,
     chocoRoach.health = maxHealth;
     chocoRoach.maxHealth = maxHealth;
     chocoRoach.dmg = dmg;
+    chocoRoach.attackCooldown = 0.f;
     chocoRoach.moveDirection = CP_Vector_Zero();
     chocoRoach.currentState = ENEMY_STATE_IDLE;
     chocoRoach.hitbox.pos.x = chocoRoach.pos.x + ENEMY_HITBOX_OFFSET_X(chocoRoach.width);
@@ -25,12 +28,12 @@ struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth,
     chocoRoach.hitbox.width = 0.8 * chocoRoach.width;
     chocoRoach.hitbox.height = 0.75 * chocoRoach.height;
     chocoRoach.healthBarDisplayTime = 0.f;
-    chocoRoach.barrierAttack = -1;
-    chocoRoach.isTakingDamage = FALSE;
+    chocoRoach.isTakingDamage = false;
+    chocoRoach.barrierAttack = MAX_BARRIERS;
     return chocoRoach;
 }
 
-void enemy_move_to_target(struct ChocoRoach* roach, struct Rectangle hitbox, float dt, PathNode* grid, int nodeCount) {
+void enemy_move_to_target(struct ChocoRoach* roach, struct Rectangle hitbox, float dt, PathNode* grid, PathNode* gridNoBarrier, int nodeCount) {
     int pathArray[50];
     int pathNodeCount = 0;
     int startNodeIndex = get_nearest_node_index(grid, nodeCount, roach->pos);
@@ -45,47 +48,22 @@ void enemy_move_to_target(struct ChocoRoach* roach, struct Rectangle hitbox, flo
             // printf("Move Direction (%lf, %lf)\n", roach->moveDirection.x, roach->moveDirection.y);
         }
         else {
-            roach->moveDirection = CP_Vector_Zero();
-            printf("No path!\n");
+            int startNodeIndexNB = get_nearest_node_index(gridNoBarrier, nodeCount, roach->pos);
+            int endNodeIndexNB = get_nearest_node_index(gridNoBarrier, nodeCount, hitbox.pos);
+            find_astar_path(gridNoBarrier, nodeCount, startNodeIndexNB, endNodeIndexNB, pathArray);
+            roach->moveDirection = CP_Vector_Normalize((CP_Vector_Subtract(grid[pathArray[0]].pos, roach->pos)));
         }
     }
-    printf("Before Pos (%lf, %lf)\n", roach->pos.x, roach->pos.y);
     roach->width = (roach->moveDirection.x < 0.f && roach->width > 0.f) || (roach->moveDirection.x > 0.f && roach->width < 0.f) ? -roach->width: roach->width;
     roach->pos.x += roach->moveDirection.x * roach->speed * dt;
     roach->pos.y += roach->moveDirection.y * roach->speed * dt;
-    printf("After Pos (%lf, %lf)\n", roach->pos.x, roach->pos.y);
 }
 
-void render_enemy_health_bar(struct ChocoRoach* roach, struct Camera cam) {
-    
-    // get relative position after camera transformation
-    CP_Vector vec = get_cam_pos_rel(roach->pos, cam);
-
-    // Set position of health bar
-    float health_bar_w = roach->width;
-    float health_bar_h = 15.f;
-    float health_bar_x = vec.x - (health_bar_w / 2);
-    float health_bar_y = (vec.y) - (roach->height / 2) - 20.f;
-
-    CP_Settings_RectMode(CP_POSITION_CORNER);
-
-    // Draw health bar rect
-    CP_Settings_Fill(CP_Color_Create(255, 0, 0, 255));
-    CP_Graphics_DrawRect(health_bar_x, health_bar_y, health_bar_w, health_bar_h);
-
-    float health_gap_x = health_bar_x + ((float)roach->health / (float)roach->maxHealth) * health_bar_w;
-    float health_gap_w = health_bar_w * (1.f - ((float)roach->health / (float)roach->maxHealth));
-
-    CP_Settings_Fill(CP_Color_Create(100, 100, 100, 255));
-    CP_Graphics_DrawRect(health_gap_x, health_bar_y, health_gap_w, health_bar_h);
-}
-
-void render_enemies(struct ChocoRoach* roaches, struct Camera cam, int size) {
+void render_enemies(struct ChocoRoach* roaches, int size) {
     for (int i = 0; i < size; i++) {
         if (roaches[i].currentState != ENEMY_STATE_DIED) {
-            CP_Vector vec = get_cam_pos_rel(roaches[i].pos, cam);
             CP_Image_Draw(roaches[i].img,
-                vec.x, vec.y,
+                roaches[i].pos.x, roaches[i].pos.y,
                 roaches[i].width, roaches[i].height,
                 255);
             //printf("enemy %d pos: ( %lf, %lf )\n", i, roaches[i].pos.x, roaches[i].pos.y);
@@ -113,7 +91,7 @@ void sort_enemies(struct ChocoRoach* roaches, int size) {
 // return 1 if enemy is killed, 0 otherwise
 int enemy_take_damage(struct ChocoRoach* roach, int dmg) {
     roach->health = CP_Math_ClampInt(roach->health - dmg, 0, roach->maxHealth);
-    roach->isTakingDamage = TRUE;
+    roach->isTakingDamage = true;
     if (roach->health <= 0) {
         roach->currentState = ENEMY_STATE_DIED;
         // set element to 0
