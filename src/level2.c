@@ -29,7 +29,7 @@ CP_Image _cursor, _levelBg;
 
 float _windowWidth, _windowHeight;
 
-void level_one_init(void) {
+void level_two_init(void) {
     init_tilemap();
     _cursor = CP_Image_Load("Assets/cursor.png");
     CP_System_ShowCursor(FALSE);
@@ -43,7 +43,7 @@ void level_one_init(void) {
     play_sound_advanced(SOUND_MUSIC_NEW_MAP_LEVEL, 1.f, 0);
 }
 
-void level_one_update(void) {
+void level_two_update(void) {
     // PLACEHOLDER
     // TODO: REMOVE
     /*if (CP_Input_KeyTriggered(KEY_O)) {
@@ -108,7 +108,7 @@ void level_one_update(void) {
     }
 }
 
-void level_one_exit(void) {
+void level_two_exit(void) {
     CP_Image_Free(&_cursor);
     dispose_sounds();
     dispose_tilemap();
