@@ -1,7 +1,6 @@
 #include "hittest.h"
 #include <math.h>
 #include <cprocessing.h>
-#include <stdio.h>
 
 int is_mouse_on_rect(struct Rectangle rect, float click_x, float click_y) {
 	rect.pos.x -= (rect.width / 2);
@@ -48,9 +47,6 @@ int are_rects_intersecting(struct Rectangle a, struct Rectangle b) {
 }
 
 int are_circle_rect_intersecting(struct Circle circ, struct Rectangle rect) {
-	if (circ.diameter == 0.f)
-		return 0;
-
 	rect.pos.x -= (rect.width / 2);
 	rect.pos.y -= (rect.height / 2);
 
@@ -83,8 +79,4 @@ void update_rect_hitbox(struct Rectangle* rect, float resized_width, float resiz
 	rect->height = resized_height == 0.0f ? rect->height : resized_height;
 	rect->width = resized_width == 0.0f ? rect->width : resized_width;
 	rect->pos = pos;
-}
-
-bool is_same_hitbox(struct Rectangle lhs, struct Rectangle rhs) {
-	return (lhs.pos.x == rhs.pos.x) && (lhs.pos.y == rhs.pos.y) && (lhs.width == rhs.width) && (lhs.height == rhs.height);
 }

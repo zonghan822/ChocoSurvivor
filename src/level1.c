@@ -5,7 +5,6 @@
 
 #include "cprocessing.h"
 #include "mainmenu.h"
-#include "level.h"
 #include "level1.h"
 #include "level2.h"
 #include "player.h"
@@ -13,6 +12,7 @@
 #include "tower.h"
 #include "camera.h"
 #include "hittest.h"
+#include "enemy.h"
 #include "utils.h"
 #include "flicker.h"
 #include "placeables.h" 
@@ -21,23 +21,126 @@
 #include "button.h"
 #include "audio.h"
 #include "pausemenu.h"
-#include "gui.h"
-#include "projectile.h"
 
+#define MAX_ENEMY_COUNT 100
 #define LEVEL_WIDTH 2000.f
 #define LEVEL_HEIGHT 900.f
 
-CP_Image _cursor, _levelBg;
+CP_Image levelBg, cursor;
 
-float _windowWidth, _windowHeight;
+float windowWidth, windowHeight;
+
+#pragma region Spawn Properties
+static float spawnMinY = 0.f, spawnMaxY = 0.f, spawnWidth = 0.f;
+static float spawnInterval = 0.0f, spawnTimer = 0.f; // Spawn interval
+static float waveDelay = 0.f, waveTimer = 0.f; // Wave delay
+static int enemySpawnIndex = 0;
+static enum SpawnWave {
+    WAVE_1 = 1,
+    WAVE_2 = 2,
+    WAVE_3 = 3
+};
+static enum SpawnWave currentWave = WAVE_1;
+static int totalEnemies = 0;
+#pragma endregion
+
+#pragma region Enemy Properties
+static enum AttackTarget {
+    NONE,
+    PLAYER,
+    TOWER,
+    BARRIER
+};
+static enum AttackTarget enemyAttackTarget = NONE;
+static unsigned short int roachesMax = 0;
+static struct ChocoRoach roaches[MAX_ENEMY_COUNT];
+static int deadEnemies = 0;
+static struct Boss bossInstance;
+#pragma endregion
+
+#pragma region Player_Properties
+static struct DefenseTarget towerInstance;
+static struct Camera cam;
+static enum BulletType bulletType = NORMAL_BULLET;
+static float bulletSpeed = 650.f, bulletDiameter = 14.f;
+static float lastShotTime = 0;
+static bool enableShooting = false;
+static CP_Vector respawnVec;
+#pragma endregion
+
+#pragma region HP/BUFF bar properties
+static float meterX = 0;
+static float meterY = 0;
+static float meterWidth = 0;
+static float meterHeight = 0;
+static float fillSpeed = 0.0f;
+static float fillWidth = 0;
+static float targetFillWidth = 0;
+static int activeBuffSlot = 0;          // 0 means no active buff, 1-3 represent the buff slots
+//float activeBuffDuration = 0.0f;  // Duration in seconds for the active buff (10s when active)
+#pragma endregion
+
+#pragma region Barrier Properties
+static struct Rectangle playerBarricades[10];
+static enum BarrierState currentBarrierState = BARRIER_IDLE;
+static CP_Vector previewPosition;
+static CP_Vector finalPosition;
+static float barrierWidth = 0.0f;
+static float barrierHeight = 0.0f;
+static float barrier_rect_W = 0.0f, barrier_rect_H = 0.0f;
+#pragma endregion
+
+#pragma region Map Properties
+static struct Rectangle worldClips[100];
+static struct Rectangle playerClips[1];
+static struct Rectangle enemyClips[1];
+static int worldClipsCount = 0;
+static Grid enemyGrid, bossGrid;
+#pragma endregion
+
+#pragma region Ally Properties
+static enum AllyState currentAllyState = ALLY_IDLE;  // Declare and initialize
+static CP_Vector allyPreviewPosition;    // Declare and initialize
+static float allyH = 150.0f;
+static float allyW = 100.0f;
+#pragma endregion
+
+static struct Button menuButton;
+static bool isMovingToNextLevel;
+
+static void _render_cursor(float mouse_x, float mouse_y) {
+    CP_Settings_ImageMode(CP_POSITION_CORNER);
+    float cursorWidth = 60.f;
+    // 20.f is to correct its draw position with the actual cursor position
+    CP_Image_Draw(cursor, mouse_x - 20.f, mouse_y, cursorWidth,
+        get_preserved_heightf(CP_Image_GetWidth(cursor), CP_Image_GetHeight(cursor), cursorWidth), 255);
+    CP_Settings_ImageMode(CP_POSITION_CENTER);
+}
+
+// TODO: Move to utils
+static void _draw_shadows(float x, float y, float width, float height) {
+    CP_Vector vec = get_cam_pos_rel(CP_Vector_Set(x, y + (height / 2.f)), cam);
+    CP_Settings_StrokeWeight(0.f);
+    CP_Settings_Fill(CP_Color_Create(0, 0, 0, 105));
+    CP_Graphics_DrawEllipse(vec.x, vec.y, width, height / 3.5f);
+
+    // Reset
+    CP_Settings_StrokeWeight(3.f);
+}
+
+static int _get_exp(int health, float speed, int max_enemies) {
+    return (int)((float)(health / speed) * (float)(max_enemies / 10.f));
+}
 
 void level_one_init(void) {
-    init_tilemap();
-    _cursor = CP_Image_Load("Assets/cursor.png");
+    isMovingToNextLevel = false;
+    enableShooting = false;
+    cursor = CP_Image_Load("Assets/cursor.png");
     CP_System_ShowCursor(FALSE);
+    levelBg = CP_Image_Load("Assets/Levels/level1.png");
 
-    _windowWidth = (float)CP_System_GetWindowWidth();
-    _windowHeight = (float)CP_System_GetWindowHeight();
+    windowWidth = (float)CP_System_GetWindowWidth();
+    windowHeight = (float)CP_System_GetWindowHeight();
 
     bossInstance = init_boss_one(BOSS_WIDTH, 40.f, 4500, 60, 0.6f);
 
@@ -127,67 +230,133 @@ void level_one_init(void) {
     init_pause_menu(CP_System_GetWindowWidth(), CP_System_GetWindowHeight());
     menuButton = init_button_image(windowWidth / 2.f, windowHeight / 1.25f, 250.f, 75.f,
         BUTTON_TYPE_DEFAULT, "Back to Menu", CP_Color_Create(0, 0, 0, 255), 45.f);
-    _levelBg = init_level(GAME_LEVEL_ONE, LEVEL_WIDTH, LEVEL_HEIGHT, _windowWidth, _windowHeight);
 
     init_sounds();
-    play_sound_advanced(SOUND_MUSIC_NEW_MAP_LEVEL, 1.f, 0);
 }
 
 void level_one_update(void) {
     // PLACEHOLDER
     // TODO: REMOVE
-    /*if (CP_Input_KeyTriggered(KEY_O)) {
+    if (CP_Input_KeyTriggered(KEY_O)) {
         isMovingToNextLevel = true;
         CP_Engine_SetNextGameState(level_two_init, level_two_update, level_two_exit);
-    }*/
+    }
 
     float dt = CP_System_GetDt();
     float mouseX = CP_Input_GetMouseWorldX(),
         mouseY = CP_Input_GetMouseWorldY();
 
-    if (try_game_over(_windowWidth, _windowHeight, _cursor))
-        return; // Game over, so don't do anything else
+    // Handler for game over
+    // TODO: Complete this code
+    if (towerInstance.health <= 0) {
+        CP_Graphics_ClearBackground(CP_Color_Create(15, 15, 15, 255));
+        CP_Settings_TextSize(175.f);
+        CP_Settings_Fill(CP_Color_Create(220, 220, 220, 255));
+        CP_Font_DrawText("GAME OVER", windowWidth / 2.f, windowHeight / 2.4f);
+        render_button(menuButton);
+        update_button_state(&menuButton, mouseX, mouseY);
+        _render_cursor(mouseX, mouseY);
 
-    move_player(&playerInstance, dt, LEVEL_WIDTH, LEVEL_HEIGHT);
+        if (menuButton.state == BUTTON_STATE_CLICKED)
+            CP_Engine_SetNextGameState(main_menu_init, main_menu_update, main_menu_exit);
+        return;
+    }
 
-    // Function to TRY to proceed to next wave or level
-    // Function is slightly hardcoded
-    next_wave_or_level();
-   
-    // Render background
     CP_Graphics_ClearBackground(CP_Color_Create(170, 170, 170, 255));
 
     CP_Vector bgVec = CP_Vector_Set((LEVEL_WIDTH / 2), (LEVEL_HEIGHT / 2)),
         relBgVec = get_cam_pos_rel(bgVec, cam);
+    CP_Image_Draw(levelBg, relBgVec.x, relBgVec.y, LEVEL_WIDTH, LEVEL_HEIGHT, 255);
   
-    CP_Image_Draw(_levelBg, (LEVEL_WIDTH / 2.f), (LEVEL_HEIGHT / 2.f), LEVEL_WIDTH, LEVEL_HEIGHT, 255);
-
     enableShooting = true;
 
-    // Spawn enemies
-    spawn_enemies(dt);
+    CP_Vector mouseVec = get_world_pos_rel(CP_Vector_Set(mouseX, 0.f), cam);
+    if (playerInstance.pos.x > mouseVec.x)
+        playerInstance.width = playerInstance.width > 0 ? -playerInstance.width : playerInstance.width;
+    else
+        playerInstance.width = playerInstance.width < 0 ? -playerInstance.width : playerInstance.width;
 
-    // Player placeables
-    player_placeables(mouseX, mouseY, dt);
+    _draw_shadows(playerInstance.pos.x, playerInstance.pos.y, playerInstance.width, playerInstance.height);
+    for (int i = 0; roaches[i].currentState; i++) {
+        struct ChocoRoach roach = roaches[i];
+        _draw_shadows(roach.pos.x, roach.pos.y, roach.width, roach.height);
+    }
+    if (bossInstance.state != BOSS_STATE_UNSPAWNED) {
+        _draw_shadows(bossInstance.pos.x, bossInstance.pos.y, bossInstance.width, bossInstance.height);
+    }
 
-    /*********************************
-                 Rendering
-    **********************************/
-#if _DEBUG
-    //debug_render_grid();
-#endif
+    // draw_grid(enemyGrid.nodes, enemyGrid.nodeCount, cam); // draw enemy grid for debugging
+    // draw_grid(bossGrid.nodes, bossGrid.nodeCount, cam); // draw boss grid for debugging
+    
+    #pragma region Enemy Spawning Logic
+    // Enemy spawner
+    if (waveTimer >= waveDelay) {
+        if (spawnInterval > spawnTimer)
+            spawnTimer += dt;
+        else {
+            float enemySpeed = 0.f;
+            int enemyMaxHealth = 0, enemyDmg = 0;
+            float nextSpawnDelay = 0.f;
+            int nextSpawnDelayIndex = 0;
 
-    render_barriers();
-    render_allies();
-    render_entities(dt, mouseX);
-    render_health_bars(dt);
+            switch (currentWave) {
+            case WAVE_1:
+                spawnInterval = 1.65f;
+                enemySpeed = 90.f;
+                enemyMaxHealth = 175;
+                enemyDmg = 7;
+                roachesMax = 35;
+                nextSpawnDelayIndex = 6;
+                nextSpawnDelay = -0.05f;
+                break;
+            case WAVE_2:
+                spawnInterval = 1.35f;
+                enemySpeed = 105.f;
+                enemyMaxHealth = 250;
+                enemyDmg = 10;
+                roachesMax = 55;
+                nextSpawnDelayIndex = 6;
+                nextSpawnDelay = -0.15f;
+                break;
+            case WAVE_3:
+                if (bossInstance.state == BOSS_STATE_UNSPAWNED) {
+                    spawn_boss(&bossInstance, -650.f, 650.f);
+                    totalEnemies++;
+                }
+                spawnInterval = 1.65f;
+                enemySpeed = 75.f;
+                enemyMaxHealth = 300;
+                enemyDmg = 15;
+                roachesMax = 45;
+                nextSpawnDelayIndex = 6;
+                nextSpawnDelay = -0.65f;
+                break;
+            }
+            totalEnemies = roachesMax + (bossInstance.state == BOSS_STATE_UNSPAWNED ? 0 : 1);
+            if (enemySpawnIndex < roachesMax) {
+                roaches[enemySpawnIndex++] = init_enemy(spawnMinY, spawnMaxY, spawnWidth, enemySpeed, enemyMaxHealth, enemyDmg);
+                spawnTimer = 0.f;
+                printf("Enemy spawned. Spawn count: %d | Remaining: %d\n", enemySpawnIndex, enemySpawnIndex - deadEnemies);
 
-    /*********************************
-         Movement and Attack Logic
-    **********************************/
-    player_shoot(dt, enableShooting, mouseX, mouseY);
-    check_collision(); // For player
-    enemy_move_attack(dt);
+                // Increase delay a bit to not overwhelm the player
+                if (enemySpawnIndex % nextSpawnDelayIndex == 0)
+                    spawnTimer = nextSpawnDelay;
+            }
+        }
+    }
+    else {
+        #pragma region Show_Spawning_Time
+        char buffer[256];
+        sprintf_s(buffer, sizeof(buffer), "Enemy coming in %d !!!", (int)(waveDelay - waveTimer));
+        CP_Settings_Fill(CP_Color_Create(255, 0, 0, 255));
+        CP_Settings_TextSize(100.0f);
+        CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_CENTER, CP_TEXT_ALIGN_V_MIDDLE);
+        CP_Font_DrawText(buffer, (float)CP_System_GetWindowWidth() / 2, (float)CP_System_GetWindowHeight() * 1 / 5);
+        #pragma endregion
+        enemySpawnIndex = 0;
+        waveTimer += dt;
+    }
+    #pragma endregion
 
     #pragma region Enemy_Movement_Logic
     for (int i = 0; roaches[i].currentState; i++) {
@@ -753,22 +922,8 @@ void level_one_exit(void) {
     }
     if (bossInstance.img != NULL)
         CP_Image_Free(&bossInstance.img);
-    // Render any UI here
-    CP_Settings_ResetMatrix();
-    render_new_wave_counter(_windowWidth, _windowHeight);
-    render_ui(_windowWidth, _windowHeight, mouseX, mouseY);
-    render_cursor(_cursor);
-    apply_camera();
-
-    // Exit to Main Menu
-    if (CP_Input_KeyTriggered(KEY_Q)) {
-        CP_Engine_SetNextGameState(main_menu_init, main_menu_update, main_menu_exit);
-    }
-}
-
-void level_one_exit(void) {
-    CP_Image_Free(&_cursor);
     dispose_sounds();
-    dispose_tilemap();
-    dispose_resources();
+    dispose_button(&menuButton);
+    dispose_barriers();
+    dispose_allies();
 }

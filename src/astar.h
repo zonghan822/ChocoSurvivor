@@ -1,6 +1,7 @@
 #pragma once
 #include <stdbool.h>
 #include "cprocessing.h"
+#include "camera.h"
 
 #define MAX_NODE_SIZE 500
 
@@ -52,7 +53,7 @@ void init_grid(Grid* grid, float levelWidth, float levelHeight, float nodeWidth,
 *****************************************************/
 void update_grid(Grid* grid, struct Rectangle* worldClips, int clipsSize, struct Rectangle* enemyClips, int enemyClipsSize);
 
-void draw_grid(PathNode* grid, int nodeCount); // draw grid for debugging
+void draw_grid(PathNode* grid, int nodeCount, struct Camera cam); // draw grid for debugging
 
 /****************************************************
  @param grid - array containing the path node of the

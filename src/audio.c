@@ -1,15 +1,12 @@
 #include "audio.h"
 #include "cprocessing.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
 
 #pragma region CP_Sounds
 #pragma region SFX Group
 #pragma region Player Sounds
-static CP_Sound _soundPlayerWalk1, _soundPlayerWalk2, _soundPlayerWalk3, _soundPlayerWalk4, _soundPlayerWalk5,
+static CP_Sound _soundPlayerWalk,
 	_soundPlayerShoot,
-	_soundPlayerHurt1, _soundPlayerHurt2, _soundPlayerHurt3,
+	_soundPlayerHurt,
 	_soundPlayerDash,
 	_soundPlayerDie;
 #pragma endregion
@@ -47,60 +44,52 @@ static CP_Sound _soundUiButtonHover,
 #pragma endregion
 
 #pragma region Music Group
-static CP_Sound _soundMusicGameOver,
-	_soundMusicLevelUp,
-	_soundMusicNewWaveStart,
-	_soundMusicNewMapLevel;
 #pragma endregion
 #pragma endregion
 
 static CP_Sound _get_sound_object(enum SoundType sound_type) {
 	switch (sound_type) {
-		case SOUND_PLAYER_SHOOT:
+		case PLAYER_WALK:
+			return _soundPlayerWalk;
+		case PLAYER_SHOOT:
 			return _soundPlayerShoot;
-		case SOUND_PLAYER_DASH:
+		case PLAYER_HURT:
+			return _soundPlayerHurt;
+		case PLAYER_DASH:
 			return _soundPlayerDash;
-		case SOUND_PLAYER_DIE:
+		case PLAYER_DIE:
 			return _soundPlayerDie;
-		case SOUND_BARRICADE_HURT:
+		case BARRICADE_HURT:
 			return _soundBarricadeHurt;
-		case SOUND_BARRICADE_DIE:
+		case BARRICADE_DIE:
 			return _soundBarricadeDie;
-		case SOUND_ROACH_WALK:
+		case ROACH_WALK:
 			return _soundRoachWalk;
-		case SOUND_ROACH_ATTACK:
+		case ROACH_ATTACK:
 			return _soundRoachAttack;
-		case SOUND_ROACH_HURT:
+		case ROACH_HURT:
 			return _soundRoachHurt;
-		case SOUND_ROACH_DIE:
+		case ROACH_DIE:
 			return _soundRoachDie;
-		case SOUND_BOSS_WALK:
+		case BOSS_WALK:
 			return _soundBossWalk;
-		case SOUND_BOSS_ATTACK:
+		case BOSS_ATTACK:
 			return _soundBossAttack;
-		case SOUND_BOSS_ATTACK_WINDUP:
+		case BOSS_ATTACK_WINDUP:
 			return _soundBossAttackWindup;
-		case SOUND_BOSS_HURT:
+		case BOSS_HURT:
 			return _soundBossHurt;
-		case SOUND_BOSS_CHARGE:
+		case BOSS_CHARGE:
 			return _soundBossCharge;
-		case SOUND_BOSS_CHARGE_WINDUP:
+		case BOSS_CHARGE_WINDUP:
 			return _soundBossChargeWindup;
-		case SOUND_PROJECTILE_HIT:
+		case PROJECTILE_HIT:
 			return _soundProjectileHit;
-		case SOUND_MUSIC_GAME_OVER:
-			return _soundMusicGameOver;
-		case SOUND_MUSIC_LEVEL_UP:
-			return _soundMusicLevelUp;
-		case SOUND_MUSIC_NEW_WAVE_START:
-			return _soundMusicNewWaveStart;
-		case SOUND_MUSIC_NEW_MAP_LEVEL:
-			return _soundMusicNewMapLevel;
-		case SOUND_UI_BUTTON_HOVER:
+		case UI_BUTTON_HOVER:
 			return _soundUiButtonHover;
-		case SOUND_UI_BUTTON_BACK_CLICK:
+		case UI_BUTTON_BACK_CLICK:
 			return _soundUiButtonBackClick;
-		case SOUND_UI_BUTTON_CONFIRM_CLICK:
+		case UI_BUTTON_CONFIRM_CLICK:
 			return _soundUiButtonConfirmClick;
 			// Add more cases as needed for UI and Music sounds
 		default:
@@ -112,38 +101,35 @@ static CP_Sound _get_sound_object(enum SoundType sound_type) {
 static enum SoundGroup _get_sound_group(enum SoundType sound_type) {
 	switch (sound_type) {
 		// Player Sounds (SFX Group)
-		case SOUND_PLAYER_WALK:
-		case SOUND_PLAYER_SHOOT:
-		case SOUND_PLAYER_HURT:
-		case SOUND_PLAYER_DASH:
-		case SOUND_PLAYER_DIE:
-		case SOUND_PLAYER_BUILD_BARRICADE:
-		case SOUND_BARRICADE_HURT:
-		case SOUND_BARRICADE_DIE:
-		case SOUND_ROACH_WALK:
-		case SOUND_ROACH_ATTACK:
-		case SOUND_ROACH_HURT:
-		case SOUND_ROACH_DIE:
-		case SOUND_BOSS_WALK:
-		case SOUND_BOSS_ATTACK:
-		case SOUND_BOSS_ATTACK_WINDUP:
-		case SOUND_BOSS_HURT:
-		case SOUND_BOSS_CHARGE:
-		case SOUND_BOSS_CHARGE_WINDUP:
-		case SOUND_PROJECTILE_HIT:
+		case PLAYER_WALK:
+		case PLAYER_SHOOT:
+		case PLAYER_HURT:
+		case PLAYER_DASH:
+		case PLAYER_DIE:
+		case PLAYER_BUILD_BARRICADE:
+		case BARRICADE_HURT:
+		case BARRICADE_DIE:
+		case ROACH_WALK:
+		case ROACH_ATTACK:
+		case ROACH_HURT:
+		case ROACH_DIE:
+		case BOSS_WALK:
+		case BOSS_ATTACK:
+		case BOSS_ATTACK_WINDUP:
+		case BOSS_HURT:
+		case BOSS_CHARGE:
+		case BOSS_CHARGE_WINDUP:
+		case PROJECTILE_HIT:
 			return SOUNDGROUP_SFX;
 
 		// Music Group
-		case SOUND_MUSIC_GAME_OVER:
-		case SOUND_MUSIC_LEVEL_UP:
-		case SOUND_MUSIC_NEW_WAVE_START:
-		case SOUND_MUSIC_NEW_MAP_LEVEL:
-		    return SOUNDGROUP_MUSIC;
+		// case MUSIC_SOMETHING:
+		//     return SOUNDGROUP_MUSIC;
 
 		// UI Group
-		case SOUND_UI_BUTTON_HOVER:
-		case SOUND_UI_BUTTON_CONFIRM_CLICK:
-		case SOUND_UI_BUTTON_BACK_CLICK:
+		case UI_BUTTON_HOVER:
+		case UI_BUTTON_CONFIRM_CLICK:
+		case UI_BUTTON_BACK_CLICK:
 		    return SOUNDGROUP_UI;
 
 		default:
@@ -151,65 +137,11 @@ static enum SoundGroup _get_sound_group(enum SoundType sound_type) {
 	}
 }
 
-static void _play_sound_random(enum SoundType sound_type, float vol, enum SoundGroup sound_group) {
-	srand(time(NULL));
-	int randomNumber = 0;
-	
-	switch (sound_type) {
-		case SOUND_PLAYER_HURT:
-			randomNumber = rand() % 3;
-			switch (randomNumber) {
-				case 0:
-					CP_Sound_PlayAdvanced(_soundPlayerHurt1, vol, 1.f, 0, sound_group);
-					break;
-				case 1: 
-					CP_Sound_PlayAdvanced(_soundPlayerHurt2, vol, 1.f, 0, sound_group);
-					break;
-				default: 
-					CP_Sound_PlayAdvanced(_soundPlayerHurt3, vol, 1.f, 0, sound_group);
-					break;
-			}
-		case SOUND_PLAYER_WALK:
-			randomNumber = rand() % 5;
-			switch (randomNumber) {
-			case 0:
-				CP_Sound_PlayAdvanced(_soundPlayerWalk1, vol, 1.f, 0, sound_group);
-				break;
-			case 1:
-				CP_Sound_PlayAdvanced(_soundPlayerWalk2, vol, 1.f, 0, sound_group);
-				break;
-			case 2:
-				CP_Sound_PlayAdvanced(_soundPlayerWalk3, vol, 1.f, 0, sound_group);
-				break;
-			case 3:
-				CP_Sound_PlayAdvanced(_soundPlayerWalk4, vol, 1.f, 0, sound_group);
-				break;
-			default:
-				CP_Sound_PlayAdvanced(_soundPlayerWalk5, vol, 1.f, 0, sound_group);
-				break;
-			}
-
-	}
-}
-
 void init_sounds(void) {
 	// Audio files should be placed in /sounds/
 	// Player
-	_soundPlayerWalk1 = CP_Sound_Load("Assets/Sounds/footstep_grass_000.ogg");
-	_soundPlayerWalk2 = CP_Sound_Load("Assets/Sounds/footstep_grass_001.ogg");
-	_soundPlayerWalk3 = CP_Sound_Load("Assets/Sounds/footstep_grass_002.ogg");
-	_soundPlayerWalk4 = CP_Sound_Load("Assets/Sounds/footstep_grass_003.ogg");
-	_soundPlayerWalk5 = CP_Sound_Load("Assets/Sounds/footstep_grass_004.ogg");
-	_soundPlayerHurt1 = CP_Sound_Load("Assets/Sounds/select_003.ogg");
-	_soundPlayerHurt2 = CP_Sound_Load("Assets/Sounds/select_004.ogg");
-	_soundPlayerHurt3 = CP_Sound_Load("Assets/Sounds/select_005.ogg");
+	//_soundPlayerWalk = CP_Sound_Load(filePath);
 	//...
-
-	// Music
-	_soundMusicGameOver = CP_Sound_Load("Assets/Sounds/jingles_NES00.ogg");
-	_soundMusicLevelUp = CP_Sound_Load("Assets/Sounds/jingles_NES03.ogg");
-	_soundMusicNewWaveStart = CP_Sound_Load("Assets/Sounds/jingles_NES01.ogg");
-	_soundMusicNewMapLevel = CP_Sound_Load("Assets/Sounds/jingles_NES02.ogg");
 
 	// UI
 	_soundUiButtonHover = CP_Sound_Load("Assets/Sounds/bong_001.ogg");
@@ -218,23 +150,16 @@ void init_sounds(void) {
 }
 
 void play_sound(enum SoundType sound_type) {
+	CP_Sound snd = _get_sound_object(sound_type);
 	enum SoundGroup grp = _get_sound_group(sound_type);
+
+	if (snd == NULL || grp == SOUNDGROUP_NONE) return;
 	float vol = CP_Sound_GetGroupVolume(grp);
 
-	if (grp == SOUNDGROUP_NONE) return;
-
-	// Handle ones with random sounds
-	if (sound_type == SOUND_PLAYER_HURT || sound_type == SOUND_PLAYER_WALK)
-		_play_sound_random(sound_type, vol, grp);
-	else {
-		CP_Sound snd = _get_sound_object(sound_type);
-
-		if (snd == NULL) return;
-		if (grp != SOUNDGROUP_MUSIC)
-			CP_Sound_PlayAdvanced(snd, vol, 1.f, 0, grp);
-		else
-			CP_Sound_PlayMusic(snd);
-	}
+	if (grp != SOUNDGROUP_MUSIC)
+		CP_Sound_PlayAdvanced(snd, vol, 1.f, 0, grp);
+	else
+		CP_Sound_PlayMusic(snd);
 }
 
 void play_sound_advanced(enum SoundType sound_type, float volume_scale, int loop) {
@@ -276,15 +201,9 @@ void dispose_sounds(void) {
 	stop_sounds();
 
 	// Player Sounds
-	CP_Sound_Free(&_soundPlayerWalk1);
-	CP_Sound_Free(&_soundPlayerWalk2);
-	CP_Sound_Free(&_soundPlayerWalk3);
-	CP_Sound_Free(&_soundPlayerWalk4);
-	CP_Sound_Free(&_soundPlayerWalk5);
+	CP_Sound_Free(&_soundPlayerWalk);
 	CP_Sound_Free(&_soundPlayerShoot);
-	CP_Sound_Free(&_soundPlayerHurt1);
-	CP_Sound_Free(&_soundPlayerHurt2);
-	CP_Sound_Free(&_soundPlayerHurt3);
+	CP_Sound_Free(&_soundPlayerHurt);
 	CP_Sound_Free(&_soundPlayerDash);
 	CP_Sound_Free(&_soundPlayerDie);
 

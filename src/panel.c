@@ -1,35 +1,45 @@
 #include "cprocessing.h"
 #include "hittest.h"
 #include "panel.h"
-#include "gui.h"
 
-void render_panel(float width, float height, float x, float y) {
-    width = resize_by_divisor(width, 4);
-    height = resize_by_divisor(height, 4);
+struct Panel init_panel(float width, float height, float x, float y) {
+    struct Panel panel = {
+        .rect = {
+            .width = resize_by_divisor(width, 4),
+            .height = resize_by_divisor(height, 4),
+            .pos = CP_Vector_Set(x, y)
+        },
+        .tileMap = CP_Image_Load("Assets/GUI/tilemap_large.png"),
+    };
+
+    return panel;
+}
+
+void render_panel(struct Panel panel) {
     float uStart = 33.f, vStart = 0;
 
     float leftWidth, rightWidth, topHeight, bottomHeight;
     leftWidth = rightWidth = topHeight = bottomHeight = 16.0f;
 
     // Center stretchable area — remaining part after accounting for corners and edges
-    float centerWidth = width - (leftWidth + rightWidth),
-        centerHeight = height - (topHeight + bottomHeight);
+    float centerWidth = panel.rect.width - (leftWidth + rightWidth),
+        centerHeight = panel.rect.height - (topHeight + bottomHeight);
 
     float uCoords[4] = { 0.0f, 8.0f, 24.0f, 32.0f },  // Left, center, right bounds for U
         vCoords[4] = { 0.0f, 8.0f, 24.0f, 32.0f };    // Top, center, bottom bounds for V
 
     float xPos[4] = {
-        x - width / 2.0f,               // Left
-        x - width / 2.0f + leftWidth,   // Center start
-        x + width / 2.0f - rightWidth,  // Center end (right)
-        x + width / 2.0f                // Right
+        panel.rect.pos.x - panel.rect.width / 2.0f,               // Left
+        panel.rect.pos.x - panel.rect.width / 2.0f + leftWidth,   // Center start
+        panel.rect.pos.x + panel.rect.width / 2.0f - rightWidth,  // Center end (right)
+        panel.rect.pos.x + panel.rect.width / 2.0f                // Right
     };
 
     float yPos[4] = {
-        y - height / 2.0f,                // Top
-        y - height / 2.0f + topHeight,    // Center start
-        y + height / 2.0f - bottomHeight, // Center end (bottom)
-        y + height / 2.0f                 // Bottom
+        panel.rect.pos.y - panel.rect.height / 2.0f,                // Top
+        panel.rect.pos.y - panel.rect.height / 2.0f + topHeight,    // Center start
+        panel.rect.pos.y + panel.rect.height / 2.0f - bottomHeight, // Center end (bottom)
+        panel.rect.pos.y + panel.rect.height / 2.0f                 // Bottom
     };
 
     for (int row = 0; row < 3; row++) {
@@ -50,7 +60,11 @@ void render_panel(float width, float height, float x, float y) {
                 v1 = vStart + vCoords[row + 1];
 
             // Draw the patch
-            CP_Image_DrawSubImage(tilemapLarge, drawX, drawY, patchWidth, patchHeight, u0, v0, u1, v1, 255);
+            CP_Image_DrawSubImage(panel.tileMap, drawX, drawY, patchWidth, patchHeight, u0, v0, u1, v1, 255);
         }
     }
+}
+
+void dispose_panel(struct Panel* panel) {
+    CP_Image_Free(panel->tileMap);
 }

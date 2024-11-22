@@ -45,12 +45,14 @@ struct Rectangle get_tower_hitbox(struct DefenseTarget tower) {
 	return rect;
 }
 
-void render_tower(struct DefenseTarget tower) {
+void render_tower(struct DefenseTarget tower, struct Camera cam) {
+	CP_Vector vec = get_cam_pos_rel(tower.pos, cam);
+
 	// PLACEHOLDER
 	CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255));
 	CP_Settings_RectMode(CP_POSITION_CENTER);
-	CP_Graphics_DrawRect(tower.pos.x, tower.pos.y, tower.width, tower.height);
+	CP_Graphics_DrawRect(vec.x, vec.y, tower.width, tower.height);
 	CP_Settings_TextSize(30);
 	CP_Settings_Fill(CP_Color_Create(255, 255, 255, 255));
-	CP_Font_DrawText("TOWER", tower.pos.x, tower.pos.y);
+	CP_Font_DrawText("TOWER", vec.x, vec.y);
 }
