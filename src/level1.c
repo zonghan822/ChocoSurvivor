@@ -124,7 +124,7 @@ void level_one_init(void) {
     update_grid(&bossGrid, worldClips, worldClipsCount, enemyClips, 1);
     #pragma endregion
 
-    init_pause_menu(_windowWidth, _windowHeight);
+    init_pause_menu(CP_System_GetWindowWidth(), CP_System_GetWindowHeight());
     menuButton = init_button_image(windowWidth / 2.f, windowHeight / 1.25f, 250.f, 75.f,
         BUTTON_TYPE_DEFAULT, "Back to Menu", CP_Color_Create(0, 0, 0, 255), 45.f);
     _levelBg = init_level(GAME_LEVEL_ONE, LEVEL_WIDTH, LEVEL_HEIGHT, _windowWidth, _windowHeight);
@@ -389,6 +389,11 @@ void level_one_update(void) {
         bossInstance.secondaryAttack(&bossInstance, &playerInstance, dt);
     #pragma endregion
 
+ if (CP_Input_KeyTriggered(KEY_Q)) {
+    for (int i = 0; i < roachesMax; i++) {
+            pause_menu(&roaches[i], windowWidth, windowHeight);     
+    }
+ }
 
     for (int i = 0; i < roachesMax; i++) {
         if (roaches[i].currentState) { // if enemy is alive
@@ -669,12 +674,6 @@ void level_one_update(void) {
         toggle_pause_menu();
     }
 
-    if (isPaused) {
-        update_pause_menu(mouseX, mouseY);
-        render_pause_menu();
-        return; // Skip the rest of the game logic
-    }
-
     // Set targetFillWidth based on updated exp
     targetFillWidth = (playerInstance.exp / (float)playerMaxExp) * meterWidth;
     fillWidth = CP_Math_ClampFloat(fillWidth, 0, meterWidth); // Clamp to the actual visual width
@@ -760,6 +759,16 @@ void level_one_exit(void) {
     render_ui(_windowWidth, _windowHeight, mouseX, mouseY);
     render_cursor(_cursor);
     apply_camera();
+
+    // Exit to Main Menu
+    if (CP_Input_KeyTriggered(KEY_Q)) {
+        CP_Engine_SetNextGameState(main_menu_init, main_menu_update, main_menu_exit);
+    }
+}
+
+void level_one_exit(void) {
+    CP_Image_Free(&_cursor);
     dispose_sounds();
+    dispose_tilemap();
     dispose_resources();
 }
