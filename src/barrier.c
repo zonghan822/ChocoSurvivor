@@ -265,7 +265,7 @@ void check_barrier_collision(struct ChocoRoach* roach, float dt) {
 
             if (barriers[i].health > 0 && barriers[i].cooldownTimer <= 0) {
                 barriers[i].health -= roach->dmg;
-                barriers[i].cooldownTimer = 500.0f;  // Cooldown time in milliseconds
+                barriers[i].cooldownTimer = 50000.0f;  // Cooldown time in milliseconds
           //      printf("DEBUG: Barrier %d took damage. New health: %d\n", i, barriers[i].health);
             }
 
