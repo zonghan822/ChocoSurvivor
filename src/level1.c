@@ -227,7 +227,6 @@ void level_one_init(void) {
     update_grid(&bossGrid, worldClips, worldClipsCount, enemyClips, 1);
     #pragma endregion
 
-    init_pause_menu(CP_System_GetWindowWidth(), CP_System_GetWindowHeight());
     menuButton = init_button_image(windowWidth / 2.f, windowHeight / 1.25f, 250.f, 75.f,
         BUTTON_TYPE_DEFAULT, "Back to Menu", CP_Color_Create(0, 0, 0, 255), 45.f);
 
@@ -267,7 +266,7 @@ void level_one_update(void) {
     CP_Vector bgVec = CP_Vector_Set((LEVEL_WIDTH / 2), (LEVEL_HEIGHT / 2)),
         relBgVec = get_cam_pos_rel(bgVec, cam);
     CP_Image_Draw(levelBg, relBgVec.x, relBgVec.y, LEVEL_WIDTH, LEVEL_HEIGHT, 255);
-  
+
     enableShooting = true;
 
     CP_Vector mouseVec = get_world_pos_rel(CP_Vector_Set(mouseX, 0.f), cam);
@@ -564,7 +563,7 @@ void level_one_update(void) {
     }
  }
 
-    for (int i = 0; i < roachesMax; i++) {
+    for (int i = 0; i < roachesMax; i++) {i
         if (roaches[i].currentState) { // if enemy is alive
             #pragma region Enemy Movement And Attack    
             switch (roaches[i].currentState) {
@@ -837,12 +836,8 @@ void level_one_update(void) {
                 }
             }
         }
-    } 
-    
-    if (CP_Input_KeyTriggered(KEY_Q)) {
-        toggle_pause_menu();
     }
-
+   
     // Set targetFillWidth based on updated exp
     targetFillWidth = (playerInstance.exp / (float)playerMaxExp) * meterWidth;
     fillWidth = CP_Math_ClampFloat(fillWidth, 0, meterWidth); // Clamp to the actual visual width
@@ -855,7 +850,6 @@ void level_one_update(void) {
         fillWidth -= fillSpeed * dt;
         if (fillWidth < targetFillWidth) fillWidth = targetFillWidth;
     }
-    update_pause_menu(CP_Input_GetMouseX(), CP_Input_GetMouseY());
 
     render_health_bar(&playerInstance, dt, windowWidth, windowHeight, meterX, meterY, meterWidth, meterHeight);
 
@@ -901,9 +895,12 @@ void level_one_update(void) {
         CP_Font_DrawText(currentWaveStr, windowWidth / 2.f, 50.f);
     }
     #pragma endregion
-    render_pause_menu();
+
     // Exit to Main Menu
-     
+     /*
+    if (CP_Input_KeyTriggered(KEY_Q)) {
+        CP_Engine_SetNextGameState(main_menu_init, main_menu_update, main_menu_exit);
+    }*/
 
     _render_cursor(mouseX, mouseY);
 }
@@ -913,7 +910,6 @@ void level_one_exit(void) {
         CP_Image_Free(&playerInstance.img);
     CP_Image_Free(&levelBg);
     CP_Image_Free(&cursor);
-    dispose_tilemap();
 
     for (int i = 0; i < roachesMax; i++) {
         struct ChocoRoach roach = roaches[i];
