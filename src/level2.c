@@ -59,7 +59,6 @@ static struct Boss bossInstance;
 
 #pragma region Player_Properties
 static struct DefenseTarget towerInstance;
-static struct Camera cam;
 static enum BulletType bulletType = NORMAL_BULLET;
 static float bulletSpeed = 650.f, bulletDiameter = 14.f;
 static float lastShotTime = 0;
@@ -117,10 +116,9 @@ static void _render_cursor(float mouse_x, float mouse_y) {
 
 // TODO: Move to utils
 static void _draw_shadows(float x, float y, float width, float height) {
-    CP_Vector vec = get_cam_pos_rel(CP_Vector_Set(x, y + (height / 2.f)), cam);
     CP_Settings_StrokeWeight(0.f);
     CP_Settings_Fill(CP_Color_Create(0, 0, 0, 105));
-    CP_Graphics_DrawEllipse(vec.x, vec.y, width, height / 3.5f);
+    CP_Graphics_DrawEllipse(x, y + (height / 2.f), width, height / 3.5f);
 
     // Reset
     CP_Settings_StrokeWeight(3.f);
@@ -130,772 +128,775 @@ static int _get_exp(int health, float speed, int max_enemies) {
     return (int)((float)(health / speed) * (float)(max_enemies / 10.f));
 }
 
-
 void level_two_init(void) {
-    init_tilemap();
-    enableShooting = false;
-    cursor = CP_Image_Load("Assets/cursor.png");
-    CP_System_ShowCursor(FALSE);
-    levelBg = CP_Image_Load("Assets/Levels/level2.png");
 
-    windowWidth = (float)CP_System_GetWindowWidth();
-    windowHeight = (float)CP_System_GetWindowHeight();
-
-    bossInstance = init_boss_two(BOSS_WIDTH, 65.f, 12500, 100, 1.1f);
-
-    #pragma region Defense_Target_Init
-    // Init Defense Target Properties
-    towerInstance.maxHealth = towerInstance.health = 3;
-    towerInstance.height = 300.0;
-    towerInstance.width = 150.0;
-    towerInstance.pos = CP_Vector_Set(LEVEL_WIDTH / 1.25f, LEVEL_HEIGHT / 1.55f);
-    towerInstance.flickerState.isVisible = TRUE;
-    #pragma endregion
-
-    #pragma region Player_Init
-    // Init Player Properties
-    respawnVec = CP_Vector_Set(towerInstance.pos.x / 1.15f, towerInstance.pos.y);
-    playerInstance.pos = respawnVec;
-    bulletType = NORMAL_BULLET;
-    //  buff bar properties
-    meterX = windowWidth - 150;
-    meterY = windowHeight - 50;
-    meterWidth = 100;
-    meterHeight = 20;
-    fillSpeed = 120.0f;
-    #pragma endregion
-
-    allyH = 150.0f;
-    allyW = 100.0f;
-
-    #pragma region Barrier_Init
-    init_barrier_images();
-    init_ally_images();
-    currentState = BARRIER_IDLE;
-    barrierWidth = 50.0f;
-    barrierHeight = 100.0f;
-    barrier_rect_W = 50.0f;
-    barrier_rect_H = 50.0f;
-    #pragma endregion
-
-    #pragma region Enemy_Spawn_Init
-    memset(roaches, 0, sizeof(roaches));
-    // Reset spawn properties
-    waveDelay = 5.0f; // Give player some buffer
-    currentWave = WAVE_1;
-    enemySpawnIndex = 0;
-    waveTimer = 0.f;
-    spawnTimer = 0.f;
-    deadEnemies = 0;
-    spawnMinY = LEVEL_HEIGHT * 1 / 5;
-    spawnMaxY = LEVEL_HEIGHT * 4 / 5;
-    spawnWidth = 300.f;
-    #pragma endregion
-
-    #pragma region Obstacles_Init
-    // enemy clips
-    struct Rectangle ememyClip1 = { .pos = CP_Vector_Set(883.5f, 577.f), .width = 303.f, .height = 444.f };
-    enemyClips[0] = ememyClip1;
-
-    // store non-movable path in worldClips
-    worldClips[0] = get_tower_hitbox(towerInstance);
-    struct Rectangle holeClip = { .pos = CP_Vector_Set(1072.f, 171.5f), .width = 2144.f, .height = 31.f };
-    struct Rectangle fountainClip = { .pos = CP_Vector_Set(1369.5f, 383.5f), .width = 253.f, .height = 361.f };
-    worldClips[1] = holeClip;
-    worldClips[2] = fountainClip;
-    worldClipsCount = 3;
-    #pragma endregion
-
-    cam = init_camera(playerInstance, windowWidth, windowHeight);
-
-    #pragma region Map_Grid_Init
-    CP_Image enemyImg = CP_Image_Load("Assets/choco_roach.png");
-    CP_Image bossImg = CP_Image_Load("Assets/boss_lvl1.png");
-    float enemyHeight = get_preserved_heightf((float)CP_Image_GetWidth(enemyImg), (float)CP_Image_GetHeight(enemyImg), ENEMY_WIDTH);
-    float bossHeight = get_preserved_heightf((float)CP_Image_GetWidth(bossImg), (float)CP_Image_GetHeight(bossImg), BOSS_WIDTH);
-    init_grid(&enemyGrid, LEVEL_WIDTH, LEVEL_HEIGHT, ENEMY_WIDTH, enemyHeight);
-    init_grid(&bossGrid, LEVEL_WIDTH, LEVEL_HEIGHT, BOSS_WIDTH, bossHeight);
-    update_grid(&enemyGrid, worldClips, worldClipsCount, enemyClips, 1);
-    update_grid(&bossGrid, worldClips, worldClipsCount, enemyClips, 1);
-
-    init_grid(&enemyGridNB, LEVEL_WIDTH, LEVEL_HEIGHT, ENEMY_WIDTH, enemyHeight);
-    init_grid(&bossGridNB, LEVEL_WIDTH, LEVEL_HEIGHT, BOSS_WIDTH, bossHeight);
-    update_grid(&enemyGridNB, worldClips, worldClipsCount, enemyClips, 1);
-    update_grid(&bossGridNB, worldClips, worldClipsCount, enemyClips, 1);
-    #pragma endregion
-
-    menuButton = init_button(windowWidth / 2.f, windowHeight / 1.25f, 250.f, 75.f,
-        BUTTON_TYPE_DEFAULT, "Back to Menu", CP_Color_Create(0, 0, 0, 255), 45.f);
-
-    init_sounds();
-    play_sound_advanced(SOUND_MUSIC_NEW_MAP_LEVEL, 1.f, 0);
 }
 
 void level_two_update(void) {
-    float dt = CP_System_GetDt();
-    float mouseX = CP_Input_GetMouseWorldX(),
-        mouseY = CP_Input_GetMouseWorldY();
 
-    // PH
-    // Handler for game over
-    if (towerInstance.health <= 0) {
-        CP_Graphics_ClearBackground(CP_Color_Create(15, 15, 15, 255));
-        CP_Settings_TextSize(175.f);
-        CP_Settings_Fill(CP_Color_Create(220, 220, 220, 255));
-        CP_Font_DrawText("GAME OVER", windowWidth / 2.f, windowHeight / 2.4f);
-        render_button(menuButton);
-        update_button_state(&menuButton, mouseX, mouseY);
-        _render_cursor(mouseX, mouseY);
-
-        if (menuButton.state == BUTTON_STATE_CLICKED)
-            CP_Engine_SetNextGameState(main_menu_init, main_menu_update, main_menu_exit);
-        return;
-    }
-
-    CP_Graphics_ClearBackground(CP_Color_Create(170, 170, 170, 255));
-
-    CP_Vector bgVec = CP_Vector_Set((LEVEL_WIDTH / 2), (LEVEL_HEIGHT / 2)),
-        relBgVec = get_cam_pos_rel(bgVec, cam);
-    CP_Image_Draw(levelBg, relBgVec.x, relBgVec.y, LEVEL_WIDTH, LEVEL_HEIGHT, 255);
-
-    enableShooting = true;
-
-    CP_Vector mouseVec = get_world_pos_rel(CP_Vector_Set(mouseX, 0.f), cam);
-    if (playerInstance.pos.x > mouseVec.x)
-        playerInstance.width = playerInstance.width > 0 ? -playerInstance.width : playerInstance.width;
-    else
-        playerInstance.width = playerInstance.width < 0 ? -playerInstance.width : playerInstance.width;
-
-    _draw_shadows(playerInstance.pos.x, playerInstance.pos.y, playerInstance.width, playerInstance.height);
-    for (int i = 0; roaches[i].currentState; i++) {
-        struct ChocoRoach roach = roaches[i];
-        _draw_shadows(roach.pos.x, roach.pos.y, roach.width, roach.height);
-    }
-    if (bossInstance.state != BOSS_STATE_UNSPAWNED) {
-        _draw_shadows(bossInstance.pos.x, bossInstance.pos.y, bossInstance.width, bossInstance.height);
-    }
-
-    // draw_grid(enemyGrid.nodes, enemyGrid.nodeCount, cam); // draw enemy grid for debugging
-    // draw_grid(bossGrid.nodes, bossGrid.nodeCount, cam); // draw boss grid for debugging
-
-    #pragma region Enemy Spawning Logic
-    // Enemy spawner
-    if (waveTimer >= waveDelay) {
-        if (spawnInterval > spawnTimer)
-            spawnTimer += dt;
-        else {
-            float enemySpeed = 0.f;
-            int enemyMaxHealth = 0, enemyDmg = 0;
-            float nextSpawnDelay = 0.f;
-            int nextSpawnDelayIndex = 0;
-
-            switch (currentWave) {
-            case WAVE_1:
-                spawnInterval = 1.65f;
-                enemySpeed = 90.f;
-                enemyMaxHealth = 175;
-                enemyDmg = 20;
-                roachesMax = 35;
-                nextSpawnDelayIndex = 6;
-                nextSpawnDelay = -0.05f;
-                break;
-            case WAVE_2:
-                spawnInterval = 1.35f;
-                enemySpeed = 105.f;
-                enemyMaxHealth = 250;
-                enemyDmg = 30;
-                roachesMax = 55;
-                nextSpawnDelayIndex = 6;
-                nextSpawnDelay = -0.15f;
-                break;
-            case WAVE_3:
-                if (bossInstance.state == BOSS_STATE_UNSPAWNED) {
-                    spawn_boss(&bossInstance, -650.f, 650.f);
-                    totalEnemies++;
-                }
-                spawnInterval = 1.65f;
-                enemySpeed = 75.f;
-                enemyMaxHealth = 300;
-                enemyDmg = 30;
-                roachesMax = 45;
-                nextSpawnDelayIndex = 6;
-                nextSpawnDelay = -0.55f;
-                break;
-            }
-            totalEnemies += roachesMax;
-            if (enemySpawnIndex < roachesMax) {
-                roaches[enemySpawnIndex++] = init_enemy(spawnMinY, spawnMaxY, spawnWidth, enemySpeed, enemyMaxHealth, enemyDmg);
-                spawnTimer = 0.f;
-                printf("Enemy spawned. Spawn count: %d | Remaining: %d\n", enemySpawnIndex, enemySpawnIndex - deadEnemies);
-
-                // Increase delay a bit to not overwhelm the player
-                if (enemySpawnIndex % nextSpawnDelayIndex == 0)
-                    spawnTimer = nextSpawnDelay;
-            }
-        }
-    }
-    else {
-        #pragma region Show_Spawning_Time
-        char buffer[256];
-        sprintf_s(buffer, sizeof(buffer), "Enemy coming in %d !!!", (int)(waveDelay - waveTimer));
-        CP_Settings_Fill(CP_Color_Create(255, 0, 0, 255));
-        CP_Settings_TextSize(100.0f);
-        CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_CENTER, CP_TEXT_ALIGN_V_MIDDLE);
-        CP_Font_DrawText(buffer, (float)CP_System_GetWindowWidth() / 2, (float)CP_System_GetWindowHeight() * 1 / 5);
-        #pragma endregion
-        enemySpawnIndex = 0;
-        waveTimer += dt;
-    }
-    #pragma endregion
-
-    #pragma region Enemy_Movement_Logic
-    for (int i = 0; roaches[i].currentState; i++) {
-        // Attack defense target when collide
-        if (are_rects_intersecting(roaches[i].hitbox, get_tower_hitbox(towerInstance))) {
-            roaches[i].currentState = ENEMY_STATE_ATTACKING;
-            enemyAttackTarget = TOWER;
-            continue;
-        }
-        // Attack player when collide
-        if (are_rects_intersecting(roaches[i].hitbox, playerInstance.hitbox)) { // When collide attack player
-            roaches[i].currentState = ENEMY_STATE_ATTACKING;
-            enemyAttackTarget = PLAYER;
-            continue;
-        }
-
-        //if (barrierAttack) {
-        //    roaches[i].currentState = STATE_ATTACKING;
-        //    enemyAttackTarget = BARRIER;
-        //}
-
-        struct Circle radarRoach = { .pos = roaches[i].pos, .diameter = 5 * (float)fabs(roaches[i].width) }; // define enemy radar
-        if (are_circle_rect_intersecting(radarRoach, playerInstance.hitbox)) { // Check enemy near with player
-            roaches[i].currentState = ENEMY_STATE_MOVING_TO_PLAYER;
-            continue;
-        }
-
-        roaches[i].currentState = ENEMY_STATE_MOVING_TO_TOWER;
-    }
-    #pragma endregion
-
-    move_player(&playerInstance, dt, LEVEL_WIDTH, LEVEL_HEIGHT);
-    update_camera(&cam, playerInstance, LEVEL_WIDTH, LEVEL_HEIGHT);
-
-    // Prevent player and bullets move into non-movable path
-    for (int i = 0; i < worldClipsCount; i++) {
-        struct Rectangle worldClip = worldClips[i];
-        if (are_rects_intersecting(playerInstance.hitbox, worldClip))
-            clamp_pos_clip_rel(&playerInstance.pos, playerInstance.hitbox, worldClip);
-        for (int j = 0; j < MAX_BULLET_COUNT; j++) {
-            if (playerInstance.bullets[j].isShooting) {
-                struct Circle bullet = { .pos = playerInstance.bullets[j].pos, .diameter = playerInstance.bullets[j].diameter };
-                if (are_circle_rect_intersecting(bullet, worldClip)) { // bullet cannot go through walls and barricades...
-                    playerInstance.bullets[j].isShooting = FALSE;
-                }
-            }
-        }
-    }
-
-    #pragma region Place_Barriers
-    switch (currentState) {
-    case BARRIER_IDLE:
-        // Start preview mode when 'P' is pressed
-        if (get_barrier_count() < MAX_BARRIERS && CP_Input_KeyTriggered(KEY_P)) {
-            currentState = BARRIER_PREVIEW;
-        }
-        break;
-
-    case BARRIER_PREVIEW:
-        enableShooting = false;
-        // Update the preview position to follow the mouse
-        previewPosition = get_world_pos_rel(CP_Vector_Set(mouseX, mouseY), cam);
-
-        // Draw translucent preview rectangle
-        CP_Settings_RectMode(CP_POSITION_CENTER);
-        CP_Settings_Fill(CP_Color_Create(0, 0, 255, 128));  // Semi-transparent blue
-        CP_Graphics_DrawRect(mouseX, mouseY, barrierWidth, barrierHeight);
-
-        // Place the barrier on mouse click
-        if (CP_Input_MouseTriggered(MOUSE_BUTTON_LEFT)) {
-            int barrierIndex = get_barrier_count();
-            if (barrierIndex < MAX_BARRIERS) {
-                // Set the barrier properties
-                set_barrier_properties(barrierIndex, previewPosition, barrierWidth, barrierHeight, BARRIER_INITIAL_HEALTH);
-                increment_barrier_count();
-                currentState = BARRIER_IDLE;
-
-                // store the barrier in worldClips
-                worldClips[worldClipsCount++] = barriers[barrierIndex].hitbox;
-                update_grid(&enemyGrid, worldClips, worldClipsCount, enemyClips, 1);
-                update_grid(&bossGrid, worldClips, worldClipsCount, enemyClips, 1);
-            }
-        }
-        break;
-    }
-    
-    #pragma endregion
-
-    #pragma region Ally_Init
-    update_allies(dt, roaches, roachesMax, cam);
-
-    switch (currentAllyState) {
-    case ALLY_IDLE:
-        // Start preview mode when 'I' is pressed
-        if (CP_Input_KeyTriggered(KEY_I) && get_ally_count() < MAX_ALLIES) {
-            //printf("Switched to ALLY_PREVIEW. Ally count: %d\n", get_ally_count());
-            currentAllyState = ALLY_PREVIEW;
-        }
-        break;
-    case ALLY_PREVIEW:
-        enableShooting = false;
-        // printf("DEBUG: In ALLY_PREVIEW. Ally count: %d\n", get_ally_count());
-        allyPreviewPosition = get_world_pos_rel(CP_Vector_Set(mouseX, mouseY), cam);
-
-        // Render translucent preview
-        CP_Settings_Fill(CP_Color_Create(0, 255, 0, 128));
-        CP_Image_Draw(get_ally_image(playerInstance.buffs.allyLevel), mouseX, mouseY, allyW, allyH, 128);
-
-        if (CP_Input_MouseTriggered(MOUSE_BUTTON_LEFT)) {
-            int allyIndex = get_ally_count();
-            if (allyIndex < MAX_ALLIES) {
-                init_ally(allyIndex, allyPreviewPosition, allyW, allyH);
-                increment_ally_count();
-                //   printf("DEBUG: Placed Ally %d at position (%.2f, %.2f).\n", allyIndex, allyPreviewPosition.x, allyPreviewPosition.y);
-
-                   // Transition back to IDLE
-
-            }
-            else {
-                printf("DEBUG: Max allies reached. Cannot place new ally.\n");
-            }
-            currentAllyState = ALLY_IDLE;
-        }
-        break;
-    }
-
-    #pragma endregion
-
-    #pragma region Player_Shoot_Bullet
-    lastShotTime += dt;
-    if (CP_Input_MouseDown(MOUSE_BUTTON_LEFT) && enableShooting) {
-        if (lastShotTime >= (1 / playerInstance.attackSpeed)) { // control fire rate
-            // bullet direction is the vector of player with mouse pointer
-            CP_Vector bulletDirection = CP_Vector_Subtract(CP_Vector_Set(mouseX, mouseY), get_cam_pos_rel(playerInstance.pos, cam));
-            struct Bullet bullet = init_bullet(bulletType, bulletSpeed, bulletDiameter, playerInstance.attackPower, bulletDirection);
-            shoot_bullet(&playerInstance, &bullet);
-            lastShotTime = 0;
-        }
-    }
-    #pragma endregion
-
-    // Render Defense Target
-    update_flicker(&towerInstance.flickerState, dt);
-    if (towerInstance.flickerState.isVisible)
-        render_tower(towerInstance, cam);
-
-    // Update and render player
-    update_flicker(&playerInstance.flickerState, dt);
-    update_rect_hitbox(&playerInstance.hitbox, 0.0f, 0.0f, playerInstance.pos); // Update hitbox of player
-    if (playerInstance.flickerState.isVisible)
-        render_player(playerInstance, 255, cam);
-    render_boss(bossInstance, cam);
-
-    // Prevent player and bullets move into non-movable path
-    for (int i = 0; i < worldClipsCount; i++) {
-        struct Rectangle worldClip = worldClips[i];
-        if (are_rects_intersecting(playerInstance.hitbox, worldClip))
-            clamp_pos_clip_rel(&playerInstance.pos, playerInstance.hitbox, worldClip);
-        for (int j = 0; j < MAX_BULLET_COUNT; j++) {
-            if (playerInstance.bullets[j].isShooting) {
-                struct Circle bullet = { .pos = playerInstance.bullets[j].pos, .diameter = playerInstance.bullets[j].diameter };
-                if (are_circle_rect_intersecting(bullet, worldClip)) { // bullet cannot go through walls and barricades...
-                    playerInstance.bullets[j].isShooting = FALSE;
-                }
-            }
-        }
-    }
-
-    #pragma region Render_Barriers_And_Allies
-    // Draw all placed barriers
-    CP_Settings_Fill(CP_Color_Create(0, 0, 255, 255)); // Solid blue
-    for (int i = 0; i < get_barrier_count(); i++) {
-        if (barriers[i].health > 0) {  // Only draw if health is greater than zero
-            CP_Vector vec = get_cam_pos_rel(barriers[i].position, cam);
-            CP_Graphics_DrawRect(vec.x, vec.y, barriers[i].width, barriers[i].height);
-        }
-    }
-    
-    render_allies(cam);
-    #pragma endregion
-
-    // Update and render bullets
-    for (int i = 0; i < MAX_BULLET_COUNT; i++) {
-        update_pos_bullet(&playerInstance.bullets[i], dt);
-        render_bullet(playerInstance.bullets[i], cam);
-    }
-
-    #pragma region Boss Movement AND Attack
-    switch (bossInstance.state) {
-    case BOSS_STATE_MOVING_TO_TOWER:
-        bossInstance.move(&bossInstance, playerInstance, get_tower_hitbox(towerInstance), dt, bossGrid.nodes, bossGrid.nodeCount);
-        break;
-
-    case BOSS_STATE_MOVING_TO_PLAYER:
-        bossInstance.move(&bossInstance, playerInstance, playerInstance.hitbox, dt, bossGrid.nodes, bossGrid.nodeCount);
-        break;
-
-    case BOSS_STATE_IDLE:
-        bossInstance.moveDirection = CP_Vector_Zero();
-        break;
-    }
-
-    if (bossInstance.canPrimaryAttack(bossInstance, playerInstance))
-        bossInstance.primaryAttack(&bossInstance, &playerInstance, dt);
-    else if (bossInstance.canSecondaryAttack(bossInstance, playerInstance))
-        bossInstance.secondaryAttack(&bossInstance, &playerInstance, dt);
-    #pragma endregion
-
-    for (int i = 0; i < roachesMax; i++) {
-        if (roaches[i].currentState) { // if enemy is alive
-            #pragma region Enemy Movement And Attack 
-            switch (roaches[i].currentState) {
-            case ENEMY_STATE_MOVING_TO_TOWER: {
-                enemy_move_to_target(&roaches[i], get_tower_hitbox(towerInstance), dt, enemyGrid.nodes, enemyGridNB.nodes,enemyGrid.nodeCount);
-                break;
-            }
-
-            case ENEMY_STATE_MOVING_TO_PLAYER: {
-                enemy_move_to_target(&roaches[i], playerInstance.hitbox, dt, enemyGrid.nodes, enemyGridNB.nodes, enemyGrid.nodeCount);
-                break;
-            }
-
-            case ENEMY_STATE_ATTACKING: {
-                // stop movement
-                roaches[i].moveDirection = CP_Vector_Zero();
-
-                // attack animation here...
-
-
-                // if animation end then...
-                switch (enemyAttackTarget) {
-                case PLAYER:
-                    if (!player_take_damage(&playerInstance, roaches[i].dmg)) { // Returns 0 if player dies from damage
-                        if (tower_revive_player(&towerInstance, &playerInstance)) // Returns 1 if tower is still alive after reviving
-                            playerInstance.pos = respawnVec;
-                    }
-                    break;
-                case TOWER:
-                    tower_take_damage(&towerInstance, 1);
-                    break;
-                case BARRIER:
-                    //barrierTakeDamage...
-                    break;
-                }
-                break;
-            }
-
-            case ENEMY_STATE_IDLE:
-                roaches[i].moveDirection = CP_Vector_Zero();
-                break;
-            }
-
-            CP_Vector hitboxPos = { roaches[i].pos.x + ENEMY_HITBOX_OFFSET_X(roaches[i].width), roaches[i].pos.y + ENEMY_HITBOX_OFFSET_Y(roaches[i].height) };
-            update_rect_hitbox(&roaches[i].hitbox, 0.0f, 0.0f, hitboxPos); // Update hitbox of enemy
-            #pragma endregion
-
-            #pragma region Enemy takes damage
-            for (int j = 0; j < MAX_BULLET_COUNT; j++) {
-                if (playerInstance.bullets[j].isShooting) {
-                    struct Circle bullet = { .pos = playerInstance.bullets[j].pos, .diameter = playerInstance.bullets[j].diameter };
-                    if (are_circle_rect_intersecting(bullet, roaches[i].hitbox)) {
-                        if (enemy_take_damage(&roaches[i], playerInstance.bullets[j].dmg)) {
-                            deadEnemies++;
-                            // Base exp on this formula:
-                            // (max health / speed) * (max enemies / 10)
-                            int expGained = _get_exp(roaches[i].maxHealth, roaches[i].speed, roachesMax);
-                            enum BuffType randomBuff = update_buff_meter(&playerInstance, expGained);
-
-                            // Apply the buff if one was granted
-                            if (randomBuff != 0) {
-                                apply_buff(&playerInstance, randomBuff, barriers, allies);
-                            }
-                        }
-                        playerInstance.bullets[j].isShooting = FALSE;
-                    }
-                }
-            }
-
-            for (int a = 0; a < get_ally_count(); a++) {  // Loop through all allies
-                struct Ally ally = allies[a];    // Get a reference to the current ally
-                for (int j = 0; j < MAX_BULLET_COUNT; j++) {  // Loop through each ally's bullets
-                    if (ally.bullets[j].isShooting) {
-                        struct Circle bullet = { .pos = ally.bullets[j].pos, .diameter = ally.bullets[j].diameter };
-                        if (are_circle_rect_intersecting(bullet, roaches[i].hitbox)) {
-                            if (enemy_take_damage(&roaches[i], ally.bullets[j].dmg)) {
-                                deadEnemies++;
-                                int expGained = _get_exp(roaches[i].maxHealth, roaches[i].speed, roachesMax);
-                                enum BuffType randomBuff = update_buff_meter(&playerInstance, expGained);
-
-                                // Apply the buff if one was granted
-                                if (randomBuff != 0) {
-                                    apply_buff(&playerInstance, randomBuff, barriers, allies);
-                                }
-                            }
-                            ally.bullets[j].isShooting = FALSE;
-                        }
-                    }
-                }
-            }
-            #pragma endregion
-        }
-        // can use else statement here for dying animation...
-    }
-
-    #pragma region Boss takes damage
-    for (int j = 0; j < MAX_BULLET_COUNT; j++) {
-        if (playerInstance.bullets[j].isShooting) {
-            struct Circle bullet = { .pos = playerInstance.bullets[j].pos, .diameter = playerInstance.bullets[j].diameter };
-            if (are_circle_rect_intersecting(bullet, bossInstance.hitbox)) {
-                if (boss_take_damage(&bossInstance, playerInstance.bullets[j].dmg)) {
-                    deadEnemies++;
-                    int expGained = _get_exp(bossInstance.maxHealth, bossInstance.speed, 1);
-                    enum BuffType randomBuff = update_buff_meter(&playerInstance, expGained * 12);
-
-                    // Apply the buff if one was granted
-                    if (randomBuff != 0) {
-                        apply_buff(&playerInstance, randomBuff, barriers, allies);
-                    }
-                    dispose_boss(&bossInstance);
-                }
-                playerInstance.bullets[j].isShooting = FALSE;
-            }
-        }
-    }
-
-    for (int a = 0; a < get_ally_count(); a++) {  // Loop through all allies
-        struct Ally ally = allies[a];    // Get a reference to the current ally
-        for (int j = 0; j < MAX_BULLET_COUNT; j++) {  // Loop through each ally's bullets
-            if (ally.bullets[j].isShooting) {
-                struct Circle bullet = { .pos = ally.bullets[j].pos, .diameter = ally.bullets[j].diameter };
-                if (are_circle_rect_intersecting(bullet, bossInstance.hitbox)) {
-                    if (boss_take_damage(&bossInstance, ally.bullets[j].dmg)) {
-                        deadEnemies++;
-                        int expGained = _get_exp(bossInstance.maxHealth, bossInstance.speed, 1);
-                        enum BuffType randomBuff = update_buff_meter(&playerInstance, expGained * 12);
-
-                        // Apply the buff if one was granted
-                        if (randomBuff != 0) {
-                            apply_buff(&playerInstance, randomBuff, barriers, allies);
-                        }
-                        dispose_boss(&bossInstance);
-                    }
-                    ally.bullets[j].isShooting = FALSE;
-                }
-            }
-        }
-    }
-    #pragma endregion
-
-    // New wave
-    if (deadEnemies == totalEnemies && totalEnemies != 0) {
-        if (currentWave < WAVE_3) {
-            deadEnemies = 0; // Reset
-            currentWave++;
-            waveTimer = 0.f; // Reset wave timer to start next wave
-        }
-        else {
-            // Game Win!!!
-        }
-    }
-
-    // Draw the empty part of the meter (white)
-    CP_Settings_RectMode(CP_POSITION_CORNER);
-    CP_Settings_Fill(CP_Color_Create(255, 255, 255, 255));
-    CP_Graphics_DrawRect(meterX, meterY, meterWidth, meterHeight);
-    if (fillWidth >= meterWidth) {
-        CP_Settings_Fill(CP_Color_Create(200, 0, 255, 255)); // purple for maxed-out meter
-    }
-    else {
-        CP_Settings_Fill(CP_Color_Create(0, 0, 255, 255)); // Blue for normal meter
-    }
-    CP_Graphics_DrawRect(meterX, meterY, fillWidth, meterHeight);
-    CP_Settings_TextSize(20.0f);
-    CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255));
-    // buff slot 1 
-    CP_Graphics_DrawCircle(150, 825, 80);
-    //buff slot 2
-    CP_Graphics_DrawCircle(300, 825, 80);
-    // buff slot 3
-    CP_Graphics_DrawCircle(450, 825, 80);
-
-    // Display the active buff slot
-    CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255));
-    CP_Graphics_DrawCircle(600, 825, 100);
-
-    for (int i = 0; i < 3; i++) {
-        // Set the position of each buff slot circle
-        CP_Settings_Fill(CP_Color_Create(255, 255, 255, 255));
-
-        float slotPositions[] = { 150, 300, 450 }; // Positions for buff slots
-
-        for (int i = 0; i < 3; i++) {
-            switch (playerInstance.buffs.type[i]) {
-            case ATTACK_UP:
-                CP_Font_DrawText(
-                    playerInstance.buffs.attackPowerLevel > 3 ? "A Max Lvl" :
-                    playerInstance.buffs.attackPowerLevel == 1 ? "A Lvl 1" :
-                    playerInstance.buffs.attackPowerLevel == 2 ? "A Lvl 2" : "A Lvl 3",
-                    slotPositions[i], 825);
-                break;
-            case ATTACK_SPEED_UP:
-                CP_Font_DrawText(
-                    playerInstance.buffs.attackSpeedLevel > 3 ? "AS Max Lvl" :
-                    playerInstance.buffs.attackSpeedLevel == 1 ? "AS Lvl 1" :
-                    playerInstance.buffs.attackSpeedLevel == 2 ? "AS Lvl 2" : "AS Lvl 3",
-                    slotPositions[i], 825);
-                break;
-            case HEALTH_UP:
-                CP_Font_DrawText(
-                    playerInstance.buffs.healthLevel > 3 ? "HP Max Lvl" :
-                    playerInstance.buffs.healthLevel == 1 ? "HP Lvl 1" :
-                    playerInstance.buffs.healthLevel == 2 ? "HP Lvl 2" : "HP Lvl 3",
-                    slotPositions[i], 825);
-                break;
-            default:
-                CP_Font_DrawText("Empty", slotPositions[i], 825);
-                break;
-            }
-
-            if (CP_Input_KeyTriggered(KEY_1) && playerInstance.buffs.type[0] != NO_BUFF) {
-                activate_buff_from_slot(&playerInstance, 1);
-            }
-            if (CP_Input_KeyTriggered(KEY_2) && playerInstance.buffs.type[1] != NO_BUFF) {
-                activate_buff_from_slot(&playerInstance, 2);
-            }
-            if (CP_Input_KeyTriggered(KEY_3) && playerInstance.buffs.type[2] != NO_BUFF) {
-                activate_buff_from_slot(&playerInstance, 3);
-            }
-            if (playerInstance.activeBuffType != NO_BUFF) {
-                const char* activeBuffName;
-
-                // Determine the name based on the active buff type
-                switch (playerInstance.activeBuffType) {
-                case ATTACK_UP:
-                    activeBuffName = "ATTACK UP";
-                    break;
-                case ATTACK_SPEED_UP:
-                    activeBuffName = "ATTACK SPEED UP";
-                    break;
-                case HEALTH_UP:
-                    activeBuffName = "HEALTH UP";
-                    break;
-                default:
-                    activeBuffName = "NO BUFF";
-                    break;
-                }
-
-                CP_Font_DrawText(activeBuffName, 600, 750);
-                if (playerInstance.activeBuffLevel == 1) {
-                    CP_Font_DrawText("Level 1", 600, 770);
-                }
-                else if (playerInstance.activeBuffLevel == 2) {
-                    CP_Font_DrawText("Level 2", 600, 770);
-                }
-                else if (playerInstance.activeBuffLevel == 3) {
-                    CP_Font_DrawText("Level 3", 600, 770);
-                }
-                else if (playerInstance.activeBuffLevel > 3) {
-                    CP_Font_DrawText("Max Level", 600, 770);
-                }
-            }
-        }
-    }
-
-    // Set targetFillWidth based on updated exp
-    targetFillWidth = (playerInstance.exp / (float)playerMaxExp) * meterWidth;
-    fillWidth = CP_Math_ClampFloat(fillWidth, 0, meterWidth); // Clamp to the actual visual width
-
-    if (fillWidth < targetFillWidth) {
-        fillWidth += fillSpeed * dt; // Use delta time for smooth updates
-        if (fillWidth >= targetFillWidth) fillWidth = targetFillWidth; // Avoid overshooting
-    }
-    else if (fillWidth > targetFillWidth) {
-        fillWidth -= fillSpeed * dt;
-        if (fillWidth < targetFillWidth) fillWidth = targetFillWidth;
-    }
-
-    render_health_bar(&playerInstance, dt, windowWidth, windowHeight, meterX, meterY, meterWidth, meterHeight);
-    CP_Settings_RectMode(CP_POSITION_CENTER);
-
-    sort_enemies(roaches, roachesMax); // Sort enemy based on pos asc
-    render_enemies(roaches, cam, roachesMax); // Draw enemies instances
-
-    #pragma region Render_Enemy_HealthBar
-    for (int i = 0; roaches[i].currentState; i++) {
-        if (roaches[i].isTakingDamage) {
-            if (roaches[i].healthBarDisplayTime < ENEMY_HEALTHBAR_DISPLAY_TIME) {
-                struct Rectangle roachRect = { roaches[i].pos, roaches[i].width, roaches[i].height };
-                render_health_bar_rel(roachRect, roaches[i].health, roaches[i].maxHealth, cam);
-                roaches[i].healthBarDisplayTime += dt;
-            }
-            else {
-                roaches[i].healthBarDisplayTime = 0;
-                roaches[i].isTakingDamage = false;
-            }
-        }
-    }
-    #pragma endregion
-
-    #pragma region Render_UI
-    {
-        CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255));
-
-        // Health
-        CP_Settings_TextSize(25);
-        char healthStr[16];
-        sprintf_s(healthStr, sizeof(healthStr), "Health: %d", playerInstance.health);
-        CP_Vector playerVec = get_cam_pos_rel(playerInstance.pos, cam);
-        float playerHalfHeight = playerInstance.height / 2,
-            healthX = playerVec.x,
-            healthY = (playerVec.y - playerHalfHeight) - 15.0f;
-        CP_Settings_TextSize(25);
-        CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255));
-        CP_Font_DrawText(healthStr, healthX, healthY);
-
-        // Wave
-        CP_Settings_TextSize(60);
-        char currentWaveStr[8];
-        sprintf_s(currentWaveStr, sizeof(currentWaveStr), "Wave: %d", currentWave);
-        CP_Font_DrawText(currentWaveStr, windowWidth / 2.f, 50.f);
-    }
-    #pragma endregion
-
-    // Exit to Main Menu
-    if (CP_Input_KeyTriggered(KEY_Q)) {
-        CP_Engine_SetNextGameState(main_menu_init, main_menu_update, main_menu_exit);
-    }
-
-    _render_cursor(mouseX, mouseY);
 }
 
 void level_two_exit(void) {
-    CP_Image_Free(&playerInstance.img);
-    CP_Image_Free(&levelBg);
-    CP_Image_Free(&cursor);
 
-    for (int i = 0; i < roachesMax; i++) {
-        struct ChocoRoach roach = roaches[i];
-        if (roach.img != NULL)
-            CP_Image_Free(&roach.img);
-    }
-    if (bossInstance.img != NULL)
-        CP_Image_Free(&bossInstance.img);
-    dispose_sounds();
-    free(enemyGrid.nodes);
-    free(enemyGridNB.nodes);
-    free(bossGrid.nodes);
-    free(bossGridNB.nodes);
-    dispose_barriers();
-    dispose_allies();
-    dispose_tilemap();
 }
+
+//void level_two_init(void) {
+//    init_tilemap();
+//    enableShooting = false;
+//    cursor = CP_Image_Load("Assets/cursor.png");
+//    CP_System_ShowCursor(FALSE);
+//    levelBg = CP_Image_Load("Assets/Levels/level2.png");
+//
+//    windowWidth = (float)CP_System_GetWindowWidth();
+//    windowHeight = (float)CP_System_GetWindowHeight();
+//
+//    bossInstance = init_boss_two(BOSS_WIDTH, 65.f, 12500, 100, 1.1f);
+//
+//    #pragma region Defense_Target_Init
+//    // Init Defense Target Properties
+//    towerInstance.maxHealth = towerInstance.health = 3;
+//    towerInstance.height = 300.0;
+//    towerInstance.width = 150.0;
+//    towerInstance.pos = CP_Vector_Set(LEVEL_WIDTH / 1.25f, LEVEL_HEIGHT / 1.55f);
+//    towerInstance.flickerState.isVisible = TRUE;
+//    #pragma endregion
+//
+//    #pragma region Player_Init
+//    // Init Player Properties
+//    respawnVec = CP_Vector_Set(towerInstance.pos.x / 1.15f, towerInstance.pos.y);
+//    playerInstance.pos = respawnVec;
+//    bulletType = NORMAL_BULLET;
+//    //  buff bar properties
+//    meterX = windowWidth - 150;
+//    meterY = windowHeight - 50;
+//    meterWidth = 100;
+//    meterHeight = 20;
+//    fillSpeed = 120.0f;
+//    #pragma endregion
+//
+//    allyH = 150.0f;
+//    allyW = 100.0f;
+//
+//    #pragma region Barrier_Init
+//    init_barrier_images();
+//    init_ally_images();
+//    currentState = BARRIER_IDLE;
+//    barrierWidth = 50.0f;
+//    barrierHeight = 100.0f;
+//    barrier_rect_W = 50.0f;
+//    barrier_rect_H = 50.0f;
+//    #pragma endregion
+//
+//    #pragma region Enemy_Spawn_Init
+//    memset(roaches, 0, sizeof(roaches));
+//    // Reset spawn properties
+//    waveDelay = 5.0f; // Give player some buffer
+//    currentWave = WAVE_1;
+//    enemySpawnIndex = 0;
+//    waveTimer = 0.f;
+//    spawnTimer = 0.f;
+//    deadEnemies = 0;
+//    spawnMinY = LEVEL_HEIGHT * 1 / 5;
+//    spawnMaxY = LEVEL_HEIGHT * 4 / 5;
+//    spawnWidth = 300.f;
+//    #pragma endregion
+//
+//    #pragma region Obstacles_Init
+//    // enemy clips
+//    struct Rectangle ememyClip1 = { .pos = CP_Vector_Set(883.5f, 577.f), .width = 303.f, .height = 444.f };
+//    enemyClips[0] = ememyClip1;
+//
+//    // store non-movable path in worldClips
+//    worldClips[0] = get_tower_hitbox(towerInstance);
+//    struct Rectangle holeClip = { .pos = CP_Vector_Set(1072.f, 171.5f), .width = 2144.f, .height = 31.f };
+//    struct Rectangle fountainClip = { .pos = CP_Vector_Set(1369.5f, 383.5f), .width = 253.f, .height = 361.f };
+//    worldClips[1] = holeClip;
+//    worldClips[2] = fountainClip;
+//    worldClipsCount = 3;
+//    #pragma endregion
+//
+//    init_camera(playerInstance, windowWidth, windowHeight);
+//
+//    #pragma region Map_Grid_Init
+//    CP_Image enemyImg = CP_Image_Load("Assets/choco_roach.png");
+//    CP_Image bossImg = CP_Image_Load("Assets/boss_lvl1.png");
+//    float enemyHeight = get_preserved_heightf((float)CP_Image_GetWidth(enemyImg), (float)CP_Image_GetHeight(enemyImg), ENEMY_WIDTH);
+//    float bossHeight = get_preserved_heightf((float)CP_Image_GetWidth(bossImg), (float)CP_Image_GetHeight(bossImg), BOSS_WIDTH);
+//    init_grid(&enemyGrid, LEVEL_WIDTH, LEVEL_HEIGHT, ENEMY_WIDTH, enemyHeight);
+//    init_grid(&bossGrid, LEVEL_WIDTH, LEVEL_HEIGHT, BOSS_WIDTH, bossHeight);
+//    update_grid(&enemyGrid, worldClips, worldClipsCount, enemyClips, 1);
+//    update_grid(&bossGrid, worldClips, worldClipsCount, enemyClips, 1);
+//
+//    init_grid(&enemyGridNB, LEVEL_WIDTH, LEVEL_HEIGHT, ENEMY_WIDTH, enemyHeight);
+//    init_grid(&bossGridNB, LEVEL_WIDTH, LEVEL_HEIGHT, BOSS_WIDTH, bossHeight);
+//    update_grid(&enemyGridNB, worldClips, worldClipsCount, enemyClips, 1);
+//    update_grid(&bossGridNB, worldClips, worldClipsCount, enemyClips, 1);
+//    #pragma endregion
+//
+//    menuButton = init_button(windowWidth / 2.f, windowHeight / 1.25f, 250.f, 75.f,
+//        BUTTON_TYPE_DEFAULT, "Back to Menu", CP_Color_Create(0, 0, 0, 255), 45.f);
+//
+//    init_sounds();
+//    play_sound_advanced(SOUND_MUSIC_NEW_MAP_LEVEL, 1.f, 0);
+//}
+//
+//void level_two_update(void) {
+//    float dt = CP_System_GetDt();
+//    float mouseX = CP_Input_GetMouseWorldX(),
+//        mouseY = CP_Input_GetMouseWorldY();
+//
+//    // PH
+//    // Handler for game over
+//    if (towerInstance.health <= 0) {
+//        CP_Graphics_ClearBackground(CP_Color_Create(15, 15, 15, 255));
+//        CP_Settings_TextSize(175.f);
+//        CP_Settings_Fill(CP_Color_Create(220, 220, 220, 255));
+//        CP_Font_DrawText("GAME OVER", windowWidth / 2.f, windowHeight / 2.4f);
+//        render_button(menuButton);
+//        update_button_state(&menuButton, mouseX, mouseY);
+//        _render_cursor(mouseX, mouseY);
+//
+//        if (menuButton.state == BUTTON_STATE_CLICKED)
+//            CP_Engine_SetNextGameState(main_menu_init, main_menu_update, main_menu_exit);
+//        return;
+//    }
+//
+//    CP_Graphics_ClearBackground(CP_Color_Create(170, 170, 170, 255));
+//
+//    CP_Vector bgVec = CP_Vector_Set((LEVEL_WIDTH / 2), (LEVEL_HEIGHT / 2));
+//    CP_Image_Draw(levelBg, bgVec.x, bgVec.y, LEVEL_WIDTH, LEVEL_HEIGHT, 255);
+//
+//    enableShooting = true;
+//
+//    CP_Vector mouseVec = CP_Vector_Set(mouseX, 0.f);
+//    if (playerInstance.pos.x > mouseVec.x)
+//        playerInstance.width = playerInstance.width > 0 ? -playerInstance.width : playerInstance.width;
+//    else
+//        playerInstance.width = playerInstance.width < 0 ? -playerInstance.width : playerInstance.width;
+//
+//    _draw_shadows(playerInstance.pos.x, playerInstance.pos.y, playerInstance.width, playerInstance.height);
+//    for (int i = 0; roaches[i].currentState; i++) {
+//        struct ChocoRoach roach = roaches[i];
+//        _draw_shadows(roach.pos.x, roach.pos.y, roach.width, roach.height);
+//    }
+//    if (bossInstance.state != BOSS_STATE_UNSPAWNED) {
+//        _draw_shadows(bossInstance.pos.x, bossInstance.pos.y, bossInstance.width, bossInstance.height);
+//    }
+//
+//    // draw_grid(enemyGrid.nodes, enemyGrid.nodeCount, cam); // draw enemy grid for debugging
+//    // draw_grid(bossGrid.nodes, bossGrid.nodeCount, cam); // draw boss grid for debugging
+//
+//    #pragma region Enemy Spawning Logic
+//    // Enemy spawner
+//    if (waveTimer >= waveDelay) {
+//        if (spawnInterval > spawnTimer)
+//            spawnTimer += dt;
+//        else {
+//            float enemySpeed = 0.f;
+//            int enemyMaxHealth = 0, enemyDmg = 0;
+//            float nextSpawnDelay = 0.f;
+//            int nextSpawnDelayIndex = 0;
+//
+//            switch (currentWave) {
+//            case WAVE_1:
+//                spawnInterval = 1.65f;
+//                enemySpeed = 90.f;
+//                enemyMaxHealth = 175;
+//                enemyDmg = 20;
+//                roachesMax = 35;
+//                nextSpawnDelayIndex = 6;
+//                nextSpawnDelay = -0.05f;
+//                break;
+//            case WAVE_2:
+//                spawnInterval = 1.35f;
+//                enemySpeed = 105.f;
+//                enemyMaxHealth = 250;
+//                enemyDmg = 30;
+//                roachesMax = 55;
+//                nextSpawnDelayIndex = 6;
+//                nextSpawnDelay = -0.15f;
+//                break;
+//            case WAVE_3:
+//                if (bossInstance.state == BOSS_STATE_UNSPAWNED) {
+//                    spawn_boss(&bossInstance, -650.f, 650.f);
+//                    totalEnemies++;
+//                }
+//                spawnInterval = 1.65f;
+//                enemySpeed = 75.f;
+//                enemyMaxHealth = 300;
+//                enemyDmg = 30;
+//                roachesMax = 45;
+//                nextSpawnDelayIndex = 6;
+//                nextSpawnDelay = -0.55f;
+//                break;
+//            }
+//            totalEnemies += roachesMax;
+//            if (enemySpawnIndex < roachesMax) {
+//                roaches[enemySpawnIndex++] = init_enemy(spawnMinY, spawnMaxY, spawnWidth, enemySpeed, enemyMaxHealth, enemyDmg);
+//                spawnTimer = 0.f;
+//                printf("Enemy spawned. Spawn count: %d | Remaining: %d\n", enemySpawnIndex, enemySpawnIndex - deadEnemies);
+//
+//                // Increase delay a bit to not overwhelm the player
+//                if (enemySpawnIndex % nextSpawnDelayIndex == 0)
+//                    spawnTimer = nextSpawnDelay;
+//            }
+//        }
+//    }
+//    else {
+//        #pragma region Show_Spawning_Time
+//        char buffer[256];
+//        sprintf_s(buffer, sizeof(buffer), "Enemy coming in %d !!!", (int)(waveDelay - waveTimer));
+//        CP_Settings_Fill(CP_Color_Create(255, 0, 0, 255));
+//        CP_Settings_TextSize(100.0f);
+//        CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_CENTER, CP_TEXT_ALIGN_V_MIDDLE);
+//        CP_Font_DrawText(buffer, (float)CP_System_GetWindowWidth() / 2, (float)CP_System_GetWindowHeight() * 1 / 5);
+//        #pragma endregion
+//        enemySpawnIndex = 0;
+//        waveTimer += dt;
+//    }
+//    #pragma endregion
+//
+//    #pragma region Enemy_Movement_Logic
+//    for (int i = 0; roaches[i].currentState; i++) {
+//        // Attack defense target when collide
+//        if (are_rects_intersecting(roaches[i].hitbox, get_tower_hitbox(towerInstance))) {
+//            roaches[i].currentState = ENEMY_STATE_ATTACKING;
+//            enemyAttackTarget = TOWER;
+//            continue;
+//        }
+//        // Attack player when collide
+//        if (are_rects_intersecting(roaches[i].hitbox, playerInstance.hitbox)) { // When collide attack player
+//            roaches[i].currentState = ENEMY_STATE_ATTACKING;
+//            enemyAttackTarget = PLAYER;
+//            continue;
+//        }
+//
+//        //if (barrierAttack) {
+//        //    roaches[i].currentState = STATE_ATTACKING;
+//        //    enemyAttackTarget = BARRIER;
+//        //}
+//
+//        struct Circle radarRoach = { .pos = roaches[i].pos, .diameter = 5 * (float)fabs(roaches[i].width) }; // define enemy radar
+//        if (are_circle_rect_intersecting(radarRoach, playerInstance.hitbox)) { // Check enemy near with player
+//            roaches[i].currentState = ENEMY_STATE_MOVING_TO_PLAYER;
+//            continue;
+//        }
+//
+//        roaches[i].currentState = ENEMY_STATE_MOVING_TO_TOWER;
+//    }
+//    #pragma endregion
+//
+//    move_player(&playerInstance, dt, LEVEL_WIDTH, LEVEL_HEIGHT);
+//
+//    // Prevent player and bullets move into non-movable path
+//    for (int i = 0; i < worldClipsCount; i++) {
+//        struct Rectangle worldClip = worldClips[i];
+//        if (are_rects_intersecting(playerInstance.hitbox, worldClip))
+//            clamp_pos_clip_rel(&playerInstance.pos, playerInstance.hitbox, worldClip);
+//        for (int j = 0; j < MAX_BULLET_COUNT; j++) {
+//            if (playerInstance.bullets[j].isShooting) {
+//                struct Circle bullet = { .pos = playerInstance.bullets[j].pos, .diameter = playerInstance.bullets[j].diameter };
+//                if (are_circle_rect_intersecting(bullet, worldClip)) { // bullet cannot go through walls and barricades...
+//                    playerInstance.bullets[j].isShooting = FALSE;
+//                }
+//            }
+//        }
+//    }
+//
+//    #pragma region Place_Barriers
+//    switch (currentState) {
+//    case BARRIER_IDLE:
+//        // Start preview mode when 'P' is pressed
+//        if (get_barrier_count() < MAX_BARRIERS && CP_Input_KeyTriggered(KEY_P)) {
+//            currentState = BARRIER_PREVIEW;
+//        }
+//        break;
+//
+//    case BARRIER_PREVIEW:
+//        enableShooting = false;
+//        // Draw translucent preview rectangle
+//        CP_Settings_RectMode(CP_POSITION_CENTER);
+//        CP_Settings_Fill(CP_Color_Create(0, 0, 255, 128));  // Semi-transparent blue
+//        CP_Graphics_DrawRect(mouseX, mouseY, barrierWidth, barrierHeight);
+//
+//        // Place the barrier on mouse click
+//        if (CP_Input_MouseTriggered(MOUSE_BUTTON_LEFT)) {
+//            int barrierIndex = get_barrier_count();
+//            if (barrierIndex < MAX_BARRIERS) {
+//                // Set the barrier properties
+//                set_barrier_properties(barrierIndex, CP_Vector_Set(mouseX, mouseY), barrierWidth, barrierHeight, BARRIER_INITIAL_HEALTH);
+//                increment_barrier_count();
+//                currentState = BARRIER_IDLE;
+//
+//                // store the barrier in worldClips
+//                worldClips[worldClipsCount++] = barriers[barrierIndex].hitbox;
+//                update_grid(&enemyGrid, worldClips, worldClipsCount, enemyClips, 1);
+//                update_grid(&bossGrid, worldClips, worldClipsCount, enemyClips, 1);
+//            }
+//        }
+//        break;
+//    }
+//    
+//    #pragma endregion
+//
+//    #pragma region Ally_Init
+//    update_allies(dt, roaches, roachesMax);
+//
+//    switch (currentAllyState) {
+//    case ALLY_IDLE:
+//        // Start preview mode when 'I' is pressed
+//        if (CP_Input_KeyTriggered(KEY_I) && get_ally_count() < MAX_ALLIES) {
+//            //printf("Switched to ALLY_PREVIEW. Ally count: %d\n", get_ally_count());
+//            currentAllyState = ALLY_PREVIEW;
+//        }
+//        break;
+//    case ALLY_PREVIEW:
+//        enableShooting = false;
+//        // printf("DEBUG: In ALLY_PREVIEW. Ally count: %d\n", get_ally_count());
+//
+//        // Render translucent preview
+//        CP_Settings_Fill(CP_Color_Create(0, 255, 0, 128));
+//        CP_Image_Draw(get_ally_image(playerInstance.buffs.allyLevel), mouseX, mouseY, allyW, allyH, 128);
+//
+//        if (CP_Input_MouseTriggered(MOUSE_BUTTON_LEFT)) {
+//            int allyIndex = get_ally_count();
+//            if (allyIndex < MAX_ALLIES) {
+//                init_ally(allyIndex, CP_Vector_Set(mouseX, mouseY), allyW, allyH);
+//                increment_ally_count();
+//                //   printf("DEBUG: Placed Ally %d at position (%.2f, %.2f).\n", allyIndex, allyPreviewPosition.x, allyPreviewPosition.y);
+//
+//                   // Transition back to IDLE
+//
+//            }
+//            else {
+//                printf("DEBUG: Max allies reached. Cannot place new ally.\n");
+//            }
+//            currentAllyState = ALLY_IDLE;
+//        }
+//        break;
+//    }
+//
+//    #pragma endregion
+//
+//    #pragma region Player_Shoot_Bullet
+//    lastShotTime += dt;
+//    if (CP_Input_MouseDown(MOUSE_BUTTON_LEFT) && enableShooting) {
+//        if (lastShotTime >= (1 / playerInstance.attackSpeed)) { // control fire rate
+//            // bullet direction is the vector of player with mouse pointer
+//            CP_Vector bulletDirection = CP_Vector_Subtract(CP_Vector_Set(mouseX, mouseY), playerInstance.pos);
+//            struct Bullet bullet = init_bullet(bulletType, bulletSpeed, bulletDiameter, playerInstance.attackPower, bulletDirection);
+//            shoot_bullet(&playerInstance, &bullet);
+//            lastShotTime = 0;
+//        }
+//    }
+//    #pragma endregion
+//
+//    // Render Defense Target
+//    update_flicker(&towerInstance.flickerState, dt);
+//    if (towerInstance.flickerState.isVisible)
+//        render_tower(towerInstance);
+//
+//    // Update and render player
+//    update_flicker(&playerInstance.flickerState, dt);
+//    update_rect_hitbox(&playerInstance.hitbox, 0.0f, 0.0f, playerInstance.pos); // Update hitbox of player
+//    if (playerInstance.flickerState.isVisible)
+//        render_player(playerInstance, 255);
+//    render_boss(bossInstance);
+//
+//    // Prevent player and bullets move into non-movable path
+//    for (int i = 0; i < worldClipsCount; i++) {
+//        struct Rectangle worldClip = worldClips[i];
+//        if (are_rects_intersecting(playerInstance.hitbox, worldClip))
+//            clamp_pos_clip_rel(&playerInstance.pos, playerInstance.hitbox, worldClip);
+//        for (int j = 0; j < MAX_BULLET_COUNT; j++) {
+//            if (playerInstance.bullets[j].isShooting) {
+//                struct Circle bullet = { .pos = playerInstance.bullets[j].pos, .diameter = playerInstance.bullets[j].diameter };
+//                if (are_circle_rect_intersecting(bullet, worldClip)) { // bullet cannot go through walls and barricades...
+//                    playerInstance.bullets[j].isShooting = FALSE;
+//                }
+//            }
+//        }
+//    }
+//
+//    #pragma region Render_Barriers_And_Allies
+//    // Draw all placed barriers
+//    CP_Settings_Fill(CP_Color_Create(0, 0, 255, 255)); // Solid blue
+//    for (int i = 0; i < get_barrier_count(); i++) {
+//        if (barriers[i].health > 0) {  // Only draw if health is greater than zero
+//            CP_Graphics_DrawRect(barriers[i].pos.x, barriers[i].pos.y, barriers[i].width, barriers[i].height);
+//        }
+//    }
+//    
+//    render_allies();
+//    #pragma endregion
+//
+//    // Update and render bullets
+//    for (int i = 0; i < MAX_BULLET_COUNT; i++) {
+//        update_pos_bullet(&playerInstance.bullets[i], dt);
+//        render_bullet(playerInstance.bullets[i]);
+//    }
+//
+//    #pragma region Boss Movement AND Attack
+//    switch (bossInstance.state) {
+//    case BOSS_STATE_MOVING_TO_TOWER:
+//        bossInstance.move(&bossInstance, playerInstance, get_tower_hitbox(towerInstance), dt, bossGrid.nodes, bossGrid.nodeCount);
+//        break;
+//
+//    case BOSS_STATE_MOVING_TO_PLAYER:
+//        bossInstance.move(&bossInstance, playerInstance, playerInstance.hitbox, dt, bossGrid.nodes, bossGrid.nodeCount);
+//        break;
+//
+//    case BOSS_STATE_IDLE:
+//        bossInstance.moveDirection = CP_Vector_Zero();
+//        break;
+//    }
+//
+//    if (bossInstance.canPrimaryAttack(bossInstance, playerInstance))
+//        bossInstance.primaryAttack(&bossInstance, &playerInstance, dt);
+//    else if (bossInstance.canSecondaryAttack(bossInstance, playerInstance))
+//        bossInstance.secondaryAttack(&bossInstance, &playerInstance, dt);
+//    #pragma endregion
+//
+//    for (int i = 0; i < roachesMax; i++) {
+//        if (roaches[i].currentState) { // if enemy is alive
+//            #pragma region Enemy Movement And Attack 
+//            switch (roaches[i].currentState) {
+//            case ENEMY_STATE_MOVING_TO_TOWER: {
+//                enemy_move_to_target(&roaches[i], get_tower_hitbox(towerInstance), dt, enemyGrid.nodes, enemyGridNB.nodes,enemyGrid.nodeCount);
+//                break;
+//            }
+//
+//            case ENEMY_STATE_MOVING_TO_PLAYER: {
+//                enemy_move_to_target(&roaches[i], playerInstance.hitbox, dt, enemyGrid.nodes, enemyGridNB.nodes, enemyGrid.nodeCount);
+//                break;
+//            }
+//
+//            case ENEMY_STATE_ATTACKING: {
+//                // stop movement
+//                roaches[i].moveDirection = CP_Vector_Zero();
+//
+//                // attack animation here...
+//
+//
+//                // if animation end then...
+//                switch (enemyAttackTarget) {
+//                case PLAYER:
+//                    if (!player_take_damage(&playerInstance, roaches[i].dmg)) { // Returns 0 if player dies from damage
+//                        if (tower_revive_player(&towerInstance, &playerInstance)) // Returns 1 if tower is still alive after reviving
+//                            playerInstance.pos = respawnVec;
+//                    }
+//                    break;
+//                case TOWER:
+//                    tower_take_damage(&towerInstance, 1);
+//                    break;
+//                case BARRIER:
+//                    //barrierTakeDamage...
+//                    break;
+//                }
+//                break;
+//            }
+//
+//            case ENEMY_STATE_IDLE:
+//                roaches[i].moveDirection = CP_Vector_Zero();
+//                break;
+//            }
+//
+//            CP_Vector hitboxPos = { roaches[i].pos.x + ENEMY_HITBOX_OFFSET_X(roaches[i].width), roaches[i].pos.y + ENEMY_HITBOX_OFFSET_Y(roaches[i].height) };
+//            update_rect_hitbox(&roaches[i].hitbox, 0.0f, 0.0f, hitboxPos); // Update hitbox of enemy
+//            #pragma endregion
+//
+//            #pragma region Enemy takes damage
+//            for (int j = 0; j < MAX_BULLET_COUNT; j++) {
+//                if (playerInstance.bullets[j].isShooting) {
+//                    struct Circle bullet = { .pos = playerInstance.bullets[j].pos, .diameter = playerInstance.bullets[j].diameter };
+//                    if (are_circle_rect_intersecting(bullet, roaches[i].hitbox)) {
+//                        if (enemy_take_damage(&roaches[i], playerInstance.bullets[j].dmg)) {
+//                            deadEnemies++;
+//                            // Base exp on this formula:
+//                            // (max health / speed) * (max enemies / 10)
+//                            int expGained = _get_exp(roaches[i].maxHealth, roaches[i].speed, roachesMax);
+//                            enum BuffType randomBuff = update_buff_meter(&playerInstance, expGained);
+//
+//                            // Apply the buff if one was granted
+//                            if (randomBuff != 0) {
+//                                apply_buff(&playerInstance, randomBuff, barriers, allies);
+//                            }
+//                        }
+//                        playerInstance.bullets[j].isShooting = FALSE;
+//                    }
+//                }
+//            }
+//
+//            for (int a = 0; a < get_ally_count(); a++) {  // Loop through all allies
+//                struct Ally ally = allies[a];    // Get a reference to the current ally
+//                for (int j = 0; j < MAX_BULLET_COUNT; j++) {  // Loop through each ally's bullets
+//                    if (ally.bullets[j].isShooting) {
+//                        struct Circle bullet = { .pos = ally.bullets[j].pos, .diameter = ally.bullets[j].diameter };
+//                        if (are_circle_rect_intersecting(bullet, roaches[i].hitbox)) {
+//                            if (enemy_take_damage(&roaches[i], ally.bullets[j].dmg)) {
+//                                deadEnemies++;
+//                                int expGained = _get_exp(roaches[i].maxHealth, roaches[i].speed, roachesMax);
+//                                enum BuffType randomBuff = update_buff_meter(&playerInstance, expGained);
+//
+//                                // Apply the buff if one was granted
+//                                if (randomBuff != 0) {
+//                                    apply_buff(&playerInstance, randomBuff, barriers, allies);
+//                                }
+//                            }
+//                            ally.bullets[j].isShooting = FALSE;
+//                        }
+//                    }
+//                }
+//            }
+//            #pragma endregion
+//        }
+//        // can use else statement here for dying animation...
+//    }
+//
+//    #pragma region Boss takes damage
+//    for (int j = 0; j < MAX_BULLET_COUNT; j++) {
+//        if (playerInstance.bullets[j].isShooting) {
+//            struct Circle bullet = { .pos = playerInstance.bullets[j].pos, .diameter = playerInstance.bullets[j].diameter };
+//            if (are_circle_rect_intersecting(bullet, bossInstance.hitbox)) {
+//                if (boss_take_damage(&bossInstance, playerInstance.bullets[j].dmg)) {
+//                    deadEnemies++;
+//                    int expGained = _get_exp(bossInstance.maxHealth, bossInstance.speed, 1);
+//                    enum BuffType randomBuff = update_buff_meter(&playerInstance, expGained * 12);
+//
+//                    // Apply the buff if one was granted
+//                    if (randomBuff != 0) {
+//                        apply_buff(&playerInstance, randomBuff, barriers, allies);
+//                    }
+//                    dispose_boss(&bossInstance);
+//                }
+//                playerInstance.bullets[j].isShooting = FALSE;
+//            }
+//        }
+//    }
+//
+//    for (int a = 0; a < get_ally_count(); a++) {  // Loop through all allies
+//        struct Ally ally = allies[a];    // Get a reference to the current ally
+//        for (int j = 0; j < MAX_BULLET_COUNT; j++) {  // Loop through each ally's bullets
+//            if (ally.bullets[j].isShooting) {
+//                struct Circle bullet = { .pos = ally.bullets[j].pos, .diameter = ally.bullets[j].diameter };
+//                if (are_circle_rect_intersecting(bullet, bossInstance.hitbox)) {
+//                    if (boss_take_damage(&bossInstance, ally.bullets[j].dmg)) {
+//                        deadEnemies++;
+//                        int expGained = _get_exp(bossInstance.maxHealth, bossInstance.speed, 1);
+//                        enum BuffType randomBuff = update_buff_meter(&playerInstance, expGained * 12);
+//
+//                        // Apply the buff if one was granted
+//                        if (randomBuff != 0) {
+//                            apply_buff(&playerInstance, randomBuff, barriers, allies);
+//                        }
+//                        dispose_boss(&bossInstance);
+//                    }
+//                    ally.bullets[j].isShooting = FALSE;
+//                }
+//            }
+//        }
+//    }
+//    #pragma endregion
+//
+//    // New wave
+//    if (deadEnemies == totalEnemies && totalEnemies != 0) {
+//        if (currentWave < WAVE_3) {
+//            deadEnemies = 0; // Reset
+//            currentWave++;
+//            waveTimer = 0.f; // Reset wave timer to start next wave
+//        }
+//        else {
+//            // Game Win!!!
+//        }
+//    }
+//
+//    // Draw the empty part of the meter (white)
+//    CP_Settings_RectMode(CP_POSITION_CORNER);
+//    CP_Settings_Fill(CP_Color_Create(255, 255, 255, 255));
+//    CP_Graphics_DrawRect(meterX, meterY, meterWidth, meterHeight);
+//    if (fillWidth >= meterWidth) {
+//        CP_Settings_Fill(CP_Color_Create(200, 0, 255, 255)); // purple for maxed-out meter
+//    }
+//    else {
+//        CP_Settings_Fill(CP_Color_Create(0, 0, 255, 255)); // Blue for normal meter
+//    }
+//    CP_Graphics_DrawRect(meterX, meterY, fillWidth, meterHeight);
+//    CP_Settings_TextSize(20.0f);
+//    CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255));
+//    // buff slot 1 
+//    CP_Graphics_DrawCircle(150, 825, 80);
+//    //buff slot 2
+//    CP_Graphics_DrawCircle(300, 825, 80);
+//    // buff slot 3
+//    CP_Graphics_DrawCircle(450, 825, 80);
+//
+//    // Display the active buff slot
+//    CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255));
+//    CP_Graphics_DrawCircle(600, 825, 100);
+//
+//    for (int i = 0; i < 3; i++) {
+//        // Set the position of each buff slot circle
+//        CP_Settings_Fill(CP_Color_Create(255, 255, 255, 255));
+//
+//        float slotPositions[] = { 150, 300, 450 }; // Positions for buff slots
+//
+//        for (int i = 0; i < 3; i++) {
+//            switch (playerInstance.buffs.type[i]) {
+//            case ATTACK_UP:
+//                CP_Font_DrawText(
+//                    playerInstance.buffs.attackPowerLevel > 3 ? "A Max Lvl" :
+//                    playerInstance.buffs.attackPowerLevel == 1 ? "A Lvl 1" :
+//                    playerInstance.buffs.attackPowerLevel == 2 ? "A Lvl 2" : "A Lvl 3",
+//                    slotPositions[i], 825);
+//                break;
+//            case ATTACK_SPEED_UP:
+//                CP_Font_DrawText(
+//                    playerInstance.buffs.attackSpeedLevel > 3 ? "AS Max Lvl" :
+//                    playerInstance.buffs.attackSpeedLevel == 1 ? "AS Lvl 1" :
+//                    playerInstance.buffs.attackSpeedLevel == 2 ? "AS Lvl 2" : "AS Lvl 3",
+//                    slotPositions[i], 825);
+//                break;
+//            case HEALTH_UP:
+//                CP_Font_DrawText(
+//                    playerInstance.buffs.healthLevel > 3 ? "HP Max Lvl" :
+//                    playerInstance.buffs.healthLevel == 1 ? "HP Lvl 1" :
+//                    playerInstance.buffs.healthLevel == 2 ? "HP Lvl 2" : "HP Lvl 3",
+//                    slotPositions[i], 825);
+//                break;
+//            default:
+//                CP_Font_DrawText("Empty", slotPositions[i], 825);
+//                break;
+//            }
+//
+//            if (CP_Input_KeyTriggered(KEY_1) && playerInstance.buffs.type[0] != NO_BUFF) {
+//                activate_buff_from_slot(&playerInstance, 1);
+//            }
+//            if (CP_Input_KeyTriggered(KEY_2) && playerInstance.buffs.type[1] != NO_BUFF) {
+//                activate_buff_from_slot(&playerInstance, 2);
+//            }
+//            if (CP_Input_KeyTriggered(KEY_3) && playerInstance.buffs.type[2] != NO_BUFF) {
+//                activate_buff_from_slot(&playerInstance, 3);
+//            }
+//            if (playerInstance.activeBuffType != NO_BUFF) {
+//                const char* activeBuffName;
+//
+//                // Determine the name based on the active buff type
+//                switch (playerInstance.activeBuffType) {
+//                case ATTACK_UP:
+//                    activeBuffName = "ATTACK UP";
+//                    break;
+//                case ATTACK_SPEED_UP:
+//                    activeBuffName = "ATTACK SPEED UP";
+//                    break;
+//                case HEALTH_UP:
+//                    activeBuffName = "HEALTH UP";
+//                    break;
+//                default:
+//                    activeBuffName = "NO BUFF";
+//                    break;
+//                }
+//
+//                CP_Font_DrawText(activeBuffName, 600, 750);
+//                if (playerInstance.activeBuffLevel == 1) {
+//                    CP_Font_DrawText("Level 1", 600, 770);
+//                }
+//                else if (playerInstance.activeBuffLevel == 2) {
+//                    CP_Font_DrawText("Level 2", 600, 770);
+//                }
+//                else if (playerInstance.activeBuffLevel == 3) {
+//                    CP_Font_DrawText("Level 3", 600, 770);
+//                }
+//                else if (playerInstance.activeBuffLevel > 3) {
+//                    CP_Font_DrawText("Max Level", 600, 770);
+//                }
+//            }
+//        }
+//    }
+//
+//    // Set targetFillWidth based on updated exp
+//    targetFillWidth = (playerInstance.exp / (float)playerInstance.playerMaxExp) * meterWidth;
+//    fillWidth = CP_Math_ClampFloat(fillWidth, 0, meterWidth); // Clamp to the actual visual width
+//
+//    if (fillWidth < targetFillWidth) {
+//        fillWidth += fillSpeed * dt; // Use delta time for smooth updates
+//        if (fillWidth >= targetFillWidth) fillWidth = targetFillWidth; // Avoid overshooting
+//    }
+//    else if (fillWidth > targetFillWidth) {
+//        fillWidth -= fillSpeed * dt;
+//        if (fillWidth < targetFillWidth) fillWidth = targetFillWidth;
+//    }
+//
+//    render_health_bar(&playerInstance, dt, windowWidth, windowHeight, meterX, meterY, meterWidth, meterHeight);
+//    CP_Settings_RectMode(CP_POSITION_CENTER);
+//
+//    sort_enemies(roaches, roachesMax); // Sort enemy based on pos asc
+//    render_enemies(roaches, roachesMax); // Draw enemies instances
+//
+//    #pragma region Render_Enemy_HealthBar
+//    for (int i = 0; roaches[i].currentState; i++) {
+//        if (roaches[i].isTakingDamage) {
+//            if (roaches[i].healthBarDisplayTime < ENEMY_HEALTHBAR_DISPLAY_TIME) {
+//                struct Rectangle roachRect = { roaches[i].pos, roaches[i].width, roaches[i].height };
+//                render_health_bar_rel(roachRect, roaches[i].health, roaches[i].maxHealth);
+//                roaches[i].healthBarDisplayTime += dt;
+//            }
+//            else {
+//                roaches[i].healthBarDisplayTime = 0;
+//                roaches[i].isTakingDamage = false;
+//            }
+//        }
+//    }
+//    #pragma endregion
+//
+//    #pragma region Render_UI
+//    {
+//        CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255));
+//
+//        // Health
+//        CP_Settings_TextSize(25);
+//        char healthStr[16];
+//        sprintf_s(healthStr, sizeof(healthStr), "Health: %d", playerInstance.health);
+//        float playerHalfHeight = playerInstance.height / 2,
+//            healthX = playerInstance.pos.x,
+//            healthY = (playerInstance.pos.y - playerHalfHeight) - 15.0f;
+//        CP_Settings_TextSize(25);
+//        CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255));
+//        CP_Font_DrawText(healthStr, healthX, healthY);
+//
+//        // Wave
+//        CP_Settings_TextSize(60);
+//        char currentWaveStr[8];
+//        sprintf_s(currentWaveStr, sizeof(currentWaveStr), "Wave: %d", currentWave);
+//        CP_Font_DrawText(currentWaveStr, windowWidth / 2.f, 50.f);
+//    }
+//    #pragma endregion
+//
+//    // Exit to Main Menu
+//    if (CP_Input_KeyTriggered(KEY_Q)) {
+//        CP_Engine_SetNextGameState(main_menu_init, main_menu_update, main_menu_exit);
+//    }
+//
+//    _render_cursor(mouseX, mouseY);
+//}
+//
+//void level_two_exit(void) {
+//    CP_Image_Free(&playerInstance.img);
+//    CP_Image_Free(&levelBg);
+//    CP_Image_Free(&cursor);
+//
+//    for (int i = 0; i < roachesMax; i++) {
+//        struct ChocoRoach roach = roaches[i];
+//        if (roach.img != NULL)
+//            CP_Image_Free(&roach.img);
+//    }
+//    if (bossInstance.img != NULL)
+//        CP_Image_Free(&bossInstance.img);
+//    dispose_sounds();
+//    free(enemyGrid.nodes);
+//    free(enemyGridNB.nodes);
+//    free(bossGrid.nodes);
+//    free(bossGridNB.nodes);
+//    dispose_barriers();
+//    dispose_allies();
+//    dispose_tilemap();
+//}

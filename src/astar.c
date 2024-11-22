@@ -101,14 +101,12 @@ void update_grid(Grid* grid, struct Rectangle* worldClips, int clipsSize, struct
 	free(tempArray);
 }
 
-void draw_grid(PathNode* grid, int nodeCount, struct Camera cam) {
+void draw_grid(PathNode* grid, int nodeCount) {
 	CP_Settings_Fill(CP_Color_Create(255, 255, 255, 255));
 	for (int i = 0; i < nodeCount; i++) {
-		CP_Vector nodeVec = get_cam_pos_rel(grid[i].pos, cam);
-		CP_Graphics_DrawCircle(nodeVec.x, nodeVec.y, 20.f);
+		CP_Graphics_DrawCircle(grid[i].pos.x, grid[i].pos.y, 20.f);
 		for (int cI = 0; cI < grid[i].connectionCount; cI++) {
-			CP_Vector neighbourVec = get_cam_pos_rel(grid[grid[i].connections[cI]].pos, cam);
-			CP_Graphics_DrawLine(nodeVec.x, nodeVec.y, neighbourVec.x, neighbourVec.y);
+			CP_Graphics_DrawLine(grid[i].pos.x, grid[i].pos.y, grid[grid[i].connections[cI]].pos.x, grid[grid[i].connections[cI]].pos.y);
 		}
 	}
 }

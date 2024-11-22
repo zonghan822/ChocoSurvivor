@@ -9,8 +9,6 @@
 #define PLAYER_HITBOX_OFFSET_Y(playerHeight) (- 8.f / 77.f * playerHeight)
 
 // to bring over to next level (map)
-extern int playerMaxExp;
-extern int playerLevel;
 extern struct ChocoShooter playerInstance;
 
 enum BuffType {
@@ -66,21 +64,23 @@ struct ChocoShooter {
     int shield; 
     int activeBuffSlot, activeBuffType, activeBuffLevel;
     int exp;
+    int playerMaxExp;
+    int playerLevel;
 };
 
 #pragma region Player
 int player_take_damage(struct ChocoShooter* player, int damage);
 struct ChocoShooter init_player(CP_Vector pos, float speed, float maxHealth, int atk, float fireRate);
 void move_player(struct ChocoShooter* player, float dt, float level_width, float level_height);
-void render_player(struct ChocoShooter player, float alpha, struct Camera cam);
+void render_player(struct ChocoShooter player, float alpha);
 void render_health_bar(struct ChocoShooter* player, float dt, float windowWidth, float windowHeight, float meterX, float meterY, float meterWidth, float meterHeight);
 #pragma endregion
 
 #pragma region Bullet
 struct Bullet init_bullet(enum BulletType bulletType, float bulletSpeed, float bulletDiameter, int dmg, CP_Vector bulletDirection);
-void shoot_bullet(struct ChocoShooter* player, struct Bullet* bullet);
+void player_shoot(float dt, bool can_shoot, float mouse_x, float mouse_y);
 void update_pos_bullet(struct Bullet* bullet, float dt);
-void render_bullet(struct Bullet bullet, struct Camera cam);
+void render_bullet(struct Bullet bullet);
 #pragma endregion
 
 #pragma region Buffs

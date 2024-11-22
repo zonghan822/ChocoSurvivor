@@ -2,54 +2,77 @@
 #include "player.h"
 #include "cprocessing.h"
 
-void update_camera(struct Camera* camera, struct ChocoShooter player, float level_width, float level_height) {
+static const float SCALE_FACTOR = 1.2f;
+static const float MOVE_FACTOR = 150.f;
+static const float MIN_SCALE = 1.f;
+static const float MAX_SCALE = 2.5f;
 
-	// Update width and height in case of resolution change
-	camera->width = (float)CP_System_GetWindowWidth();
-	camera->height = (float)CP_System_GetWindowHeight();
+static float _currentScale;
+static CP_Vector _centerOffset, _currentPosition;
+static CP_Matrix _translationMatrix;
 
-	float halfWidth = camera->width / 2,
-		halfHeight = camera->height / 2;
+static CP_Matrix _transform;
+static float _maxWidth, _maxHeight;
 
-	// Clamp camera pos so it won't go beyond level height and width
-	camera->pos.x = CP_Math_ClampFloat(player.pos.x, halfWidth, level_width - halfWidth);
-	camera->pos.y = CP_Math_ClampFloat(player.pos.y, halfHeight, level_height - halfHeight);
+void init_camera(struct ChocoShooter player, float width, float height) {
+	_maxWidth = width;
+	_maxHeight = height;
+	_currentScale = 1.f;
 
-	// Any more updates here
+	_currentPosition = CP_Vector_Set(-player.pos.x, -player.pos.y);
+	_translationMatrix = CP_Matrix_Translate(_currentPosition);
+
+	_centerOffset = CP_Vector_Set(CP_System_GetWindowWidth() / 2.f, CP_System_GetWindowHeight() / 2.f);
+	_transform = CP_Matrix_Identity();
 }
 
-struct Camera init_camera(struct ChocoShooter player, float width, float height) {
-	struct Camera cam = {
-		.pos = player.pos,
-		.width = width,
-		.height = height
-	};
+void update_camera(struct ChocoShooter player, float dt) {
+	const float minDistance = 2.5f; // to smoothen movement later
+	// Translation
+	if (CP_Vector_Distance(CP_Vector_Negate(_currentPosition), player.pos) < minDistance)
+		_currentPosition = CP_Vector_Set(-player.pos.x, -player.pos.y); // Correct the camera so it won't shake continuously
+	else { // Continue moving the camera until it reaches the player's pos
+		CP_Vector delta = CP_Vector_Subtract(player.pos, CP_Vector_Negate(_currentPosition));
+		CP_Vector moveDirection = CP_Vector_Zero();
 
-	return cam;
+		if (delta.x != 0.f)
+			moveDirection.x = delta.x < 0.f ? -1.f : 1.f;
+		if (delta.y != 0.f)
+			moveDirection.y = delta.y < 0.f ? -1.f : 1.f;
+
+		// Smoothen movement
+		if (delta.x != 0 && (delta.x < minDistance && delta.x > -minDistance)) {
+			moveDirection.x = 0.f;
+			_currentPosition.x = -player.pos.x;
+		}
+		if (delta.y != 0 && (delta.y < minDistance && delta.y > -minDistance)) {
+			moveDirection.y = 0.f;
+			_currentPosition.y = -player.pos.y;
+		}
+
+		// Move camera
+		if (moveDirection.x != 0)
+			moveDirection.x += dt * (moveDirection.x > 0 ? MOVE_FACTOR : -MOVE_FACTOR);
+		if (moveDirection.y != 0)
+			moveDirection.y += dt * (moveDirection.y > 0 ? MOVE_FACTOR : -MOVE_FACTOR);
+
+		_currentPosition = CP_Vector_Add(_currentPosition, CP_Vector_Set(-moveDirection.x, -moveDirection.y));
+	}
+	CP_Matrix offsetMatrix = CP_Matrix_Translate(_centerOffset);
+
+	// Clamp
+	float windowWidth = CP_System_GetWindowWidth(),
+		windowHeight = CP_System_GetWindowHeight();
+	_currentPosition.x = CP_Math_ClampFloat(_currentPosition.x, -(_maxWidth - _centerOffset.x), -_centerOffset.x);
+	_currentPosition.y = CP_Math_ClampFloat(_currentPosition.y, -(_maxHeight - _centerOffset.y), -_centerOffset.y);
+
+	// Apply matrix
+	_translationMatrix = CP_Matrix_Translate(_currentPosition);
+	_transform = CP_Matrix_Multiply(_translationMatrix, offsetMatrix);
+
+	CP_Settings_ApplyMatrix(_transform);
 }
 
-// Get vector based on camera's pos
-// Due to the level size bigger than window size, the camera
-// position will represent the "view" of the level
-// `vec` is the position of the entity
-CP_Vector get_cam_pos_rel(CP_Vector vec, struct Camera cam) {
-	// Get top left point of the camera
-	// The camera height and width is basically the window size
-	// Top left for correct rendering (0,0) is top left
-	cam.pos.x -= cam.width / 2;
-	cam.pos.y -= cam.height / 2;
-
-	// Get the relative position of the entity/vector to
-	// the camera position
-	return CP_Vector_Subtract(vec, cam.pos);
-}
-
-CP_Vector get_world_pos_rel(CP_Vector vec, struct Camera cam) {
-	float camHalfWidth = cam.width / 2,
-		camHalfHeight = cam.height / 2;
-
-	cam.pos.x -= camHalfWidth;
-	cam.pos.y -= camHalfHeight;
-
-	return CP_Vector_Add(vec, cam.pos);
+void apply_camera(void) {
+	CP_Settings_ApplyMatrix(_transform);
 }

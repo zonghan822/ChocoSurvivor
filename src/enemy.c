@@ -58,12 +58,11 @@ void enemy_move_to_target(struct ChocoRoach* roach, struct Rectangle hitbox, flo
     roach->pos.y += roach->moveDirection.y * roach->speed * dt;
 }
 
-void render_enemies(struct ChocoRoach* roaches, struct Camera cam, int size) {
+void render_enemies(struct ChocoRoach* roaches, int size) {
     for (int i = 0; i < size; i++) {
         if (roaches[i].currentState != ENEMY_STATE_DIED) {
-            CP_Vector vec = get_cam_pos_rel(roaches[i].pos, cam);
             CP_Image_Draw(roaches[i].img,
-                vec.x, vec.y,
+                roaches[i].pos.x, roaches[i].pos.y,
                 roaches[i].width, roaches[i].height,
                 255);
             //printf("enemy %d pos: ( %lf, %lf )\n", i, roaches[i].pos.x, roaches[i].pos.y);

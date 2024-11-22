@@ -41,4 +41,6 @@ void clamp_pos_clip_rel(CP_Vector* vec, struct Rectangle entity_hitbox, struct R
 
 float resize_by_divisor(float dimension, int divisor);
 
-void render_health_bar_rel(struct Rectangle entity, int health, int maxHealth, struct Camera cam);
+void render_health_bar_rel(struct Rectangle entity, int health, int maxHealth);
+
+void render_cursor(CP_Image cursor);

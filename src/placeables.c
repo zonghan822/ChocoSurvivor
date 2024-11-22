@@ -41,15 +41,15 @@ void increment_barrier_count(void) {
     }
 }
 
-void set_barrier_properties(int index, CP_Vector position, float width, float height, int health) {
+void set_barrier_properties(int index, CP_Vector pos, float width, float height, int health) {
     if (index < MAX_BARRIERS) {
-        barriers[index].position = barriers[index].hitbox.pos = position;
+        barriers[index].pos = barriers[index].hitbox.pos = pos;
         barriers[index].width = barriers[index].hitbox.width = width;
         barriers[index].height = barriers[index].hitbox.height = height;
         barriers[index].health = barriers[index].maxHealth = health;
         barriers[index].isTakingDamage = false;
         barriers[index].healthBarDisplayTime = 0.f;
-        printf("Barrier %d set at position (%.2f, %.2f) with health %d\n", index, position.x, position.y, health);
+        printf("Barrier %d set at position (%.2f, %.2f) with health %d\n", index, pos.x, pos.y, health);
     }
 }
 
@@ -78,13 +78,12 @@ int barrier_take_damage(int barrierIndex, int damage) {
     return 0;
 }
 
-void render_barriers(struct Camera cam) {
+void render_barriers() {
     CP_Settings_Fill(CP_Color_Create(0, 0, 255, 255)); // Solid blue
     for (int i = 0; i < get_barrier_count(); i++) {
         if (barriers[i].health > 0) {  // Only draw if health is greater than zero
-            CP_Vector vec = get_cam_pos_rel(barriers[i].position, cam);
             CP_Image_Draw(get_barrier_image(playerInstance.buffs.barrierLevel),
-                vec.x, vec.y,
+                barriers[i].pos.x, barriers[i].pos.y,
                 barriers[i].width, barriers[i].height,
                 255);
         }
@@ -124,9 +123,9 @@ void increment_ally_count(void) {
     }
 }
 
-void init_ally(int index, CP_Vector position, float width, float height) {
+void init_ally(int index, CP_Vector pos, float width, float height) {
     if (index < MAX_ALLIES) {
-        allies[index].position = position;
+        allies[index].pos = pos;
         allies[index].width = width;
         allies[index].height = height;
         allies[index].attackSpeed = 2.0f; // in milliseconds
@@ -145,29 +144,27 @@ void init_ally(int index, CP_Vector position, float width, float height) {
     }
 }
 
-void render_allies(struct Camera cam) {
+void render_allies() {
     for (int i = 0; i < get_ally_count(); i++) {
         if (!allies[i].state) {
-            CP_Vector vec = get_cam_pos_rel(allies[i].position, cam);
             CP_Image_Draw(get_ally_image(playerInstance.buffs.allyLevel),
-                vec.x, vec.y,
+                allies[i].pos.x, allies[i].pos.y,
                 allies[i].width, allies[i].height,
                 255);
         }
     }
 }
 
-void render_ally_bullet(struct Bullet bullet, struct Camera cam) {
+void render_ally_bullet(struct Bullet bullet) {
     if (bullet.isShooting) { // Only render bullets that are active
-        CP_Vector screenPos = get_cam_pos_rel(bullet.pos, cam); // Convert world to screen coordinates
         CP_Settings_Fill(CP_Color_Create(255, 0, 0, 255));      // Red color for bullets
-        CP_Graphics_DrawCircle(screenPos.x, screenPos.y, bullet.diameter); // Draw the bullet
+        CP_Graphics_DrawCircle(bullet.pos.x, bullet.pos.y, bullet.diameter); // Draw the bullet
         printf("DEBUG: Rendering bullet at position (%.2f, %.2f), diameter=%.2f\n",
-            screenPos.x, screenPos.y, bullet.diameter);
+            bullet.pos.x, bullet.pos.y, bullet.diameter);
     }
 }
 
-void update_allies(float dt, struct ChocoRoach* enemies, int enemyCount, struct Camera cam) {
+void update_allies(float dt, struct ChocoRoach* enemies, int enemyCount) {
     for (int i = 0; i < allyCount; i++) {
         if (allies[i].state < ALLY_IDLE)
             continue;
@@ -183,7 +180,7 @@ void update_allies(float dt, struct ChocoRoach* enemies, int enemyCount, struct 
         for (int j = 0; j < enemyCount; j++) {
             if (enemies[j].currentState == ENEMY_STATE_DIED) continue;
 
-            float distance = CP_Vector_Distance(allies[i].position, enemies[j].pos);
+            float distance = CP_Vector_Distance(allies[i].pos, enemies[j].pos);
             if (distance < closestDistance) {
                 closestDistance = distance;
                 closestEnemy = &enemies[j];
@@ -211,13 +208,13 @@ void update_allies(float dt, struct ChocoRoach* enemies, int enemyCount, struct 
                 ALLY_BULLET_SPEED,
                 10.0f,
                 allies[i].attackPower,
-                CP_Vector_Subtract(closestEnemy->pos, allies[i].position)
+                CP_Vector_Subtract(closestEnemy->pos, allies[i].pos)
             );
 
             // Find an available bullet slot
             int slot = find_bullet_slot(allies[i].bullets);
             if (slot != -1) {
-                bullet.pos = allies[i].position;
+                bullet.pos = allies[i].pos;
                 allies[i].bullets[slot] = bullet;
                 allies[i].bullets[slot].isShooting = TRUE; // Mark bullet as active
                 printf("DEBUG: Ally %d shot a bullet at enemy at position (%.2f, %.2f).\n", i, closestEnemy->pos.x, closestEnemy->pos.y);
@@ -234,7 +231,7 @@ void update_allies(float dt, struct ChocoRoach* enemies, int enemyCount, struct 
         for (int k = 0; k < MAX_BULLET_COUNT; k++) {
             if (allies[i].bullets[k].isShooting) {
                 update_pos_bullet(&allies[i].bullets[k], dt);
-                render_ally_bullet(allies[i].bullets[k], cam); // Render the bullet
+                render_ally_bullet(allies[i].bullets[k]); // Render the bullet
                 printf("DEBUG: Bullet %d for Ally %d is moving. Position=(%.2f, %.2f)\n",
                     k, i, allies[i].bullets[k].pos.x, allies[i].bullets[k].pos.y);
             }

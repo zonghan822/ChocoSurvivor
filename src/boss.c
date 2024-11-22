@@ -123,9 +123,8 @@ struct Boss init_boss_two(float width, float speed, int health, int attack_power
 	return boss;
 }
 
-void render_boss(struct Boss boss, struct Camera cam) {
-	CP_Vector vec = get_cam_pos_rel(boss.pos, cam);
-	CP_Image_Draw(boss.img, vec.x, vec.y, boss.width, boss.height, 255);
+void render_boss(struct Boss boss) {
+	CP_Image_Draw(boss.img, boss.pos.x, boss.pos.x, boss.width, boss.height, 255);
 }
 
 void spawn_boss(struct Boss* boss, float x, float y) {

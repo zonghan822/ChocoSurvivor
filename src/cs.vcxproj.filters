@@ -64,6 +64,9 @@
     <ClCompile Include="gui.c">
       <Filter>Source Files\UI</Filter>
     </ClCompile>
+    <ClCompile Include="level.c">
+      <Filter>Source Files\Levels</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="boss.h">
@@ -122,6 +125,9 @@
     </ClInclude>
     <ClInclude Include="gui.h">
       <Filter>Header Files\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="level.h">
+      <Filter>Header Files\Levels</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

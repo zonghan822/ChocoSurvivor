@@ -15,8 +15,8 @@ struct ProgressBar {
 	CP_Color baseColor;
 };
 
-struct ProgressBar init_progressbar(float width, float height, float x, float y, CP_Color baseColor);
+struct ProgressBar init_progressbar(float width, float height, float x, float y, CP_Color baseColor, enum ProgressBarColor barColor);
 void update_progressbar(struct ProgressBar* progressBar, float value, float max);
 void render_progressbar(struct ProgressBar progressBar);
-void render_progressbar_custom(float width, float height, float x, float y, CP_Color baseColor, float value, float max);
+void render_progressbar_custom(float width, float height, float x, float y, CP_Color baseColor, enum ProgressBarColor barColor, float value, float max);
 void dispose_progressbar(struct ProgressBar* progressBar);

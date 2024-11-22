@@ -22,6 +22,7 @@
     <ClCompile Include="audio.c" />
     <ClCompile Include="astar.c" />
     <ClCompile Include="gui.c" />
+    <ClCompile Include="level.c" />
     <ClCompile Include="placeables.c" />
     <ClCompile Include="boss.c" />
     <ClCompile Include="button.c" />
@@ -44,6 +45,7 @@
     <ClInclude Include="audio.h" />
     <ClInclude Include="astar.h" />
     <ClInclude Include="gui.h" />
+    <ClInclude Include="level.h" />
     <ClInclude Include="placeables.h" />
     <ClInclude Include="boss.h" />
     <ClInclude Include="button.h" />

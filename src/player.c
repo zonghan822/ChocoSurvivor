@@ -19,9 +19,10 @@ static CP_Vector _dashTo;
 static float _walkSoundTimer;
 static bool _hasPlayedLevelUpMusic;
 
-int playerMaxExp = 20;
-int playerLevel = 1;
-struct ChocoShooter playerInstance;
+struct ChocoShooter playerInstance; // Global variable, not private
+static enum BulletType _bulletType = NORMAL_BULLET;
+static float _bulletSpeed = 650.f, _bulletDiameter = 14.f;
+static float _lastShotTime = 0;
 
 #pragma region Player
 // Returns 1 if still alive, 0 if not
@@ -65,7 +66,7 @@ struct ChocoShooter init_player(CP_Vector pos, float speed, float maxHealth, int
         .attackPower = atk,
         .buffs = {0},
         .flickerState.isVisible = TRUE,
-        .exp = 0
+        .exp = 0,
     };
     player.height = get_preserved_heightf((float)CP_Image_GetWidth(player.img), (float)CP_Image_GetHeight(player.img), player.width);
     player.hitbox.width = player.width / 1.4f;
@@ -161,6 +162,8 @@ void move_player(struct ChocoShooter *player, float dt, float level_width, float
             _isDashing = FALSE;
     }
 
+    update_camera(*player, dt);
+
     // Use hitbox instead because images can have whitespaces in them
     // Add some padding
     float halfWidth = (player->hitbox.width / 2.0f) + 2.0f,
@@ -176,9 +179,8 @@ void move_player(struct ChocoShooter *player, float dt, float level_width, float
     }
 }
 
-void render_player(struct ChocoShooter player, float alpha, struct Camera cam) {
-    CP_Vector vec = get_cam_pos_rel(player.pos, cam);
-    CP_Image_Draw(player.img, vec.x, vec.y, player.width, player.height, alpha);
+void render_player(struct ChocoShooter player, float alpha) {
+    CP_Image_Draw(player.img, player.pos.x, player.pos.y, player.width, player.height, alpha);
 }
 
 void render_health_bar(struct ChocoShooter* player, float dt, float windowWidth, float windowHeight, float meterX, float meterY, float meterWidth, float meterHeight) {
@@ -226,40 +228,53 @@ struct Bullet init_bullet(enum BulletType bulletType, float bulletSpeed, float b
     return bullet;
 }
 
-void shoot_bullet(struct ChocoShooter* player, struct Bullet* bullet) {
-    // x is the min or max x of player (extreme left or right of player)
-    float playerWidth = player->width < 0 ? -player->width : player->width;
-    bullet->pos.x = (bullet->shootDirection.x < 0) ? player->pos.x - (playerWidth / 2) : player->pos.x + (playerWidth / 2);
-    bullet->pos.y = player->pos.y;
+void player_shoot(float dt, bool can_shoot, float mouse_x, float mouse_y) {
+    _lastShotTime += dt;
+    if (CP_Input_MouseDown(MOUSE_BUTTON_LEFT) && can_shoot) {
+        if (_lastShotTime >= (1 / playerInstance.attackSpeed)) { // control fire rate
+            // bullet direction is the vector of player with mouse pointer
+            CP_Vector bulletDirection = CP_Vector_Subtract(CP_Vector_Set(mouse_x, mouse_y), playerInstance.pos);
+            struct Bullet bullet = init_bullet(_bulletType, _bulletSpeed, _bulletDiameter, playerInstance.attackPower, bulletDirection);
+            
+            // Shoot bullet logic
+            {
+                // x is the min or max x of player (extreme left or right of player)
+                float playerWidth = playerInstance.width < 0 ? -playerInstance.width : playerInstance.width;
+                bullet.pos.x = (bullet.shootDirection.x < 0) ? playerInstance.pos.x - (playerWidth / 2) : playerInstance.pos.x + (playerWidth / 2);
+                bullet.pos.y = playerInstance.pos.y;
 
-    int bulletCount = 0;
-    // check if the bullet is still moving
-    for (int i = 0; (player->bullets[i].isShooting || player->bullets[i + 1].isShooting); i++) {
+                int bulletCount = 0;
+                // check if the bullet is still moving
+                for (int i = 0; (playerInstance.bullets[i].isShooting || playerInstance.bullets[i + 1].isShooting); i++) {
 
-        // pop first index if finish shooting (push to the back of the last active bullet)
-        // e.g.: 
-        // before: [b1, b2, b3, b4, b5]->.ishooting = [False, True, True, True, False]
-        // after: [b2, b3, b4, b1, b5]->.ishooting = [True, True, True, False, False] , bulletCount = 3
-    
-        // if first bullet finish shooting and second bullet still shooting
-        if (!(player->bullets[i].isShooting) && (player->bullets[i + 1].isShooting)) {
-            // swap bullet
-            struct Bullet temp = player->bullets[i];
-            player->bullets[i] = player->bullets[i + 1];
-            player->bullets[i + 1] = temp;
+                    // pop first index if finish shooting (push to the back of the last active bullet)
+                    // e.g.: 
+                    // before: [b1, b2, b3, b4, b5]->.ishooting = [False, True, True, True, False]
+                    // after: [b2, b3, b4, b1, b5]->.ishooting = [True, True, True, False, False] , bulletCount = 3
+
+                    // if first bullet finish shooting and second bullet still shooting
+                    if (!(playerInstance.bullets[i].isShooting) && (playerInstance.bullets[i + 1].isShooting)) {
+                        // swap bullet
+                        struct Bullet temp = playerInstance.bullets[i];
+                        playerInstance.bullets[i] = playerInstance.bullets[i + 1];
+                        playerInstance.bullets[i + 1] = temp;
+                    }
+
+                    // get the count of the active bullet
+                    bulletCount++;
+                    if (i + 2 == MAX_BULLET_COUNT) {
+                        bulletCount = playerInstance.bullets[i + 1].isShooting ? bulletCount + 1 : bulletCount;
+                        break;
+                    }
+                }
+
+                // assign the next bullet to the next active bullet slot 
+                if (bulletCount < MAX_BULLET_COUNT) {
+                    playerInstance.bullets[bulletCount] = bullet;
+                }
+            }
+            _lastShotTime = 0;
         }
-
-        // get the count of the active bullet
-        bulletCount++;
-        if (i + 2 == MAX_BULLET_COUNT) {
-            bulletCount = player->bullets[i + 1].isShooting ? bulletCount + 1 : bulletCount;
-            break;
-        }
-    }
-
-    // assign the next bullet to the next active bullet slot 
-    if (bulletCount < MAX_BULLET_COUNT) {
-        player->bullets[bulletCount] = *bullet;
     }
 }
 
@@ -278,11 +293,10 @@ void update_pos_bullet(struct Bullet* bullet, float dt) {
     }
 }
 
-void render_bullet(struct Bullet bullet, struct Camera cam) {
+void render_bullet(struct Bullet bullet) {
     if (bullet.isShooting) {
-        CP_Vector vec = get_cam_pos_rel(bullet.pos, cam);
         CP_Settings_Fill(CP_Color_Create(113, 54, 0, 128));
-        CP_Graphics_DrawCircle(vec.x, vec.y, bullet.diameter);
+        CP_Graphics_DrawCircle(bullet.pos.x, bullet.pos.y, bullet.diameter);
     }
 }
 
@@ -347,11 +361,11 @@ void apply_buff(struct ChocoShooter* player, enum BuffType buff, struct Barrier*
 // Sidenote: EXP would refer to buff meter
 int update_buff_meter(struct ChocoShooter* player, int expGained) {
     player->exp += expGained;
-    printf("Current Exp: %d / %d\n", player->exp, playerMaxExp);
+    printf("Current Exp: %d / %d\n", player->exp, playerInstance.playerMaxExp);
 
     // Full or exceeded EXP
-    if (player->exp >= playerMaxExp) {
-        playerLevel++;
+    if (player->exp >= playerInstance.playerMaxExp) {
+        playerInstance.playerLevel++;
         if (!_hasPlayedLevelUpMusic) {
             play_sound_advanced(SOUND_MUSIC_LEVEL_UP, 1.f, 0);
             _hasPlayedLevelUpMusic = true;
@@ -359,10 +373,10 @@ int update_buff_meter(struct ChocoShooter* player, int expGained) {
         // Do nothing if EXP == playerMaxExp
         // But do return the buff
         // Wrap around only if exceeding
-        if (player->exp > playerMaxExp) {
+        if (player->exp > playerInstance.playerMaxExp) {
             // Wrap around then increase maxExp
-            player->exp -= playerMaxExp;
-            playerMaxExp *= EXP_INCREASE_MULTIPLIER;
+            player->exp -= playerInstance.playerMaxExp;
+            playerInstance.playerMaxExp *= EXP_INCREASE_MULTIPLIER;
         }
         enum BuffType randomBuff = CP_Random_RangeInt(1, 6);
         return randomBuff;

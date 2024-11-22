@@ -4,7 +4,7 @@
 #include <math.h>
 #include "gui.h"
 
-struct ProgressBar init_progressbar(float width, float height, float x, float y, CP_Color baseColor) {
+struct ProgressBar init_progressbar(float width, float height, float x, float y, CP_Color baseColor, enum ProgressBarColor barColor) {
     float w = resize_by_divisor(width, 4),
         h = resize_by_divisor(height, 4);
 
@@ -15,6 +15,7 @@ struct ProgressBar init_progressbar(float width, float height, float x, float y,
             .pos = CP_Vector_Set(x, y)
         },
         .value = 0,
+        .barColor = barColor,
         .baseColor = baseColor
     };
 
@@ -28,8 +29,8 @@ void update_progressbar(struct ProgressBar* progressbar, float value, float max)
     progressbar->value = value;
 }
 
-void render_progressbar_custom(float width, float height, float x, float y, CP_Color baseColor, float value, float max) {
-    struct ProgressBar progBar = init_progressbar(width, height, x, y, baseColor);
+void render_progressbar_custom(float width, float height, float x, float y, CP_Color baseColor, enum ProgressBarColor barColor, float value, float max) {
+    struct ProgressBar progBar = init_progressbar(width, height, x, y, baseColor, barColor);
     update_progressbar(&progBar, value, max);
     render_progressbar(progBar);
 }
