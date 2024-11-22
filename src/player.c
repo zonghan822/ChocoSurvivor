@@ -262,7 +262,6 @@ void apply_buff(struct ChocoShooter* player, enum BuffType buff, struct Barrier*
    
          break;
 
-
     }
 }
 

@@ -5,6 +5,7 @@
 #include "cprocessing.h"
 #include "enemy.h"
 #include "camera.h"
+#include "placeables.h"
 
 
 struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth, float speed, int maxHealth, int dmg) {
@@ -28,7 +29,7 @@ struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth,
     chocoRoach.hitbox.height = 0.75 * chocoRoach.height;
     chocoRoach.healthBarDisplayTime = 0.f;
     chocoRoach.isTakingDamage = false;
-    chocoRoach.barrierAttack = -1;
+    chocoRoach.barrierAttack = MAX_BARRIERS;
     return chocoRoach;
 }
 

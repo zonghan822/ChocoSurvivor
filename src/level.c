@@ -336,6 +336,7 @@ void spawn_enemies(float dt) {
 void player_placeables(float mouse_x, float mouse_y, float dt) {
     // Update allies
     ally_shoot(dt, _roaches, _roachesMax);
+    sort_barriers();
 
     // Barriers
     switch (_currentBarrierState) {
@@ -559,7 +560,7 @@ void render_ui(float window_width, float window_height, float mouse_x, float mou
     CP_Settings_TextSize(30.f);
     CP_Settings_Fill(CP_Color_Create(255, 255, 255, 255));
     char levelStr[10];
-    sprintf_s(levelStr, sizeof(levelStr), "Lvl. %d", playerInstance.playerLevel);
++    sprintf_s(levelStr, sizeof(levelStr), "Lvl. %d", playerInstance.playerLevel);
     CP_Font_DrawText(levelStr, 25.f, 25.f);
     CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_CENTER, CP_TEXT_ALIGN_V_MIDDLE);
 }
@@ -734,7 +735,7 @@ void check_collision(void) {
 
 // TODO: Need rework
 void enemy_move_attack(float dt) {
-#pragma region Enemy Attack State
+    #pragma region Enemy Attack State
     for (int i = 0; _roaches[i].currentState; i++) {
         // Attack defense target when collide
         if (are_rects_intersecting(_roaches[i].hitbox, get_tower_hitbox(_tower))) {
@@ -758,7 +759,7 @@ void enemy_move_attack(float dt) {
                 break;
             }
         }
-        if (_roaches[i].barrierAttack >= 0)
+        if (_roaches[i].barrierAttack < MAX_BARRIERS)
             continue;
 
         struct Circle radarRoach = { .pos = _roaches[i].pos, .diameter = 5 * fabs(_roaches[i].width) }; // define enemy radar
@@ -768,83 +769,70 @@ void enemy_move_attack(float dt) {
         }
         _roaches[i].currentState = ENEMY_STATE_MOVING_TO_TOWER;
     }
-#pragma endregion
-
-    int barriersDestroyed[MAX_BARRIERS];
-    int barriersDestroyedCount = 0;
-    bool isDestroyed = false;
+    #pragma endregion
 
     for (int i = 0; i < _roachesMax; i++) {
-#pragma region Enemy Movement & Attack 
         if (_roaches[i].currentState) { // if enemy is alive
-            int barriersDestroyed[MAX_BARRIERS] = { 0 };
-            int barriersDestroyedCount = 0;
-            bool isDestroyed = false;
+            
+            #pragma region Enemy Movement & Attack 
             _roaches[i].attackCooldown = max(0, _roaches[i].attackCooldown - dt);
+
             switch (_roaches[i].currentState) {
-            case ENEMY_STATE_MOVING_TO_TOWER: {
-                enemy_move_to_target(&_roaches[i], get_tower_hitbox(_tower), dt, _enemyGrid.nodes, _enemyGridNB.nodes, _enemyGrid.nodeCount);
-                break;
-            }
-
-            case ENEMY_STATE_MOVING_TO_PLAYER: {
-                enemy_move_to_target(&_roaches[i], playerInstance.hitbox, dt, _enemyGrid.nodes, _enemyGridNB.nodes, _enemyGrid.nodeCount);
-                break;
-            }
-
-            case ENEMY_STATE_ATTACKING: {
-                // stop movement
-                _roaches[i].moveDirection = CP_Vector_Zero();
-
-                // attack animation here...
-
-
-                // if animation end then...
-                switch (_enemyAttackTarget) {
-                case TARGET_PLAYER:
-                    if (!player_take_damage(&playerInstance, _roaches[i].dmg)) { // Returns 0 if player dies from damage
-                        if (tower_revive_player(&_tower, &playerInstance)) // Returns 1 if tower is still alive after reviving
-                            playerInstance.pos = _respawnVec;
-                    }
+                case ENEMY_STATE_MOVING_TO_TOWER: {
+                    enemy_move_to_target(&_roaches[i], get_tower_hitbox(_tower), dt, _enemyGrid.nodes, _enemyGridNB.nodes, _enemyGrid.nodeCount);
                     break;
-                case TARGET_TOWER:
-                    tower_take_damage(&_tower, 1);
+                }
+
+                case ENEMY_STATE_MOVING_TO_PLAYER: {
+                    enemy_move_to_target(&_roaches[i], playerInstance.hitbox, dt, _enemyGrid.nodes, _enemyGridNB.nodes, _enemyGrid.nodeCount);
                     break;
-                case TARGET_BARRIER: {
-                    for (int j = 0; j < barriersDestroyedCount; j++) {
-                        if (barriersDestroyed[j] == _roaches[i].barrierAttack)
-                            if (barriersDestroyed[j] == _roaches[i].barrierAttack) {
-                                isDestroyed = true;
-                                _roaches[i].barrierAttack = -1;
+                }
+
+                case ENEMY_STATE_ATTACKING: {
+                    // stop movement
+                    _roaches[i].moveDirection = CP_Vector_Zero();
+
+                    // attack animation here...
+
+
+                    // if animation end then...
+                    switch (_enemyAttackTarget) {
+                        case TARGET_PLAYER:
+                            if (!player_take_damage(&playerInstance, _roaches[i].dmg)) { // Returns 0 if player dies from damage
+                                if (tower_revive_player(&_tower, &playerInstance)) // Returns 1 if tower is still alive after reviving
+                                    playerInstance.pos = _respawnVec;
                             }
-                    }
-                    if (_roaches[i].attackCooldown <= 0 && !isDestroyed) {
-                        _roaches[i].attackCooldown = _enemyMaxAttackCD;
-                        if (!barrier_take_damage(_roaches[i].barrierAttack, _roaches[i].dmg)) {
-                            barriersDestroyed[barriersDestroyedCount++] = _roaches[i].barrierAttack;
-                            int worldClipsIndex = _obstaclesCount + _roaches[i].barrierAttack;
-                            if (worldClipsIndex != _worldClipsCount - 1) {
-                                struct Rectangle tmp = _worldClips[_worldClipsCount - 1];
-                                _worldClips[_worldClipsCount - 1] = _worldClips[worldClipsIndex];
-                                _worldClips[worldClipsIndex] = tmp;
+                            break;
+                
+                        case TARGET_TOWER:
+                            tower_take_damage(&_tower, 1);
+                            break;
+                
+                        case TARGET_BARRIER: 
+                            if (_roaches[i].attackCooldown <= 0) {
+                                _roaches[i].attackCooldown = _enemyMaxAttackCD;
+                                if (!barrier_take_damage(_roaches[i].barrierAttack, _roaches[i].dmg)) {
+                                    int worldClipsIndex = _obstaclesCount + _roaches[i].barrierAttack;
+                                    if (worldClipsIndex != (_worldClipsCount - 1)) {
+                                        struct Rectangle tmp = _worldClips[_worldClipsCount - 1];
+                                        _worldClips[_worldClipsCount - 1] = _worldClips[worldClipsIndex];
+                                        _worldClips[worldClipsIndex] = tmp;
+                                    }
+                                    _worldClipsCount--;
+                                    update_grid(&_enemyGrid, _worldClips, _worldClipsCount, _enemyClips, 1);
+                                    update_grid(&_bossGrid, _worldClips, _worldClipsCount, _enemyClips, 1);
+                                }
                             }
-                            _worldClipsCount--;
-                            update_grid(&_enemyGrid, _worldClips, _worldClipsCount, _enemyClips, 1);
-                            update_grid(&_bossGrid, _worldClips, _worldClipsCount, _enemyClips, 1);
-                            _roaches[i].barrierAttack = -1; // make index of barrier to attack to negative
-                        }
+                            _roaches[i].barrierAttack = MAX_BARRIERS;
+                            break;
                     }
                     break;
                 }
-                }
-                break;
-            }
 
-            case ENEMY_STATE_IDLE:
-                _roaches[i].moveDirection = CP_Vector_Zero();
-                break;
+                case ENEMY_STATE_IDLE:
+                    _roaches[i].moveDirection = CP_Vector_Zero();
+                    break;
             }
-            sort_barriers();
             CP_Vector hitboxPos = { _roaches[i].pos.x + ENEMY_HITBOX_OFFSET_X(_roaches[i].width), _roaches[i].pos.y + ENEMY_HITBOX_OFFSET_Y(_roaches[i].height) };
             update_rect_hitbox(&_roaches[i].hitbox, 0.0f, 0.0f, hitboxPos); // Update hitbox of enemy
 #pragma endregion
@@ -852,7 +840,7 @@ void enemy_move_attack(float dt) {
         // can use else statement here for dying animation...
     }
 
-#pragma region Boss Movement & Attack
+    #pragma region Boss Movement & Attack
     switch (_boss.state) {
     case BOSS_STATE_MOVING_TO_TOWER:
         _boss.move(&_boss, playerInstance, get_tower_hitbox(_tower), dt, _bossGrid.nodes, _bossGrid.nodeCount);

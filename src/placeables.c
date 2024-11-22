@@ -56,24 +56,6 @@ CP_Image get_barrier_image(int barrierLevel) {
     return barrierImages[barrierLevel];
 }
 
-// Returns 1 if still alive, 0 if not
-int barrier_take_damage(int barrierIndex, int damage) {
-    barriers[barrierIndex].isTakingDamage = true;
-    barriers[barrierIndex].health = CP_Math_ClampInt(barriers[barrierIndex].health - damage, 0, barriers[barrierIndex].maxHealth);
-    barriers[barrierIndex].healthBarDisplayTime = 0;
-
-    if (barriers[barrierIndex].health > 0) {
-        printf("Barrier took %d damage, health is now %d\n", damage, barriers[barrierIndex].health);
-        return 1;
-    }
-
-    printf("Barrier destroyed!\n");
-    
-    barrierCount = max(0, barrierCount-1);
-    return 0;
-}
-
-
 static int _comp(const void* a, const void* b)
 {
     if (!(((struct Barrier*)a)->health) && !(((struct Barrier*)b)->health))
@@ -87,6 +69,25 @@ static int _comp(const void* a, const void* b)
 
 void sort_barriers(void) {
     qsort(barriers, MAX_BARRIERS, sizeof(struct Barrier), _comp);
+}
+
+// Returns 1 if still alive, 0 if not
+int barrier_take_damage(int barrierIndex, int damage) {
+    if (barriers[barrierIndex].health <= 0) // prevent deal damage to destroyed barrier
+        return -1;
+
+    barriers[barrierIndex].isTakingDamage = true;
+    barriers[barrierIndex].health = CP_Math_ClampInt(barriers[barrierIndex].health - damage, 0, barriers[barrierIndex].maxHealth);
+    barriers[barrierIndex].healthBarDisplayTime = 0;
+
+    if (barriers[barrierIndex].health > 0) {
+        printf("Barrier took %d damage, health is now %d\n", damage, barriers[barrierIndex].health);
+        return 1;
+    }
+
+    printf("Barrier destroyed!\n");
+    --barrierCount;
+    return 0;
 }
 
 void render_barriers() {
