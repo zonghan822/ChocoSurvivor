@@ -682,13 +682,17 @@ void enemy_move_attack(float dt) {
     }
 #pragma endregion
 
+    int barriersDestroyed[MAX_BARRIERS];
+    int barriersDestroyedCount = 0;
+    bool isDestroyed = false;
+
     for (int i = 0; i < _roachesMax; i++) {
 #pragma region Enemy Movement & Attack 
         if (_roaches[i].currentState) { // if enemy is alive
             int barriersDestroyed[MAX_BARRIERS] = { 0 };
             int barriersDestroyedCount = 0;
             bool isDestroyed = false;
-            _roaches[i].attackCooldown = fmaxf(0.f, _roaches[i].attackCooldown - dt);
+            _roaches[i].attackCooldown = max(0, _roaches[i].attackCooldown - dt);
             switch (_roaches[i].currentState) {
             case ENEMY_STATE_MOVING_TO_TOWER: {
                 enemy_move_to_target(&_roaches[i], get_tower_hitbox(_tower), dt, _enemyGrid.nodes, _enemyGridNB.nodes, _enemyGrid.nodeCount);
@@ -721,7 +725,10 @@ void enemy_move_attack(float dt) {
                 case TARGET_BARRIER: {
                     for (int j = 0; j < barriersDestroyedCount; j++) {
                         if (barriersDestroyed[j] == _roaches[i].barrierAttack)
-                            isDestroyed = true;
+                            if (barriersDestroyed[j] == _roaches[i].barrierAttack) {
+                                isDestroyed = true;
+                                _roaches[i].barrierAttack = -1;
+                            }
                     }
                     if (_roaches[i].attackCooldown <= 0 && !isDestroyed) {
                         _roaches[i].attackCooldown = _enemyMaxAttackCD;
@@ -749,6 +756,7 @@ void enemy_move_attack(float dt) {
                 _roaches[i].moveDirection = CP_Vector_Zero();
                 break;
             }
+            sort_barriers();
             CP_Vector hitboxPos = { _roaches[i].pos.x + ENEMY_HITBOX_OFFSET_X(_roaches[i].width), _roaches[i].pos.y + ENEMY_HITBOX_OFFSET_Y(_roaches[i].height) };
             update_rect_hitbox(&_roaches[i].hitbox, 0.0f, 0.0f, hitboxPos); // Update hitbox of enemy
 #pragma endregion
