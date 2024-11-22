@@ -101,12 +101,14 @@ void update_grid(Grid* grid, struct Rectangle* worldClips, int clipsSize, struct
 	free(tempArray);
 }
 
-void draw_grid(PathNode* grid, int nodeCount) {
+void draw_grid(PathNode* grid, int nodeCount, struct Camera cam) {
 	CP_Settings_Fill(CP_Color_Create(255, 255, 255, 255));
 	for (int i = 0; i < nodeCount; i++) {
-		CP_Graphics_DrawCircle(grid[i].pos.x, grid[i].pos.y, 20.f);
+		CP_Vector nodeVec = get_cam_pos_rel(grid[i].pos, cam);
+		CP_Graphics_DrawCircle(nodeVec.x, nodeVec.y, 20.f);
 		for (int cI = 0; cI < grid[i].connectionCount; cI++) {
-			CP_Graphics_DrawLine(grid[i].pos.x, grid[i].pos.y, grid[grid[i].connections[cI]].pos.x, grid[grid[i].connections[cI]].pos.y);
+			CP_Vector neighbourVec = get_cam_pos_rel(grid[grid[i].connections[cI]].pos, cam);
+			CP_Graphics_DrawLine(nodeVec.x, nodeVec.y, neighbourVec.x, neighbourVec.y);
 		}
 	}
 }
@@ -127,10 +129,6 @@ int get_nearest_node_index(PathNode* grid, int nodeCount, CP_Vector position) {
 
 static void init_list(AStarList* nodeList, int size) {
 	nodeList->list = (AStarNode *)malloc(size * sizeof(AStarNode));
-	if (nodeList->list == NULL) {
-		fprintf(stderr, "Memory allocation failed\n");
-		return;
-	}
 	nodeList->nodeCount = 0;
 	nodeList->size = size;
 }
@@ -139,10 +137,6 @@ static void append_list(AStarList* nodeList, AStarNode node) {
 	if (nodeList->nodeCount == nodeList->size) {
 		nodeList->size++;
 		nodeList->list = realloc(nodeList->list, nodeList->size * sizeof(AStarNode));
-		if (nodeList->list == NULL) {
-			fprintf(stderr, "Memory reallocation failed\n");
-			return;
-		}
 	}
 	nodeList->list[nodeList->nodeCount++] = node;
 }
@@ -211,16 +205,6 @@ int find_astar_path(PathNode* grid, int nodeCount, int startNodeIndex, int endNo
 				current = *(current.parentNode);
 			}
 			reverse_array(pathArray, pathNodeCount);
-			while (--(openList.nodeCount) >= 0) {
-				if (openList.list[openList.nodeCount].parentNode != NULL && openList.list[openList.nodeCount].parentNode->nodeIndex > 0) {
-					free(openList.list[openList.nodeCount].parentNode);
-				}
-			}
-			while (--(closedList.nodeCount) >= 0) {
-				if (closedList.list[closedList.nodeCount].parentNode != NULL && closedList.list[closedList.nodeCount].parentNode->nodeIndex > 0) {
-					free(closedList.list[closedList.nodeCount].parentNode);
-				}
-			}
 			free(openList.list);
 			free(closedList.list);
 			return pathNodeCount;
@@ -240,10 +224,6 @@ int find_astar_path(PathNode* grid, int nodeCount, int startNodeIndex, int endNo
 
 			if (!isNeighbourInClosed) {
 				AStarNode* parentNode = (AStarNode*)malloc(sizeof(AStarNode));
-				if (parentNode == NULL) {
-					fprintf(stderr, "Memory allocation failed\n");
-					return 0;
-				}
 
 				parentNode->nodeIndex = currentNode.nodeIndex;
 				parentNode->fCost = currentNode.fCost;
@@ -272,17 +252,5 @@ int find_astar_path(PathNode* grid, int nodeCount, int startNodeIndex, int endNo
 			}
 		}
 	}
-	while (--(openList.nodeCount) >= 0) {
-		if (openList.list[openList.nodeCount].parentNode != NULL && openList.list[openList.nodeCount].parentNode->nodeIndex > 0) {
-			free(openList.list[openList.nodeCount].parentNode);
-		}
-	}
-	while (--(closedList.nodeCount) >= 0) {
-		if (closedList.list[closedList.nodeCount].parentNode != NULL && closedList.list[closedList.nodeCount].parentNode->nodeIndex > 0) {
-			free(closedList.list[closedList.nodeCount].parentNode);
-		}
-	}
-	free(openList.list);
-	free(closedList.list);
 	return 0;
 }

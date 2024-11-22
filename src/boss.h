@@ -35,12 +35,12 @@ struct Boss {
     struct Rectangle hitbox;
     float attackSpeed;
     int attackPower;
-    bool isTakingDamage;
+    BOOL isTakingDamage;
 };
 
 struct Boss init_boss_one(float width, float speed, int health, int attack_power, float attack_speed);
 struct Boss init_boss_two(float width, float speed, int health, int attack_power, float attack_speed);
-void render_boss(struct Boss);
+void render_boss(struct Boss, struct Camera cam);
 int boss_take_damage(struct Boss* boss, int damage);
 void spawn_boss(struct Boss* boss, float x, float y);
 void dispose_boss(struct Boss* boss);

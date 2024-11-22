@@ -16,6 +16,7 @@ enum EnemyState {
 	ENEMY_STATE_DIED = 0,
 	ENEMY_STATE_MOVING_TO_TOWER,
 	ENEMY_STATE_MOVING_TO_PLAYER,
+	ENEMY_STATE_MOVING_TO_BARRIER,
 	ENEMY_STATE_DASHING,
 	ENEMY_STATE_ATTACKING,
 	ENEMY_STATE_IDLE
@@ -27,23 +28,24 @@ struct ChocoRoach {
 	float width;
 	float height;
 	float speed;
+	float originalSpeed;
 	int health;
 	int maxHealth;
 	int dmg;
-	float attackCooldown;
 	CP_Vector moveDirection;
 	enum EnemyState currentState;
 	struct Rectangle hitbox;
-	bool isTakingDamage; // for healthbar rendering
+	BOOL isTakingDamage;
 	float healthBarDisplayTime;
-	int barrierAttack;
+	int barrierAttack; // index of barrier to attack
 };
 
 // Takes in single enemy
 struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth, float speed, int maxHealth, int dmg);
-void enemy_move_to_target(struct ChocoRoach* roach, struct Rectangle hitbox, float dt, PathNode* grid, PathNode* gridNoBarrier, int nodeCount);
+void enemy_move_to_target(struct ChocoRoach* roach, struct Rectangle hitbox, float dt, PathNode* grid, int nodeCount);
+void render_enemy_health_bar(struct ChocoRoach* roach, struct Camera cam);
 int enemy_take_damage(struct ChocoRoach* roach, int dmg);
 
 // Takes in array of enemies
-void render_enemies(struct ChocoRoach* roachesArr, int size);
+void render_enemies(struct ChocoRoach* roachesArr, struct Camera cam, int size);
 void sort_enemies(struct ChocoRoach* roachesArr, int size);

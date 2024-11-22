@@ -1,6 +1,7 @@
 #pragma once
 #include "cprocessing.h"
 #include "utils.h"
+#include "camera.h"
 #include "flicker.h"
 
 struct DefenseTarget {
@@ -19,4 +20,4 @@ int tower_revive_player(struct DefenseTarget* tower, struct ChocoShooter* player
 
 struct Rectangle get_tower_hitbox(struct DefenseTarget tower);
 
-void render_tower(struct DefenseTarget tower);
+void render_tower(struct DefenseTarget tower, struct Camera cam);

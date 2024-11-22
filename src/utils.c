@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include "cprocessing.h"
 #include "utils.h"
-#include "camera.h"
 
 float get_preserved_widthf(float width, float height, float new_height) {
 	float aspectRatio = width / height;
@@ -59,34 +58,19 @@ float resize_by_divisor(float dimension, int divisor) {
     return dimension;
 }
 
-void render_health_bar_rel(struct Rectangle entity, int health, int maxHealth) {
-    // Set position of health bar
-    float health_bar_w = entity.width;
-    float health_bar_h = 15.f;
-    float health_bar_x = entity.pos.x - (health_bar_w / 2);
-    float health_bar_y = (entity.pos.y) - (entity.height / 2) - 20.f;
 
-    CP_Settings_RectMode(CP_POSITION_CORNER);
-
-    // Draw health bar rect
-    CP_Settings_Fill(CP_Color_Create(255, 0, 0, 255));
-    CP_Graphics_DrawRect(health_bar_x, health_bar_y, health_bar_w, health_bar_h);
-
-    float health_gap_x = health_bar_x + ((float)health / (float)maxHealth) * health_bar_w;
-    float health_gap_w = health_bar_w * (1.f - ((float)health / (float)maxHealth));
-
-    CP_Settings_Fill(CP_Color_Create(100, 100, 100, 255));
-    CP_Graphics_DrawRect(health_gap_x, health_bar_y, health_gap_w, health_bar_h);
-    CP_Settings_RectMode(CP_POSITION_CENTER);
-}
-
-void render_cursor(CP_Image cursor) {
-    CP_Settings_ImageMode(CP_POSITION_CORNER);
-    float cursorWidth = 60.f;
-    float mouseX = CP_Input_GetMouseX(),
-        mouseY = CP_Input_GetMouseY();
-    // 20.f is to correct its draw position with the actual cursor position
-    CP_Image_Draw(cursor, mouseX - 20.f, mouseY, cursorWidth,
-        get_preserved_heightf(CP_Image_GetWidth(cursor), CP_Image_GetHeight(cursor), cursorWidth), 255);
-    CP_Settings_ImageMode(CP_POSITION_CENTER);
-}
+//float get_diagonal_dist(float dist) {
+//	return (float)sqrt((dist * dist)/2);
+//}
+// 
+//void resize_by_width_preservef(float* width, float* height, float new_width) {
+//	float aspectRatio = *width / *height;
+//	*width = new_width;
+//	*height = new_width / aspectRatio;
+//}
+//
+//void resize_by_height_preservef(float* width, float* height, float new_height) {
+//	float aspectRatio = *width / *height;
+//	*height = new_height;
+//	*width = new_height / aspectRatio;
+//}
