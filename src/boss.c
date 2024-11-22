@@ -123,9 +123,8 @@ struct Boss init_boss_two(float width, float speed, int health, int attack_power
 	return boss;
 }
 
-void render_boss(struct Boss boss, struct Camera cam) {
-	CP_Vector vec = get_cam_pos_rel(boss.pos, cam);
-	CP_Image_Draw(boss.img, vec.x, vec.y, boss.width, boss.height, 255);
+void render_boss(struct Boss boss) {
+	CP_Image_Draw(boss.img, boss.pos.x, boss.pos.x, boss.width, boss.height, 255);
 }
 
 void spawn_boss(struct Boss* boss, float x, float y) {
@@ -137,7 +136,7 @@ void spawn_boss(struct Boss* boss, float x, float y) {
 
 int boss_take_damage(struct Boss* boss, int damage) {
 	boss->health = CP_Math_ClampInt(boss->health - damage, 0, boss->maxHealth);
-	boss->isTakingDamage = TRUE;
+	boss->isTakingDamage = true;
 
 	if (boss->health <= 0) {
 		printf("Boss has been defeated!\n");

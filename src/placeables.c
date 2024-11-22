@@ -9,24 +9,23 @@
 
 // Barrier variables
 struct Barrier barriers[MAX_BARRIERS];
-static int barrierCount = 0;
+int barrierCount = 0;
 CP_Image barrierImages[MAX_BARRIER_IMAGES] = { 0 };
 
 // Ally variables
 struct Ally allies[MAX_ALLIES];
-static int allyCount = 0;
+int allyCount = 0;
 static enum AllyState currentAllyState = ALLY_IDLE;
 static CP_Vector allyPreviewPosition = { 0, 0 };
 CP_Image allyImages[MAX_ALLIES_IMAGES] = { 0 };
 
+// Barrier Functions
 void init_barrier_images(void) {
     barrierImages[0] = CP_Image_Load("Assets/barrier_1.png");
     barrierImages[1] = CP_Image_Load("Assets/barrier_2.png");
     barrierImages[2] = CP_Image_Load("Assets/barrier_3.png");
     barrierImages[3] = CP_Image_Load("Assets/barrier_4.png");
 }
-
-// Barrier Functions
 
 int get_barrier_count(void) {
     return barrierCount;
@@ -41,14 +40,15 @@ void increment_barrier_count(void) {
     }
 }
 
-void set_barrier_properties(int index, CP_Vector position, float width, float height, int health) {
+void set_barrier_properties(int index, CP_Vector pos, float width, float height, int health) {
     if (index < MAX_BARRIERS) {
-        barriers[index].position = barriers[index].hitbox.pos = position;
+        barriers[index].pos = barriers[index].hitbox.pos = pos;
         barriers[index].width = barriers[index].hitbox.width = width;
         barriers[index].height = barriers[index].hitbox.height = height;
-        barriers[index].health = health;
-        barriers[index].cooldownTimer = 0.0f;
-        printf("Barrier %d set at position (%.2f, %.2f) with health %d\n", index, position.x, position.y, health);
+        barriers[index].health = barriers[index].maxHealth = health;
+        barriers[index].isTakingDamage = false;
+        barriers[index].healthBarDisplayTime = 0.f;
+        printf("Barrier %d set at position (%.2f, %.2f) with health %d\n", index, pos.x, pos.y, health);
     }
 }
 
@@ -56,60 +56,46 @@ CP_Image get_barrier_image(int barrierLevel) {
     return barrierImages[barrierLevel];
 }
 
-void check_barrier_collision(struct ChocoRoach* roach, float dt) {
-    for (int i = 0; i < barrierCount; i++) {
-        struct Rectangle barrierRect = {
-            .pos = barriers[i].position,
-            .width = barriers[i].width,
-            .height = barriers[i].height
-        };
-
-        // Debugging: Display barrier properties
-      //  printf("DEBUG: Checking collision for Barrier %d: position=(%.2f, %.2f), width=%.2f, height=%.2f, health=%d\n",
-           // i, barriers[i].position.x, barriers[i].position.y, barriers[i].width, barriers[i].height, barriers[i].health);
-
-        if (barriers[i].cooldownTimer > 0) {
-            barriers[i].cooldownTimer -= dt;
-            //     printf("DEBUG: Barrier %d is on cooldown. Timer: %.2f\n", i, barriers[i].cooldownTimer);
-        }
-
-        if (are_rects_intersecting(roach->hitbox, barrierRect)) {
-            //    printf("DEBUG: Roach collided with Barrier %d.\n", i);
-
-            if (barriers[i].health > 0 && barriers[i].cooldownTimer <= 0) {
-                barriers[i].health -= roach->dmg;
-                barriers[i].cooldownTimer = 500.0f;  // Cooldown time in milliseconds
-                //      printf("DEBUG: Barrier %d took damage. New health: %d\n", i, barriers[i].health);
-            }
-
-            if (barriers[i].health <= 0) {
-                //    printf("DEBUG: Barrier %d destroyed.\n", i);
-
-                    // Shift remaining barriers down to maintain array order
-                for (int j = i; j < barrierCount - 1; j++) {
-                    barriers[j] = barriers[j + 1];
-                }
-                barrierCount--;
-                i--;  // Recheck the barrier at this index after shifting
-            }
-
-            roach->speed = 0;  // Stop the roach after collision
-            return;  // Exit as roach can only hit one barrier at a time
-        }
-    }
-
-    // If no collision, reset the roach's speed
-    roach->speed = roach->originalSpeed;
-    //  printf("DEBUG: No collision detected. Roach speed reset to %.2f.\n", roach->originalSpeed);
+static int _comp(const void* a, const void* b)
+{
+    if (!(((struct Barrier*)a)->health) && !(((struct Barrier*)b)->health))
+        return -1;
+    if (!(((struct Barrier*)a)->health))
+        return 1;
+    if (!(((struct Barrier*)b)->health))
+        return -1;
+    return ((struct Barrier*)a)->pos.y - ((struct Barrier*)b)->pos.y;
 }
 
-void render_barriers(struct Camera cam) {
+void sort_barriers(void) {
+    qsort(barriers, MAX_BARRIERS, sizeof(struct Barrier), _comp);
+}
+
+// Returns 1 if still alive, 0 if not
+int barrier_take_damage(int barrierIndex, int damage) {
+    if (barriers[barrierIndex].health <= 0) // prevent deal damage to destroyed barrier
+        return -1;
+
+    barriers[barrierIndex].isTakingDamage = true;
+    barriers[barrierIndex].health = CP_Math_ClampInt(barriers[barrierIndex].health - damage, 0, barriers[barrierIndex].maxHealth);
+    barriers[barrierIndex].healthBarDisplayTime = 0;
+
+    if (barriers[barrierIndex].health > 0) {
+        printf("Barrier took %d damage, health is now %d\n", damage, barriers[barrierIndex].health);
+        return 1;
+    }
+
+    printf("Barrier destroyed!\n");
+    --barrierCount;
+    return 0;
+}
+
+void render_barriers() {
     CP_Settings_Fill(CP_Color_Create(0, 0, 255, 255)); // Solid blue
     for (int i = 0; i < get_barrier_count(); i++) {
         if (barriers[i].health > 0) {  // Only draw if health is greater than zero
-            CP_Vector vec = get_cam_pos_rel(barriers[i].position, cam);
             CP_Image_Draw(get_barrier_image(playerInstance.buffs.barrierLevel),
-                vec.x, vec.y,
+                barriers[i].pos.x, barriers[i].pos.y,
                 barriers[i].width, barriers[i].height,
                 255);
         }
@@ -149,135 +135,35 @@ void increment_ally_count(void) {
     }
 }
 
-void init_ally(int index, CP_Vector position, float width, float height) {
+void init_ally(int index, CP_Vector pos, float width, float height) {
     if (index < MAX_ALLIES) {
-        allies[index].position = position;
+        allies[index].pos = pos;
         allies[index].width = width;
         allies[index].height = height;
         allies[index].attackSpeed = 2.0f; // in milliseconds
         allies[index].attackPower = 20;
-        allies[index].lastShotTime = 0.0f;
-
-        // Initialize bullets
-        for (int i = 0; i < MAX_BULLET_COUNT; i++) {
-            allies[index].bullets[i].isShooting = FALSE;
-        }
-
-
     }
     else {
        // printf("DEBUG: Unable to initialize ally at index %d (exceeds MAX_ALLIES).\n", index);
     }
 }
 
-void render_allies(struct Camera cam) {
+void render_allies() {
     for (int i = 0; i < get_ally_count(); i++) {
         if (!allies[i].state) {
-            CP_Vector vec = get_cam_pos_rel(allies[i].position, cam);
-            CP_Image_Draw(get_ally_image(playerInstance.buffs.allyLevel),
-                vec.x, vec.y,
+            // PLACEHOLDER
+            // TODO: Remove
+            int allyLevel = playerInstance.buffs.allyLevel; // PH: Stored here until allies have upgrade images
+            CP_Image_Draw(get_ally_image(0),
+                allies[i].pos.x, allies[i].pos.y,
                 allies[i].width, allies[i].height,
                 255);
         }
     }
 }
 
-void render_ally_bullet(struct Bullet bullet, struct Camera cam) {
-    if (bullet.isShooting) { // Only render bullets that are active
-        CP_Vector screenPos = get_cam_pos_rel(bullet.pos, cam); // Convert world to screen coordinates
-        CP_Settings_Fill(CP_Color_Create(255, 0, 0, 255));      // Red color for bullets
-        CP_Graphics_DrawCircle(screenPos.x, screenPos.y, bullet.diameter); // Draw the bullet
-        printf("DEBUG: Rendering bullet at position (%.2f, %.2f), diameter=%.2f\n",
-            screenPos.x, screenPos.y, bullet.diameter);
-    }
-}
-
-void update_allies(float dt, struct ChocoRoach* enemies, int enemyCount, struct Camera cam) {
-    for (int i = 0; i < allyCount; i++) {
-        if (allies[i].state < ALLY_IDLE)
-            continue;
-
-        // Update time since last shot
-        allies[i].lastShotTime += dt;
-        printf("DEBUG: Ally %d lastShotTime=%.2f, attackSpeed=%.2f\n", i, allies[i].lastShotTime, allies[i].attackSpeed);
-
-        // Find the closest enemy
-        struct ChocoRoach* closestEnemy = NULL;
-        float closestDistance = 500.0f;
-
-        for (int j = 0; j < enemyCount; j++) {
-            if (enemies[j].currentState == ENEMY_STATE_DIED) continue;
-
-            float distance = CP_Vector_Distance(allies[i].position, enemies[j].pos);
-            if (distance < closestDistance) {
-                closestDistance = distance;
-                closestEnemy = &enemies[j];
-            }
-        }
-
-        if (closestEnemy == NULL) {
-            // No valid enemy detected; stop shooting and skip this ally's logic
-            printf("DEBUG: No valid enemy detected for Ally %d. Stopping bullets.\n", i);
-            for (int i = 0; i < allyCount; i++) { // Iterate over all allies
-                for (int k = 0; k < MAX_BULLET_COUNT; k++) { // Iterate over all bullets for each ally
-                    allies[i].bullets[k].isShooting = FALSE; // Reset isShooting flag
-                }
-            }
-            continue; // Skip further logic for this ally
-        }
-
-        printf("DEBUG: Closest enemy to Ally %d: Position=(%.2f, %.2f), Distance=%.2f\n",
-            i, closestEnemy->pos.x, closestEnemy->pos.y, closestDistance);
-
-        // Shoot if ready and target found
-        if (allies[i].lastShotTime >= allies[i].attackSpeed) {
-            struct Bullet bullet = init_bullet(
-                NORMAL_BULLET,
-                ALLY_BULLET_SPEED,
-                10.0f,
-                allies[i].attackPower,
-                CP_Vector_Subtract(closestEnemy->pos, allies[i].position)
-            );
-
-            // Find an available bullet slot
-            int slot = find_bullet_slot(allies[i].bullets);
-            if (slot != -1) {
-                bullet.pos = allies[i].position;
-                allies[i].bullets[slot] = bullet;
-                allies[i].bullets[slot].isShooting = TRUE; // Mark bullet as active
-                printf("DEBUG: Ally %d shot a bullet at enemy at position (%.2f, %.2f).\n", i, closestEnemy->pos.x, closestEnemy->pos.y);
-            }
-            else {
-                printf("DEBUG: No available bullet slot for Ally %d.\n", i);
-            }
-
-            // Reset shooting cooldown
-            allies[i].lastShotTime = 0.0f;
-        }
-
-        // Update all bullets for this ally
-        for (int k = 0; k < MAX_BULLET_COUNT; k++) {
-            if (allies[i].bullets[k].isShooting) {
-                update_pos_bullet(&allies[i].bullets[k], dt);
-                render_ally_bullet(allies[i].bullets[k], cam); // Render the bullet
-                printf("DEBUG: Bullet %d for Ally %d is moving. Position=(%.2f, %.2f)\n",
-                    k, i, allies[i].bullets[k].pos.x, allies[i].bullets[k].pos.y);
-            }
-        }
-    }
-}
-
 CP_Image get_ally_image(int allyLevel) {
     return allyImages[allyLevel];
-}
-
-int find_bullet_slot(struct Bullet* bullets) {
-    for (int i = 0; i < MAX_BULLET_COUNT; i++) {
-        if (!bullets[i].isShooting) {
-            return i;
-        }
-    }
-    return -1;
 }
 
 void dispose_allies(void) {
