@@ -697,17 +697,16 @@ void check_collision(void) {
 
     // Ally Projectiles
     for (int i = 0; i < allyCount; i++) {
-        ProjectilePool allyProjs = allyProjectiles[i];
-        for (int j = 0; j < allyProjs.activeCount; j++) {
-            if (allyProjs.projectiles[j].isActive) {
-                struct Projectile projectile = allyProjs.projectiles[j];
+        for (int j = 0; j < allyProjectiles[i].activeCount; j++) {
+            if (allyProjectiles[i].projectiles[j].isActive) {
+                struct Projectile projectile = allyProjectiles[i].projectiles[j];
                 struct Circle projectileHitbox = { .pos = projectile.pos, .diameter = projectile.diameter };
 
                 // Obstacles
                 for (int x = 0; x < _worldClipsCount; x++) {
                     struct Rectangle worldClip = _worldClips[x];
                     if (are_circle_rect_intersecting(projectileHitbox, worldClip)) // bullet cannot go through walls and barricades...
-                        remove_projectile(&allyProjectiles, j);
+                        remove_projectile(&allyProjectiles[i], j);
                 }
 
                 // Common Enemies (roaches)
@@ -716,7 +715,7 @@ void check_collision(void) {
                         if (enemy_take_damage(&_roaches[x], projectile.dmg)) {
                             _on_enemy_killed(x);
                         }
-                        remove_projectile(&allyProjectiles, j);
+                        remove_projectile(&allyProjectiles[i], j);
                     }
                 }
 
@@ -726,7 +725,7 @@ void check_collision(void) {
                         _on_boss_killed();
                         dispose_boss(&_boss);
                     }
-                    remove_projectile(&allyProjectiles, j);
+                    remove_projectile(&allyProjectiles[i], j);
                 }
             }
         }
