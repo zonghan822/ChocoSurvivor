@@ -83,7 +83,7 @@ static int _comp(const void* a, const void* b)
         return 1;
     if (!(((struct Barrier*)b)->health))
         return -1;
-    return ((struct Barrier*)a)->position.y - ((struct Barrier*)b)->position.y;
+    return ((struct Barrier*)a)->pos.y - ((struct Barrier*)b)->pos.y;
 }
 
 void sort_barriers(void) {

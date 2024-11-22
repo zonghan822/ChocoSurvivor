@@ -21,7 +21,7 @@ static bool _hasPlayedLevelUpMusic;
 
 struct ChocoShooter playerInstance; // Global variable, not private
 static enum BulletType _bulletType = NORMAL_BULLET;
-static float _bulletSpeed = 650.f, _bulletDiameter = 14.f;
+static float _bulletSpeed = 1000.f, _bulletDiameter = 14.f;
 static float _lastShotTime = 0;
 
 #pragma region Player
