@@ -20,6 +20,7 @@
 #include "boss.h"
 #include "button.h"
 #include "audio.h"
+#include "pausemenu.h"
 
 #define MAX_ENEMY_COUNT 100
 #define LEVEL_WIDTH 2000.f
@@ -556,7 +557,13 @@ void level_one_update(void) {
         bossInstance.secondaryAttack(&bossInstance, &playerInstance, dt);
     #pragma endregion
 
+ if (CP_Input_KeyTriggered(KEY_Q)) {
     for (int i = 0; i < roachesMax; i++) {
+            pause_menu(&roaches[i], windowWidth, windowHeight);     
+    }
+ }
+
+    for (int i = 0; i < roachesMax; i++) {i
         if (roaches[i].currentState) { // if enemy is alive
             #pragma region Enemy Movement And Attack    
             switch (roaches[i].currentState) {
@@ -890,9 +897,10 @@ void level_one_update(void) {
     #pragma endregion
 
     // Exit to Main Menu
+     /*
     if (CP_Input_KeyTriggered(KEY_Q)) {
         CP_Engine_SetNextGameState(main_menu_init, main_menu_update, main_menu_exit);
-    }
+    }*/
 
     _render_cursor(mouseX, mouseY);
 }

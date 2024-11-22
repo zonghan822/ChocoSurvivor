@@ -58,6 +58,9 @@
     <ClCompile Include="slider.c">
       <Filter>Source Files\UI</Filter>
     </ClCompile>
+    <ClCompile Include="pausemenu.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="boss.h">
@@ -110,6 +113,9 @@
     </ClInclude>
     <ClInclude Include="slider.h">
       <Filter>Header Files\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="pausemenu.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
