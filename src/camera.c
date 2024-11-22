@@ -1,9 +1,10 @@
 #include "camera.h"
 #include "player.h"
 #include "cprocessing.h"
+#include <math.h>
 
 static const float SCALE_FACTOR = 1.2f;
-static const float MOVE_FACTOR = 150.f;
+static const float MOVE_FACTOR = 175.f;
 static const float MIN_SCALE = 1.f;
 static const float MAX_SCALE = 2.5f;
 
@@ -35,10 +36,16 @@ void update_camera(struct ChocoShooter player, float dt) {
 		CP_Vector delta = CP_Vector_Subtract(player.pos, CP_Vector_Negate(_currentPosition));
 		CP_Vector moveDirection = CP_Vector_Zero();
 
-		if (delta.x != 0.f)
+		if (delta.x != 0.f) {
 			moveDirection.x = delta.x < 0.f ? -1.f : 1.f;
-		if (delta.y != 0.f)
+			// Increase camera speed if further for each 100s
+			moveDirection.x *= (int)(fabsf(delta.x) / 100.f);
+		}
+		if (delta.y != 0.f) {
 			moveDirection.y = delta.y < 0.f ? -1.f : 1.f;
+			// Increase camera speed if further for each 100s
+			moveDirection.y *= (int)(fabsf(delta.y) / 100.f);
+		}
 
 		// Smoothen movement
 		if (delta.x != 0 && (delta.x < minDistance && delta.x > -minDistance)) {

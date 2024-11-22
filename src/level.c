@@ -211,7 +211,9 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
 
 // Move to next wave or level, if possible
 void next_wave_or_level(void) {
-    if (_deadEnemies == (_boss.state != BOSS_STATE_UNSPAWNED ? _roachesMax : _roachesMax + 1)) {
+    if (_deadEnemies <= 0) return;
+
+    if (_deadEnemies == (_boss.state == BOSS_STATE_UNSPAWNED ? _roachesMax : _roachesMax + 1)) {
         if (currentWave < WAVE_3) {
             _hasPlayedNewWaveMusic = false;
             _deadEnemies = 0; // Reset
