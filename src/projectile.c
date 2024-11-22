@@ -109,14 +109,18 @@ void ally_shoot(float dt, struct ChocoRoach* enemies, int enemyCount) {
 }
 
 void remove_projectile(ProjectilePool* pool, int index) {
-    pool->projectiles[index].isActive = false;
+    if (pool->projectiles[index].isActive)
+        pool->projectiles[index].isActive = false;
     struct Projectile temp = pool->projectiles[index];
 
     for (int i = index; i < pool->activeCount; i++) {
         pool->projectiles[i] = pool->projectiles[i + 1];
     }
 
-    pool->projectiles[--pool->activeCount] = temp;
+    if (pool->projectiles[index].isActive)
+        pool->projectiles[--pool->activeCount] = temp;
+    else
+        pool->projectiles[pool->activeCount] = temp;
 }
 
 void update_projectiles(ProjectilePool* pool, float dt) {

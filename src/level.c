@@ -175,8 +175,8 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
 
         // Global/World Clips (for all)
         _worldClips[0] = get_tower_hitbox(_tower);
-        struct Rectangle topClip = { .pos = CP_Vector_Set(level_width / 2, 50.f), .width = level_height, .height = 110.f };
-        struct Rectangle botClip = { .pos = CP_Vector_Set(level_width / 2, 833.f), .width = level_height, .height = 106.f };
+        struct Rectangle topClip = { .pos = CP_Vector_Set(level_width / 2, 50.f), .width = level_width , .height = 110.f };
+        struct Rectangle botClip = { .pos = CP_Vector_Set(level_width / 2, 833.f), .width = level_width, .height = 106.f };
         struct Rectangle oweoClip = { .pos = CP_Vector_Set(750.f, 351.f), .width = 140.f, .height = 60.f }; // Oreo
         struct Rectangle missesClip = { .pos = CP_Vector_Set(680.f, 203.5f), .width = 40.f, .height = 15.f }; // Kisses
         struct Rectangle columnClip = { .pos = CP_Vector_Set(1200.f, 600.f), .width = 80.f, .height = 360.f };
@@ -670,7 +670,7 @@ void check_collision(void) {
             for (int i = 0; i < _worldClipsCount; i++) {
                 struct Rectangle worldClip = _worldClips[i];
                 if (are_circle_rect_intersecting(projectileHitbox, worldClip)) // bullet cannot go through walls and barricades...
-                    remove_projectile(&playerProjectiles, i);
+                    remove_projectile(&playerProjectiles, j);
             }
 
             // Common Enemies (roaches)
@@ -684,6 +684,7 @@ void check_collision(void) {
                 }
             }
 
+            // Boss
             if (are_circle_rect_intersecting(projectileHitbox, _boss.hitbox)) {
                 if (boss_take_damage(&_boss, projectile.dmg)) {
                     _on_boss_killed();
@@ -703,20 +704,19 @@ void check_collision(void) {
                 struct Circle projectileHitbox = { .pos = projectile.pos, .diameter = projectile.diameter };
 
                 // Obstacles
-                for (int i = 0; i < _worldClipsCount; i++) {
-                    struct Rectangle worldClip = _worldClips[i];
+                for (int x = 0; x < _worldClipsCount; x++) {
+                    struct Rectangle worldClip = _worldClips[x];
                     if (are_circle_rect_intersecting(projectileHitbox, worldClip)) // bullet cannot go through walls and barricades...
-                        remove_projectile(&allyProjs, i);
+                        remove_projectile(&allyProjectiles, j);
                 }
 
                 // Common Enemies (roaches)
-                for (int i = 0; i < _roachesMax; i++) {
-                    if (are_circle_rect_intersecting(projectileHitbox, _roaches[i].hitbox)) {
-                        if (enemy_take_damage(&_roaches[i], projectile.dmg)) {
-                            _on_enemy_killed(i);
+                for (int x = 0; x < _roachesMax; x++) {
+                    if (are_circle_rect_intersecting(projectileHitbox, _roaches[x].hitbox)) {
+                        if (enemy_take_damage(&_roaches[x], projectile.dmg)) {
+                            _on_enemy_killed(x);
                         }
-                        // Cancel bullet after hit enemy
-                        remove_projectile(&allyProjs, j);
+                        remove_projectile(&allyProjectiles, j);
                     }
                 }
 
@@ -726,7 +726,7 @@ void check_collision(void) {
                         _on_boss_killed();
                         dispose_boss(&_boss);
                     }
-                    remove_projectile(&allyProjs, j);
+                    remove_projectile(&allyProjectiles, j);
                 }
             }
         }
