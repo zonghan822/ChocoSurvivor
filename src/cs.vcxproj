@@ -37,6 +37,7 @@
     <ClCompile Include="panel.c" />
     <ClCompile Include="player.c" />
     <ClCompile Include="progressbar.c" />
+    <ClCompile Include="projectile.c" />
     <ClCompile Include="slider.c" />
     <ClCompile Include="tower.c" />
     <ClCompile Include="utils.c" />
@@ -55,6 +56,7 @@
     <ClInclude Include="level2.h" />
     <ClInclude Include="panel.h" />
     <ClInclude Include="progressbar.h" />
+    <ClInclude Include="projectile.h" />
     <ClInclude Include="slider.h" />
     <ClInclude Include="tower.h" />
     <ClInclude Include="flicker.h" />

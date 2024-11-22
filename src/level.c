@@ -17,6 +17,7 @@
 #include "mainmenu.h"
 #include "audio.h"
 #include "utils.h"
+#include "projectile.h"
 
 // Macros
 #define MAX_ENEMY_COUNT 100
@@ -26,7 +27,6 @@ static float _spawnMinY = 0.f, _spawnMaxY = 0.f, _spawnWidth = 0.f;
 static float _spawnInterval = 0.0f, _spawnTimer = 0.f;      // Spawn interval
 static float _waveDelay = 0.f, _waveTimer = 0.f;            // Wave delay
 static int _enemySpawnIndex = 0;
-static int _totalEnemies = 0;
 #pragma endregion
 
 #pragma region Enemy Properties
@@ -127,6 +127,9 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
     _waveTimer = 0.f;
     _spawnTimer = 0.f;
     _deadEnemies = 0;
+    playerProjectiles.activeCount = 0;
+    memset(&playerProjectiles, 0, sizeof(playerProjectiles.projectiles));
+    memset(allyProjectiles, 0, sizeof(allyProjectiles));
 
     // Can move to level specific cases
     _spawnMinY = level_height * 1 / 5;
@@ -208,7 +211,7 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
 
 // Move to next wave or level, if possible
 void next_wave_or_level(void) {
-    if (_deadEnemies == _totalEnemies && _totalEnemies != 0) {
+    if (_deadEnemies == (_boss.state != BOSS_STATE_UNSPAWNED ? _roachesMax : _roachesMax + 1)) {
         if (currentWave < WAVE_3) {
             _hasPlayedNewWaveMusic = false;
             _deadEnemies = 0; // Reset
@@ -295,10 +298,8 @@ void spawn_enemies(float dt) {
                     nextSpawnDelay = -0.4f;
                     break;
                 case WAVE_3:
-                    if (_boss.state == BOSS_STATE_UNSPAWNED) {
+                    if (_boss.state == BOSS_STATE_UNSPAWNED)
                         spawn_boss(&_boss, -650.f, 650.f);
-                        _totalEnemies++;
-                    }
                     _spawnInterval = 1.65f;
                     enemySpeed = 75.f;
                     enemyMaxHealth = 300;
@@ -315,7 +316,6 @@ void spawn_enemies(float dt) {
 #pragma endregion
             }
             if (_enemySpawnIndex < _roachesMax) {
-                _totalEnemies++;
                 _roaches[_enemySpawnIndex++] = init_enemy(_spawnMinY, _spawnMaxY, _spawnWidth, enemySpeed, enemyMaxHealth, enemyDmg);
                 _spawnTimer = 0.f;
                 printf("Enemy spawned. Spawn count: %d | Remaining: %d\n", _enemySpawnIndex, _enemySpawnIndex - _deadEnemies);
@@ -335,7 +335,7 @@ void spawn_enemies(float dt) {
 // Placeables function for player
 void player_placeables(float mouse_x, float mouse_y, float dt) {
     // Update allies
-    update_allies(dt, _roaches, _roachesMax);
+    ally_shoot(dt, _roaches, _roachesMax);
 
     // Barriers
     switch (_currentBarrierState) {
@@ -577,10 +577,8 @@ void render_new_wave_counter(float window_width, float window_height) {
 void render_entities(float dt, float mouse_x) {
 #pragma region Projectiles
     // Update and render bullets
-    for (int i = 0; i < MAX_BULLET_COUNT; i++) {
-        update_pos_bullet(&playerInstance.bullets[i], dt);
-        render_bullet(playerInstance.bullets[i]);
-    }
+    update_all_projectiles(dt);
+    render_all_projectiles();
 #pragma endregion
 
 #pragma region Tower
@@ -625,19 +623,109 @@ void render_entities(float dt, float mouse_x) {
 }
 #pragma endregion
 
+static void _on_enemy_killed(int i) {
+    _deadEnemies++;
+    // Base exp on this formula:
+    // (max health / speed) * (max enemies / 10)
+    int expGained = _get_exp(_roaches[i].maxHealth, _roaches[i].speed, _roachesMax);
+    enum BuffType randomBuff = update_buff_meter(&playerInstance, expGained);
+    memset(&_roaches[i], 0, sizeof(_roaches[i]));
+    // Apply the buff if one was granted
+    if (randomBuff != 0) {
+        apply_buff(&playerInstance, randomBuff, barriers, allies);
+    }
+}
+
+static void _on_boss_killed() {
+    _deadEnemies++;
+    float expGained = _get_exp(_boss.maxHealth, _boss.speed, 1);
+    enum BuffType randomBuff = update_buff_meter(&playerInstance, expGained * 12.f);
+
+    // Apply the buff if one was granted
+    if (randomBuff != 0) {
+        apply_buff(&playerInstance, randomBuff, barriers, allies);
+    }
+}
+
 // Check for collision
 // Currently it is just for player
 void check_collision(void) {
-    // Prevent player and bullets move into non-movable path
+    // Player
+    // Prevent player from moving into non-movable path
     for (int i = 0; i < _worldClipsCount; i++) {
         struct Rectangle worldClip = _worldClips[i];
         if (are_rects_intersecting(playerInstance.hitbox, worldClip))
             clamp_pos_clip_rel(&playerInstance.pos, playerInstance.hitbox, worldClip);
-        for (int j = 0; j < MAX_BULLET_COUNT; j++) {
-            if (playerInstance.bullets[j].isShooting) {
-                struct Circle bullet = { .pos = playerInstance.bullets[j].pos, .diameter = playerInstance.bullets[j].diameter };
-                if (are_circle_rect_intersecting(bullet, worldClip)) { // bullet cannot go through walls and barricades...
-                    playerInstance.bullets[j].isShooting = FALSE;
+    }
+
+    // Player Projectiles
+    // Loop from the end to avoid issues when removing projectiles
+    for (int j = 0; j < playerProjectiles.activeCount; j++) {
+        if (playerProjectiles.projectiles[j].isActive) {
+            struct Projectile projectile = playerProjectiles.projectiles[j];
+            struct Circle projectileHitbox = { .pos = projectile.pos, .diameter = projectile.diameter };
+
+            // Obstacles
+            for (int i = 0; i < _worldClipsCount; i++) {
+                struct Rectangle worldClip = _worldClips[i];
+                if (are_circle_rect_intersecting(projectileHitbox, worldClip)) // bullet cannot go through walls and barricades...
+                    remove_projectile(&playerProjectiles, i);
+            }
+
+            // Common Enemies (roaches)
+            for (int i = 0; i < _roachesMax; i++) {
+                if (are_circle_rect_intersecting(projectileHitbox, _roaches[i].hitbox)) {
+                    if (enemy_take_damage(&_roaches[i], projectile.dmg)) {
+                        _on_enemy_killed(i);
+                    }
+                    // Cancel bullet after hit enemy
+                    remove_projectile(&playerProjectiles, j);
+                }
+            }
+
+            if (are_circle_rect_intersecting(projectileHitbox, _boss.hitbox)) {
+                if (boss_take_damage(&_boss, projectile.dmg)) {
+                    _on_boss_killed();
+                    dispose_boss(&_boss);
+                }
+                remove_projectile(&playerProjectiles, j);
+            }
+        }
+    }
+
+    // Ally Projectiles
+    for (int i = 0; i < allyCount; i++) {
+        ProjectilePool allyProjs = allyProjectiles[i];
+        for (int j = 0; j < allyProjs.activeCount; j++) {
+            if (allyProjs.projectiles[j].isActive) {
+                struct Projectile projectile = allyProjs.projectiles[j];
+                struct Circle projectileHitbox = { .pos = projectile.pos, .diameter = projectile.diameter };
+
+                // Obstacles
+                for (int i = 0; i < _worldClipsCount; i++) {
+                    struct Rectangle worldClip = _worldClips[i];
+                    if (are_circle_rect_intersecting(projectileHitbox, worldClip)) // bullet cannot go through walls and barricades...
+                        remove_projectile(&allyProjs, i);
+                }
+
+                // Common Enemies (roaches)
+                for (int i = 0; i < _roachesMax; i++) {
+                    if (are_circle_rect_intersecting(projectileHitbox, _roaches[i].hitbox)) {
+                        if (enemy_take_damage(&_roaches[i], projectile.dmg)) {
+                            _on_enemy_killed(i);
+                        }
+                        // Cancel bullet after hit enemy
+                        remove_projectile(&allyProjs, j);
+                    }
+                }
+
+                // Boss
+                if (are_circle_rect_intersecting(projectileHitbox, _boss.hitbox)) {
+                    if (boss_take_damage(&_boss, projectile.dmg)) {
+                        _on_boss_killed();
+                        dispose_boss(&_boss);
+                    }
+                    remove_projectile(&allyProjs, j);
                 }
             }
         }
@@ -760,52 +848,6 @@ void enemy_move_attack(float dt) {
             CP_Vector hitboxPos = { _roaches[i].pos.x + ENEMY_HITBOX_OFFSET_X(_roaches[i].width), _roaches[i].pos.y + ENEMY_HITBOX_OFFSET_Y(_roaches[i].height) };
             update_rect_hitbox(&_roaches[i].hitbox, 0.0f, 0.0f, hitboxPos); // Update hitbox of enemy
 #pragma endregion
-
-#pragma region Enemy Taking Damage
-            for (int j = 0; j < MAX_BULLET_COUNT; j++) {
-                if (playerInstance.bullets[j].isShooting) {
-                    struct Circle bullet = { .pos = playerInstance.bullets[j].pos, .diameter = playerInstance.bullets[j].diameter };
-                    if (are_circle_rect_intersecting(bullet, _roaches[i].hitbox)) {
-                        if (enemy_take_damage(&_roaches[i], playerInstance.bullets[j].dmg)) {
-                            _deadEnemies++;
-                            // Base exp on this formula:
-                            // (max health / speed) * (max enemies / 10)
-                            int expGained = _get_exp(_roaches[i].maxHealth, _roaches[i].speed, _roachesMax);
-                            enum BuffType randomBuff = update_buff_meter(&playerInstance, expGained);
-
-                            // Apply the buff if one was granted
-                            if (randomBuff != 0) {
-                                apply_buff(&playerInstance, randomBuff, barriers, allies);
-                            }
-                        }
-                        // Cancel bullet after hit enemy
-                        playerInstance.bullets[j].isShooting = FALSE;
-                    }
-                }
-            }
-
-            for (int a = 0; a < get_ally_count(); a++) {  // Loop through all allies
-                struct Ally ally = allies[a];    // Get a reference to the current ally
-                for (int j = 0; j < MAX_BULLET_COUNT; j++) {  // Loop through each ally's bullets
-                    if (ally.bullets[j].isShooting) {
-                        struct Circle bullet = { .pos = ally.bullets[j].pos, .diameter = ally.bullets[j].diameter };
-                        if (are_circle_rect_intersecting(bullet, _roaches[i].hitbox)) {
-                            if (enemy_take_damage(&_roaches[i], ally.bullets[j].dmg)) {
-                                _deadEnemies++;
-                                int expGained = _get_exp(_roaches[i].maxHealth, _roaches[i].speed, _roachesMax);
-                                enum BuffType randomBuff = update_buff_meter(&playerInstance, expGained);
-
-                                // Apply the buff if one was granted
-                                if (randomBuff != 0) {
-                                    apply_buff(&playerInstance, randomBuff, barriers, allies);
-                                }
-                            }
-                            ally.bullets[j].isShooting = FALSE;
-                        }
-                    }
-                }
-            }
-#pragma endregion
         }
         // can use else statement here for dying animation...
     }
@@ -830,59 +872,14 @@ void enemy_move_attack(float dt) {
     else if (_boss.canSecondaryAttack(_boss, playerInstance))
         _boss.secondaryAttack(&_boss, &playerInstance, dt);
 #pragma endregion
-
-#pragma region Boss Taking Damage
-    for (int j = 0; j < MAX_BULLET_COUNT; j++) {
-        if (playerInstance.bullets[j].isShooting) {
-            struct Circle bullet = { .pos = playerInstance.bullets[j].pos, .diameter = playerInstance.bullets[j].diameter };
-            if (are_circle_rect_intersecting(bullet, _boss.hitbox)) {
-                if (boss_take_damage(&_boss, playerInstance.bullets[j].dmg)) {
-                    _deadEnemies++;
-                    float expGained = _get_exp(_boss.maxHealth, _boss.speed, 1);
-                    enum BuffType randomBuff = update_buff_meter(&playerInstance, expGained * 12.f);
-
-                    // Apply the buff if one was granted
-                    if (randomBuff != 0) {
-                        apply_buff(&playerInstance, randomBuff, barriers, allies);
-                    }
-                    dispose_boss(&_boss);
-                }
-                playerInstance.bullets[j].isShooting = FALSE;
-            }
-        }
-    }
-
-    for (int a = 0; a < get_ally_count(); a++) {  // Loop through all allies
-        struct Ally ally = allies[a];    // Get a reference to the current ally
-        for (int j = 0; j < MAX_BULLET_COUNT; j++) {  // Loop through each ally's bullets
-            if (ally.bullets[j].isShooting) {
-                struct Circle bullet = { .pos = ally.bullets[j].pos, .diameter = ally.bullets[j].diameter };
-                if (are_circle_rect_intersecting(bullet, _boss.hitbox)) {
-                    if (boss_take_damage(&_boss, ally.bullets[j].dmg)) {
-                        _deadEnemies++;
-                        float expGained = _get_exp(_boss.maxHealth, _boss.speed, 1);
-                        enum BuffType randomBuff = update_buff_meter(&playerInstance, expGained * 12.f);
-
-                        // Apply the buff if one was granted
-                        if (randomBuff != 0) {
-                            apply_buff(&playerInstance, randomBuff, barriers, allies);
-                        }
-                        dispose_boss(&_boss);
-                    }
-                    ally.bullets[j].isShooting = FALSE;
-                }
-            }
-        }
-    }
-#pragma endregion
 }
 
 #if _DEBUG
 void debug_render_grid(void) {
-    // draw_grid(enemyGrid.nodes, enemyGrid.nodeCount, cam); // draw enemy grid for debugging
-    // draw_grid(bossGrid.nodes, bossGrid.nodeCount, cam); // draw boss grid for debugging
-    // draw_grid(enemyGridNB.nodes, enemyGrid.nodeCount, cam); // draw enemy grid for debugging
-    // draw_grid(bossGridNB.nodes, bossGrid.nodeCount, cam); // draw boss grid for debugging
+    // draw_grid(_enemyGrid.nodes, _enemyGrid.nodeCount); // draw enemy grid for debugging
+    // draw_grid(_bossGrid.nodes, _bossGrid.nodeCount); // draw boss grid for debugging
+    // draw_grid(_enemyGridNB.nodes, _enemyGrid.nodeCount); // draw enemy grid for debugging
+    // draw_grid(_bossGridNB.nodes, _bossGrid.nodeCount); // draw boss grid for debugging
 }
 #endif
 

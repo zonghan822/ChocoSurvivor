@@ -1,6 +1,7 @@
 #include "hittest.h"
 #include <math.h>
 #include <cprocessing.h>
+#include <stdio.h>
 
 int is_mouse_on_rect(struct Rectangle rect, float click_x, float click_y) {
 	rect.pos.x -= (rect.width / 2);
@@ -47,6 +48,9 @@ int are_rects_intersecting(struct Rectangle a, struct Rectangle b) {
 }
 
 int are_circle_rect_intersecting(struct Circle circ, struct Rectangle rect) {
+	if (circ.diameter == 0.f)
+		return 0;
+
 	rect.pos.x -= (rect.width / 2);
 	rect.pos.y -= (rect.height / 2);
 

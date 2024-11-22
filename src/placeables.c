@@ -9,16 +9,15 @@
 
 // Barrier variables
 struct Barrier barriers[MAX_BARRIERS];
-static int barrierCount = 0;
+int barrierCount = 0;
 CP_Image barrierImages[MAX_BARRIER_IMAGES] = { 0 };
 
 // Ally variables
 struct Ally allies[MAX_ALLIES];
-static int allyCount = 0;
+int allyCount = 0;
 static enum AllyState currentAllyState = ALLY_IDLE;
 static CP_Vector allyPreviewPosition = { 0, 0 };
 CP_Image allyImages[MAX_ALLIES_IMAGES] = { 0 };
-
 
 // Barrier Functions
 void init_barrier_images(void) {
@@ -142,14 +141,6 @@ void init_ally(int index, CP_Vector pos, float width, float height) {
         allies[index].height = height;
         allies[index].attackSpeed = 2.0f; // in milliseconds
         allies[index].attackPower = 20;
-        allies[index].lastShotTime = 0.0f;
-
-        // Initialize bullets
-        for (int i = 0; i < MAX_BULLET_COUNT; i++) {
-            allies[index].bullets[i].isShooting = FALSE;
-        }
-
-
     }
     else {
        // printf("DEBUG: Unable to initialize ally at index %d (exceeds MAX_ALLIES).\n", index);
@@ -170,101 +161,8 @@ void render_allies() {
     }
 }
 
-void render_ally_bullet(struct Bullet bullet) {
-    if (bullet.isShooting) { // Only render bullets that are active
-        CP_Settings_Fill(CP_Color_Create(255, 0, 0, 255));      // Red color for bullets
-        CP_Graphics_DrawCircle(bullet.pos.x, bullet.pos.y, bullet.diameter); // Draw the bullet
-        printf("DEBUG: Rendering bullet at position (%.2f, %.2f), diameter=%.2f\n",
-            bullet.pos.x, bullet.pos.y, bullet.diameter);
-    }
-}
-
-void update_allies(float dt, struct ChocoRoach* enemies, int enemyCount) {
-    for (int i = 0; i < allyCount; i++) {
-        if (allies[i].state < ALLY_IDLE)
-            continue;
-
-        // Update time since last shot
-        allies[i].lastShotTime += dt;
-        printf("DEBUG: Ally %d lastShotTime=%.2f, attackSpeed=%.2f\n", i, allies[i].lastShotTime, allies[i].attackSpeed);
-
-        // Find the closest enemy
-        struct ChocoRoach* closestEnemy = NULL;
-        float closestDistance = 500.0f;
-
-        for (int j = 0; j < enemyCount; j++) {
-            if (enemies[j].currentState == ENEMY_STATE_DIED) continue;
-
-            float distance = CP_Vector_Distance(allies[i].pos, enemies[j].pos);
-            if (distance < closestDistance) {
-                closestDistance = distance;
-                closestEnemy = &enemies[j];
-            }
-        }
-
-        if (closestEnemy == NULL) {
-            // No valid enemy detected; stop shooting and skip this ally's logic
-            printf("DEBUG: No valid enemy detected for Ally %d. Stopping bullets.\n", i);
-            for (int i = 0; i < allyCount; i++) { // Iterate over all allies
-                for (int k = 0; k < MAX_BULLET_COUNT; k++) { // Iterate over all bullets for each ally
-                    allies[i].bullets[k].isShooting = FALSE; // Reset isShooting flag
-                }
-            }
-            continue; // Skip further logic for this ally
-        }
-
-        printf("DEBUG: Closest enemy to Ally %d: Position=(%.2f, %.2f), Distance=%.2f\n",
-            i, closestEnemy->pos.x, closestEnemy->pos.y, closestDistance);
-
-        // Shoot if ready and target found
-        if (allies[i].lastShotTime >= allies[i].attackSpeed) {
-            struct Bullet bullet = init_bullet(
-                NORMAL_BULLET,
-                ALLY_BULLET_SPEED,
-                10.0f,
-                allies[i].attackPower,
-                CP_Vector_Subtract(closestEnemy->pos, allies[i].pos)
-            );
-
-            // Find an available bullet slot
-            int slot = find_bullet_slot(allies[i].bullets);
-            if (slot != -1) {
-                bullet.pos = allies[i].pos;
-                allies[i].bullets[slot] = bullet;
-                allies[i].bullets[slot].isShooting = TRUE; // Mark bullet as active
-                printf("DEBUG: Ally %d shot a bullet at enemy at position (%.2f, %.2f).\n", i, closestEnemy->pos.x, closestEnemy->pos.y);
-            }
-            else {
-                printf("DEBUG: No available bullet slot for Ally %d.\n", i);
-            }
-
-            // Reset shooting cooldown
-            allies[i].lastShotTime = 0.0f;
-        }
-
-        // Update all bullets for this ally
-        for (int k = 0; k < MAX_BULLET_COUNT; k++) {
-            if (allies[i].bullets[k].isShooting) {
-                update_pos_bullet(&allies[i].bullets[k], dt);
-                render_ally_bullet(allies[i].bullets[k]); // Render the bullet
-                printf("DEBUG: Bullet %d for Ally %d is moving. Position=(%.2f, %.2f)\n",
-                    k, i, allies[i].bullets[k].pos.x, allies[i].bullets[k].pos.y);
-            }
-        }
-    }
-}
-
 CP_Image get_ally_image(int allyLevel) {
     return allyImages[allyLevel];
-}
-
-int find_bullet_slot(struct Bullet* bullets) {
-    for (int i = 0; i < MAX_BULLET_COUNT; i++) {
-        if (!bullets[i].isShooting) {
-            return i;
-        }
-    }
-    return -1;
 }
 
 void dispose_allies(void) {

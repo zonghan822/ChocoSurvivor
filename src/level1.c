@@ -21,6 +21,7 @@
 #include "button.h"
 #include "audio.h"
 #include "gui.h"
+#include "projectile.h"
 
 #define LEVEL_WIDTH 2000.f
 #define LEVEL_HEIGHT 900.f

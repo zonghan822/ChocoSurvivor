@@ -4,7 +4,6 @@
 #include "utils.h"
 #include "flicker.h"
 
-#define MAX_BULLET_COUNT 20
 #define PLAYER_HITBOX_OFFSET_X(playerWidth) (- 1 / 33.f * playerWidth)
 #define PLAYER_HITBOX_OFFSET_Y(playerHeight) (- 8.f / 77.f * playerHeight)
 
@@ -30,24 +29,6 @@ struct Buffs {
     int barrierLevel;
 };
 
-enum BulletType {
-    NORMAL_BULLET,
-    EXPOLSIVE_BULLET,
-    ADHESIVE_BULLET,
-    HEAL_BULLET
-};
-
-struct Bullet {
-    CP_Vector pos;
-    enum BulletType bulletType;
-    float speed;
-    BOOL isShooting;
-    float shootRange;
-    float diameter;
-    int dmg;
-    CP_Vector shootDirection;
-};
-
 struct ChocoShooter {
     CP_Vector pos;
     float width, height;
@@ -56,7 +37,6 @@ struct ChocoShooter {
     enum Movement movement;
     int health, maxHealth;
     struct Rectangle hitbox;
-    struct Bullet bullets[MAX_BULLET_COUNT];
     struct FlickerState flickerState;
     struct Buffs buffs;
     int attackPower;   
@@ -74,13 +54,6 @@ struct ChocoShooter init_player(CP_Vector pos, float speed, float maxHealth, int
 void move_player(struct ChocoShooter* player, float dt, float level_width, float level_height);
 void render_player(struct ChocoShooter player, float alpha);
 void render_health_bar(struct ChocoShooter* player, float dt, float windowWidth, float windowHeight, float meterX, float meterY, float meterWidth, float meterHeight);
-#pragma endregion
-
-#pragma region Bullet
-struct Bullet init_bullet(enum BulletType bulletType, float bulletSpeed, float bulletDiameter, int dmg, CP_Vector bulletDirection);
-void player_shoot(float dt, bool can_shoot, float mouse_x, float mouse_y);
-void update_pos_bullet(struct Bullet* bullet, float dt);
-void render_bullet(struct Bullet bullet);
 #pragma endregion
 
 #pragma region Buffs

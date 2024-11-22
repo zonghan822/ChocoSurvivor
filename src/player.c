@@ -20,9 +20,6 @@ static float _walkSoundTimer;
 static bool _hasPlayedLevelUpMusic;
 
 struct ChocoShooter playerInstance; // Global variable, not private
-static enum BulletType _bulletType = NORMAL_BULLET;
-static float _bulletSpeed = 1000.f, _bulletDiameter = 14.f;
-static float _lastShotTime = 0;
 
 #pragma region Player
 // Returns 1 if still alive, 0 if not
@@ -61,7 +58,6 @@ struct ChocoShooter init_player(CP_Vector pos, float speed, float maxHealth, int
         .img = CP_Image_Load("Assets/choco_shooter.png"),
         .movement = STOPPED,
         .width = 100.f,
-        .bullets[0].isShooting = FALSE,
         .attackSpeed = fireRate,
         .attackPower = atk,
         .buffs = {0},
@@ -210,94 +206,6 @@ void render_health_bar(struct ChocoShooter* player, float dt, float windowWidth,
     // Render the interpolated health bar (green to red gradient)
     CP_Settings_Fill(CP_Color_Create(225, 0, 0, 255));
     CP_Graphics_DrawRect(meterX, barOffsetY, interpolatedHealthWidth, meterHeight);
-}
-
-#pragma endregion
-
-#pragma region Bullet
-struct Bullet init_bullet(enum BulletType bulletType, float bulletSpeed, float bulletDiameter, int dmg, CP_Vector bulletDirection) {
-    struct Bullet bullet = {
-        .isShooting = TRUE,
-        .shootRange = 1000.f,
-        .bulletType = bulletType,
-        .speed = bulletSpeed,
-        .diameter = bulletDiameter,
-        .dmg = dmg,
-        .shootDirection = bulletDirection
-    };
-    return bullet;
-}
-
-void player_shoot(float dt, bool can_shoot, float mouse_x, float mouse_y) {
-    _lastShotTime += dt;
-    if (CP_Input_MouseDown(MOUSE_BUTTON_LEFT) && can_shoot) {
-        if (_lastShotTime >= (1 / playerInstance.attackSpeed)) { // control fire rate
-            // bullet direction is the vector of player with mouse pointer
-            CP_Vector bulletDirection = CP_Vector_Subtract(CP_Vector_Set(mouse_x, mouse_y), playerInstance.pos);
-            struct Bullet bullet = init_bullet(_bulletType, _bulletSpeed, _bulletDiameter, playerInstance.attackPower, bulletDirection);
-            
-            // Shoot bullet logic
-            {
-                // x is the min or max x of player (extreme left or right of player)
-                float playerWidth = playerInstance.width < 0 ? -playerInstance.width : playerInstance.width;
-                bullet.pos.x = (bullet.shootDirection.x < 0) ? playerInstance.pos.x - (playerWidth / 2) : playerInstance.pos.x + (playerWidth / 2);
-                bullet.pos.y = playerInstance.pos.y;
-
-                int bulletCount = 0;
-                // check if the bullet is still moving
-                for (int i = 0; (playerInstance.bullets[i].isShooting || playerInstance.bullets[i + 1].isShooting); i++) {
-
-                    // pop first index if finish shooting (push to the back of the last active bullet)
-                    // e.g.: 
-                    // before: [b1, b2, b3, b4, b5]->.ishooting = [False, True, True, True, False]
-                    // after: [b2, b3, b4, b1, b5]->.ishooting = [True, True, True, False, False] , bulletCount = 3
-
-                    // if first bullet finish shooting and second bullet still shooting
-                    if (!(playerInstance.bullets[i].isShooting) && (playerInstance.bullets[i + 1].isShooting)) {
-                        // swap bullet
-                        struct Bullet temp = playerInstance.bullets[i];
-                        playerInstance.bullets[i] = playerInstance.bullets[i + 1];
-                        playerInstance.bullets[i + 1] = temp;
-                    }
-
-                    // get the count of the active bullet
-                    bulletCount++;
-                    if (i + 2 == MAX_BULLET_COUNT) {
-                        bulletCount = playerInstance.bullets[i + 1].isShooting ? bulletCount + 1 : bulletCount;
-                        break;
-                    }
-                }
-
-                // assign the next bullet to the next active bullet slot 
-                if (bulletCount < MAX_BULLET_COUNT) {
-                    playerInstance.bullets[bulletCount] = bullet;
-                }
-            }
-            _lastShotTime = 0;
-        }
-    }
-}
-
-void update_pos_bullet(struct Bullet* bullet, float dt) {
-
-    if (bullet->isShooting) {
-        if (bullet->shootRange > 0) {
-            bullet->shootDirection = CP_Vector_Normalize(bullet->shootDirection);
-            bullet->pos.x += bullet->shootDirection.x * bullet->speed * dt;
-            bullet->pos.y += bullet->shootDirection.y * bullet->speed * dt;
-            bullet->shootRange -= bullet->speed * dt;
-        }
-        else {
-            bullet->isShooting = FALSE;
-        }
-    }
-}
-
-void render_bullet(struct Bullet bullet) {
-    if (bullet.isShooting) {
-        CP_Settings_Fill(CP_Color_Create(113, 54, 0, 128));
-        CP_Graphics_DrawCircle(bullet.pos.x, bullet.pos.y, bullet.diameter);
-    }
 }
 
 #pragma endregion
