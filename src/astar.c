@@ -212,7 +212,6 @@ int find_astar_path(PathNode* grid, int nodeCount, int startNodeIndex, int endNo
 					break;
 				current = *(current.parentNode);
 			}
-			pathArray[pathNodeCount++] = startNode.nodeIndex;
 			reverse_array(pathArray, pathNodeCount);
 			break;
 		}
