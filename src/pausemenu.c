@@ -10,14 +10,14 @@ static bool isPaused = false;
 static struct Button resumeButton;
 static struct Button endGameButton;
 static struct Button optionsButton;
+
 void init_pause_menu(float screenWidth, float screenHeight) {
-    // Initialize tilemap for GUI visuals
-    init_tilemap();
     // Initialize buttons
     resumeButton = init_button(screenWidth / 2, screenHeight / 2 - 75, 200, 50, BUTTON_TYPE_SUCCESS, "Resume", CP_Color_Create(255, 255, 255, 255), 24.0f);
     endGameButton = init_button(screenWidth / 2, screenHeight / 2, 200, 50, BUTTON_TYPE_WARNING, "End Game", CP_Color_Create(255, 255, 255, 255), 24.0f);
     optionsButton = init_button(screenWidth / 2, screenHeight / 2 + 75, 200, 50, BUTTON_TYPE_DEFAULT, "Options", CP_Color_Create(255, 255, 255, 255), 24.0f);
 }
+
 void render_pause_menu() {
     if (isPaused) {
         // Render a dim background overlay
@@ -29,6 +29,7 @@ void render_pause_menu() {
         render_button(optionsButton);
     }
 }
+
 void update_pause_menu(float mouseX, float mouseY) {
     if (isPaused) {
         // Update button states based on mouse interaction
@@ -45,9 +46,11 @@ void update_pause_menu(float mouseX, float mouseY) {
         }
         if (optionsButton.state == BUTTON_STATE_CLICKED) {
             // Trigger options menu logic (implement as needed)
-            open_options_menu();
+            //open_options_menu();
         }
     }
 }
+
 void toggle_pause_menu() {
     isPaused = !isPaused;
+}

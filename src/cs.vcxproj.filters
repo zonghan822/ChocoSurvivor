@@ -19,13 +19,7 @@
     <ClCompile Include="mainmenu.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="player.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="utils.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="tower.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="camera.c">
@@ -36,12 +30,6 @@
     </ClCompile>
     <ClCompile Include="level2.c">
       <Filter>Source Files\Levels</Filter>
-    </ClCompile>
-    <ClCompile Include="flicker.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="placeables.c">
-      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="audio.c">
       <Filter>Source Files</Filter>
@@ -61,6 +49,30 @@
     <ClCompile Include="pausemenu.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="level.c">
+      <Filter>Source Files\Levels</Filter>
+    </ClCompile>
+    <ClCompile Include="gui.c">
+      <Filter>Source Files\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="progressbar.c">
+      <Filter>Source Files\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="player.c">
+      <Filter>Source Files\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="tower.c">
+      <Filter>Source Files\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="placeables.c">
+      <Filter>Source Files\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="flicker.c">
+      <Filter>Source Files\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="projectile.c">
+      <Filter>Source Files\Player</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="boss.h">
@@ -72,13 +84,7 @@
     <ClInclude Include="mainmenu.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="player.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="hittest.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="tower.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="camera.h">
@@ -89,12 +95,6 @@
     </ClInclude>
     <ClInclude Include="level2.h">
       <Filter>Header Files\Levels</Filter>
-    </ClInclude>
-    <ClInclude Include="flicker.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="placeables.h">
-      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="audio.h">
       <Filter>Header Files</Filter>
@@ -117,6 +117,30 @@
     <ClInclude Include="pausemenu.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="level.h">
+      <Filter>Header Files\Levels</Filter>
+    </ClInclude>
+    <ClInclude Include="gui.h">
+      <Filter>Header Files\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="progressbar.h">
+      <Filter>Header Files\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="projectile.h">
+      <Filter>Header Files\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="placeables.h">
+      <Filter>Header Files\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="player.h">
+      <Filter>Header Files\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="tower.h">
+      <Filter>Header Files\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="flicker.h">
+      <Filter>Header Files\Player</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Header Files">
@@ -136,6 +160,12 @@
     </Filter>
     <Filter Include="Header Files\UI">
       <UniqueIdentifier>{5aed46db-ab69-4e6c-9f73-a1381b09156c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Player">
+      <UniqueIdentifier>{e3b4e23c-fc19-4929-8345-4d02ec9a4d94}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Player">
+      <UniqueIdentifier>{229a02ea-9b5b-471a-abfb-f384f4b37ee2}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
