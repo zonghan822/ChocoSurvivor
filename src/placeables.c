@@ -136,8 +136,8 @@ void init_ally(int index, CP_Vector pos, float width, float height) {
         allies[index].pos = pos;
         allies[index].width = width;
         allies[index].height = height;
-        allies[index].attackSpeed = 3.6f;
-        allies[index].attackPower = 3;
+        allies[index].attackSpeed = 5.35f;
+        allies[index].attackPower = 2;
     }
     else {
        // printf("DEBUG: Unable to initialize ally at index %d (exceeds MAX_ALLIES).\n", index);

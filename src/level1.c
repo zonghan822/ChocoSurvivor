@@ -198,7 +198,8 @@ void level_one_init(void) {
     _levelBg = init_level(GAME_LEVEL_ONE, LEVEL_WIDTH, LEVEL_HEIGHT, _windowWidth, _windowHeight);
     _tutHasPressedW = _tutHasPressedA = _tutHasPressedS =
         _tutHasPressedD = _tutHasPressedV = _tutHasPressedB =
-        _tutHasPressedRmb = _tutCanCancelPlaceablesRmb = false;
+        _tutHasPressedRmb = _tutCanCancelPlaceablesRmb = 
+        _tutHasPressedSpace = false;
     
     _tutImageW = CP_Image_Load("Assets/GUI/keyboard_w.png");
     _tutImageA = CP_Image_Load("Assets/GUI/keyboard_a.png");

@@ -174,7 +174,7 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
     default:
     case GAME_LEVEL_ONE:
         levelBg = CP_Image_Load("Assets/Levels/level1.png");
-        _boss = init_boss_one(BOSS_WIDTH, 30.f, 4500, 60, 1.03f);
+        _boss = init_boss_one(BOSS_WIDTH, 20.f, 4500, 60, 1.03f);
 
         // Init Defense Target Properties
         _tower.maxHealth = _tower.health = 3;
@@ -365,14 +365,14 @@ void spawn_enemies(float dt) {
                     nextSpawnDelay = -0.05f;
                     break;
                 case WAVE_2:
-                    _spawnInterval = 1.35f;
-                    enemySpeed = 102.f;
+                    _spawnInterval = 1.3f;
+                    enemySpeed = 110.f;
                     enemyMaxHealth = 250;
                     enemyDmg = 35;
                     _enemyMaxAttackCD = 1.5f;
-                    _roachesMax = 55;
-                    nextSpawnDelayIndex = 4;
-                    nextSpawnDelay = -0.8f;
+                    _roachesMax = 50;
+                    nextSpawnDelayIndex = 7;
+                    nextSpawnDelay = -1.55f;
                     break;
                 case WAVE_3:
                     if (_boss.state == BOSS_STATE_UNSPAWNED)
@@ -384,7 +384,7 @@ void spawn_enemies(float dt) {
                     _enemyMaxAttackCD = 1.5f;
                     _roachesMax = 45;
                     nextSpawnDelayIndex = 5;
-                    nextSpawnDelay = -0.6f;
+                    nextSpawnDelay = -0.75f;
                     break;
                 }
 #pragma endregion
@@ -593,9 +593,10 @@ void render_ui(float window_width, float window_height, float mouse_x, float mou
     // Render boss health bar
     if (_boss.state != BOSS_STATE_UNSPAWNED && _boss.state != BOSS_STATE_DIED) {
         CP_Settings_StrokeWeight(5.f);
-        const float bossHpMaxWidth = 1350.f,
-            bossHpMaxHeight = 35.f;
-        float currentBossHpWidth;
+        const float bossHpMaxWidth = 1150.f,
+            bossHpMaxHeight = 30.f;
+        float currentBossHpWidth,
+            currentBossHpX = window_width / 2.f;
 
         // Increase the health bar like an animation
         if (_currentBossHealthWidth < bossHpMaxWidth)
@@ -609,7 +610,7 @@ void render_ui(float window_width, float window_height, float mouse_x, float mou
         else { // This is for correcting the health bar, and perform calculations if boss is damaged
             _currentBossHealthWidth = bossHpMaxWidth;
             currentBossHpWidth = ((float)_boss.health / (float)_boss.maxHealth) * bossHpMaxWidth;
-            CP_Settings_StrokeWeight(3.f);
+            currentBossHpX -= (bossHpMaxWidth - currentBossHpWidth) / 2.f;
         }
 
 
@@ -622,7 +623,8 @@ void render_ui(float window_width, float window_height, float mouse_x, float mou
 
         // Value
         CP_Settings_Fill(CP_Color_Create(255, 0, 0, 255));
-        CP_Graphics_DrawRect(window_width / 2.f, window_height - 60.f, currentBossHpWidth, bossHpMaxHeight);
+        CP_Graphics_DrawRect(currentBossHpX, window_height - 60.f, currentBossHpWidth, bossHpMaxHeight);
+        CP_Settings_StrokeWeight(3.f);
     }
 
     // TODO: Rework buff UI
@@ -841,7 +843,6 @@ void check_collision(void) {
                     if (enemy_take_damage(&_roaches[i], projectile.dmg)) {
                         _on_enemy_killed(i);
                     }
-                    // Cancel bullet after hit enemy
                     remove_projectile(&playerProjectiles, j);
                     break;
                 }
