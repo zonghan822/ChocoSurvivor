@@ -23,7 +23,7 @@
     <ClCompile Include="astar.c" />
     <ClCompile Include="gui.c" />
     <ClCompile Include="level.c" />
-    <ClCompile Include="pausemenu.c" />
+    <ClCompile Include="optionsmenu.c" />
     <ClCompile Include="placeables.c" />
     <ClCompile Include="boss.c" />
     <ClCompile Include="button.c" />
@@ -48,7 +48,7 @@
     <ClInclude Include="astar.h" />
     <ClInclude Include="gui.h" />
     <ClInclude Include="level.h" />
-    <ClInclude Include="pausemenu.h" />
+    <ClInclude Include="optionsmenu.h" />
     <ClInclude Include="placeables.h" />
     <ClInclude Include="boss.h" />
     <ClInclude Include="button.h" />

@@ -59,7 +59,9 @@ void level_one_update(void) {
     if (try_game_over(_windowWidth, _windowHeight, _cursor))
         return; // Game over, so don't do anything else
 
-    move_player(&playerInstance, dt, LEVEL_WIDTH, LEVEL_HEIGHT);
+    if (!isPaused)
+        move_player(&playerInstance, dt, LEVEL_WIDTH, LEVEL_HEIGHT);
+    update_camera(playerInstance, dt);
 
     // Function to TRY to proceed to next wave or level
     // Function is slightly hardcoded
@@ -69,7 +71,7 @@ void level_one_update(void) {
     CP_Graphics_ClearBackground(CP_Color_Create(170, 170, 170, 255));
     CP_Image_Draw(_levelBg, (LEVEL_WIDTH / 2.f), (LEVEL_HEIGHT / 2.f), LEVEL_WIDTH, LEVEL_HEIGHT, 255);
 
-    enableShooting = true;
+    enableShooting = !isPaused;
 
     // Spawn enemies
     spawn_enemies(dt);
@@ -92,7 +94,8 @@ void level_one_update(void) {
     /*********************************
          Movement and Attack Logic
     **********************************/
-    player_shoot(dt, enableShooting, mouseX, mouseY);
+    if (!isPaused)
+        player_shoot(dt, enableShooting, mouseX, mouseY);
     check_collision(); // For player
     enemy_move_attack(dt);
 
@@ -100,11 +103,12 @@ void level_one_update(void) {
     CP_Settings_ResetMatrix();
     render_new_wave_counter(_windowWidth, _windowHeight);
     render_ui(_windowWidth, _windowHeight, mouseX, mouseY);
+    try_pause(_windowWidth, _windowHeight);
     render_cursor(_cursor);
     apply_camera();
 
     // Exit to Main Menu
-    if (CP_Input_KeyTriggered(KEY_Q)) {
+    if (!isPaused && CP_Input_KeyTriggered(KEY_Q)) {
         CP_Engine_SetNextGameState(main_menu_init, main_menu_update, main_menu_exit);
     }
 }

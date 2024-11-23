@@ -158,8 +158,6 @@ void move_player(struct ChocoShooter *player, float dt, float level_width, float
             _isDashing = FALSE;
     }
 
-    update_camera(*player, dt);
-
     // Use hitbox instead because images can have whitespaces in them
     // Add some padding
     float halfWidth = (player->hitbox.width / 2.0f) + 2.0f,
