@@ -32,12 +32,8 @@ int get_barrier_count(void) {
 }
 
 void increment_barrier_count(void) {
-    if (barrierCount < MAX_BARRIERS) {
+    if (barrierCount < MAX_BARRIERS)
         barrierCount++;
-    }
-    else {
-        printf("Max barriers reached. Cannot increment.\n");
-    }
 }
 
 void set_barrier_properties(int index, CP_Vector pos, float width, float height, int health) {

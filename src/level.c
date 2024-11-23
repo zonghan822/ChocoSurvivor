@@ -980,13 +980,26 @@ void enemy_move_attack(float dt) {
                             if (_roaches[i].attackCooldown <= 0) {
                                 _roaches[i].attackCooldown = _enemyMaxAttackCD;
                                 if (!barrier_take_damage(_roaches[i].barrierAttack, _roaches[i].dmg)) {
-                                    int worldClipsIndex = _obstaclesCount + _roaches[i].barrierAttack;
-                                    if (worldClipsIndex != (_worldClipsCount - 1)) {
-                                        struct Rectangle tmp = _worldClips[_worldClipsCount - 1];
-                                        _worldClips[_worldClipsCount - 1] = _worldClips[worldClipsIndex];
-                                        _worldClips[worldClipsIndex] = tmp;
+                                    int barrierCount = get_barrier_count(),
+                                        index = (_worldClipsCount - _obstaclesCount) - (barrierCount + 1);
+                                    for (; index < (barrierCount == 0 ? 1 : barrierCount); index++) {
+                                        // Assume _worldClipsCount = 9, _obstaclesCount = 6, barrierCount = 2
+                                        // To get the first barrier index in the _worldClips, (9 - 6) - (2 + 1)
+                                        // Because get_barrier_count will always return the updated count
+                                        struct Rectangle temp = _worldClips[index + _obstaclesCount];
+                                        if (CP_Vector_Distance(temp.pos, barriers[_roaches[i].barrierAttack].pos)) { // Not the same barrier
+                                            continue;
+                                        }
+                                        else {
+                                            int b4 = _worldClipsCount;
+                                            for (int i = index + _obstaclesCount; i < _worldClipsCount; i++)
+                                                _worldClips[i] = _worldClips[i + 1];
+                                            --_worldClipsCount;
+                                            break;
+                                        }
                                     }
-                                    --_worldClipsCount;
+                                    if ((get_barrier_count() + _obstaclesCount) != _worldClipsCount)
+                                        printf("!!!!!!!!!!!!!! Error in removing barrier !!!!!!!!!!!!!!!!!\n");
                                     update_grid(&_enemyGrid, _worldClips, _worldClipsCount, _enemyClips, 4);
                                     update_grid(&_bossGrid, _worldClips, _worldClipsCount, _enemyClips, 4);
                                 }
