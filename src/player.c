@@ -59,7 +59,8 @@ struct ChocoShooter init_player(CP_Vector pos, float speed, float maxHealth, int
         .attackPower = atk,
         .flickerState.isVisible = TRUE,
         .exp = 0,
-        .expGained = 0
+        .expGained = 0,
+        .currentProjectileType = NORMAL_PROJECTILE
     };
     player.height = get_preserved_heightf((float)CP_Image_GetWidth(player.img), (float)CP_Image_GetHeight(player.img), player.width);
     player.hitbox.width = player.width / 1.4f;

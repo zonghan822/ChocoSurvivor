@@ -94,7 +94,14 @@ void render_barriers() {
     CP_Settings_Fill(CP_Color_Create(0, 0, 255, 255)); // Solid blue
     for (int i = 0; i < get_barrier_count(); i++) {
         if (barriers[i].health > 0) {  // Only draw if health is greater than zero
-            CP_Image_Draw(get_barrier_image(playerInstance.buffs.barrierLevel),
+            int barrierLvl = 0;
+            for (int i = 0; i < activeBuffs.buffCount; i++) {
+                if (activeBuffs.buffs[i].type == BARRIER_LVL_UP) {
+                    barrierLvl = activeBuffs.buffs[i].level;
+                    break;
+                }
+            }
+            CP_Image_Draw(get_barrier_image(barrierLvl),
                 barriers[i].pos.x, barriers[i].pos.y,
                 barriers[i].width, barriers[i].height,
                 255);
@@ -151,9 +158,14 @@ void init_ally(int index, CP_Vector pos, float width, float height) {
 void render_allies() {
     for (int i = 0; i < get_ally_count(); i++) {
         if (!allies[i].state) {
-            // PLACEHOLDER
-            // TODO: Remove
-            int allyLevel = playerInstance.buffs.allyLevel; // PH: Stored here until allies have upgrade images
+            int allyLvl = 0;
+            for (int i = 0; i < activeBuffs.buffCount; i++) {
+                if (activeBuffs.buffs[i].type == ALLY_LVL_UP) {
+                    allyLvl = activeBuffs.buffs[i].level;
+                    break;
+                }
+            }
+            int allyLevel = allyLvl; // PH: Stored here until allies have upgrade images
             CP_Image img = get_ally_image(0);
             float preservedHeight = get_preserved_heightf(CP_Image_GetWidth(img),
                 CP_Image_GetHeight(img), allies[i].width);

@@ -3,7 +3,10 @@
 #include "cprocessing.h"
 #include "player.h"
 
+#define BUFF_TIME 10.f
+
 typedef enum BuffType {
+    NO_BUFF,
     ATTACK_UP,
     ATTACK_SPEED_UP,
     HEALTH_UP,
@@ -18,18 +21,20 @@ typedef enum BuffType {
 
 typedef struct Buff {
     BuffType type;
+    bool isActive;
     bool isTimerBuff;
-    bool isActiveBuff;
     float timeLeft;
     int level;
 }Buff;
 
 typedef struct {
-    Buff buffs[5];
+    Buff buffs[10];
     int buffCount;
 }BuffList;
 
-void apply_buff(struct ChocoShooter* player, enum BuffType buff, struct Barrier* barrier, struct Ally* allies);
+extern BuffList activeBuffs;
+
+void apply_buff(BuffList *activeBuffs, enum BuffType buff, struct ChocoShooter* player, struct Barrier* barrier, struct Ally* allies);
 int update_buff_meter(struct ChocoShooter* player, float dt);
-void activate_buff_from_slot(struct ChocoShooter* player, int slot);
-void assign_buff_to_slot(struct ChocoShooter* player, enum BuffType buffType);
+//void activate_buff_from_slot(struct ChocoShooter* player, int slot);
+//void assign_buff_to_slot(struct ChocoShooter* player, enum BuffType buffType);

@@ -59,13 +59,13 @@ static void _move_to_target(struct Boss* boss, struct Rectangle hitbox, float dt
 		pathNodeCount = find_astar_path(grid, nodeCount, startNodeIndex, endNodeIndex, pathArray);
 
 		if (pathNodeCount) {
-			boss->moveDirection = CP_Vector_Normalize((CP_Vector_Subtract(grid[pathArray[0]].pos, boss->pos)));
+			boss->moveDirection = CP_Vector_Normalize((CP_Vector_Subtract(grid[pathArray[1]].pos, boss->pos)));
 		}
 		else {
 			int startNodeIndexNB = get_nearest_node_index(gridNoBarrier, nodeCount, boss->pos);
 			int endNodeIndexNB = get_nearest_node_index(gridNoBarrier, nodeCount, hitbox.pos);
 			find_astar_path(gridNoBarrier, nodeCount, startNodeIndexNB, endNodeIndexNB, pathArray);
-			boss->moveDirection = CP_Vector_Normalize((CP_Vector_Subtract(grid[pathArray[0]].pos, boss->pos)));
+			boss->moveDirection = CP_Vector_Normalize((CP_Vector_Subtract(grid[pathArray[1]].pos, boss->pos)));
 		}
 	}
 	boss->width = (boss->moveDirection.x < 0.f && boss->width > 0.f) || (boss->moveDirection.x > 0.f && boss->width < 0.f) ? -boss->width : boss->width;

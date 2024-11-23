@@ -4,6 +4,7 @@
 #include "utils.h"
 #include "flicker.h"
 #include "buff.h"
+#include "projectile.h"
 
 #define PLAYER_HITBOX_OFFSET_X(playerWidth) (- 1 / 33.f * playerWidth)
 #define PLAYER_HITBOX_OFFSET_Y(playerHeight) (- 8.f / 77.f * playerHeight)
@@ -28,8 +29,8 @@ struct ChocoShooter {
     float expGained;
     int playerMaxExp;
     int playerLevel;
+    enum ProjectileType currentProjectileType;
 };
-
 
 int player_take_damage(struct ChocoShooter* player, int damage);
 struct ChocoShooter init_player(CP_Vector pos, float speed, float maxHealth, int atk, float fireRate);

@@ -281,17 +281,17 @@ int find_astar_path(PathNode* grid, int nodeCount, int startNodeIndex, int endNo
 	}
 
 	for (int i = 0; i < openList.nodeCount; i++) {
-		if (openList.list[openList.nodeCount].parentNode != NULL &&
-			openList.list[openList.nodeCount].parentNode->nodeIndex >= 0 &&
-			openList.list[openList.nodeCount].parentNode->nodeIndex < nodeCount) {
+		if (openList.list[i].parentNode != NULL &&
+			openList.list[i].parentNode->nodeIndex >= 0 &&
+			openList.list[i].parentNode->nodeIndex < nodeCount) {
 			free(openList.list[i].parentNode);
 		}
 	}
 	free(openList.list);
 	for (int i = 0; i < closedList.nodeCount; i++) {
-		if (closedList.list[closedList.nodeCount].parentNode != NULL &&
-			closedList.list[closedList.nodeCount].parentNode->nodeIndex > 0 &&
-			closedList.list[closedList.nodeCount].parentNode->nodeIndex < nodeCount) { {
+		if (closedList.list[i].parentNode != NULL &&
+			closedList.list[i].parentNode->nodeIndex > 0 &&
+			closedList.list[i].parentNode->nodeIndex < nodeCount) {
 			free(closedList.list[i].parentNode);
 		}
 	}

@@ -74,12 +74,10 @@ static Grid _enemyGrid, _bossGrid, _enemyGridNB, _bossGridNB;
 static enum AllyState _currentAllyState = ALLY_IDLE;
 #pragma endregion
 
-#pragma region Buff properties
-static BuffList activeBuffs;
-static BuffList passiveBuffs;
-static int activeBuffSlot = 0;          // 0 means no active buff, 1-3 represent the buff slots
-//static float activeBuffDuration = 0.0f;  // Duration in seconds for the active buff (10s when active)
+#pragma region Buff Properties
+static BuffType buffSlot[MAX_BUFF_SLOT];
 #pragma endregion
+
 
 enum SpawnWave currentWave;
 
@@ -150,6 +148,7 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
     playerProjectiles.activeCount = 0;
     memset(&playerProjectiles, 0, sizeof(playerProjectiles.projectiles));
     memset(&allyProjectiles, 0, sizeof(allyProjectiles->projectiles));
+    memset(buffSlot, 0, sizeof(buffSlot));
 
     float halfWindowWidth = window_width / 2.f,
         halfWindowHeight = window_height / 2.f;
@@ -192,6 +191,9 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
         playerInstance = init_player(_respawnVec, 350.0f, 100, 21, 4.2f);
         playerInstance.playerMaxExp = 20; // Reset exp
         playerInstance.playerLevel = 1; // Reset level
+
+        // Init Buffs
+        memset(&activeBuffs, 0, sizeof(activeBuffs));
 
         // Init placeables
         init_barrier_images();
@@ -431,12 +433,19 @@ void player_placeables(float mouse_x, float mouse_y, float dt) {
             _currentBarrierState = BARRIER_PREVIEW;
         break;
 
-    case BARRIER_PREVIEW:
+    case BARRIER_PREVIEW: {
         enableShooting = false;
         // Render translucent barrier preview
         CP_Settings_RectMode(CP_POSITION_CENTER);
         CP_Settings_Fill(CP_Color_Create(0, 0, 255, 128));
-        CP_Image_Draw(get_barrier_image(playerInstance.buffs.barrierLevel), mouse_x, mouse_y, BARRIER_WIDTH, BARRIER_HEIGHT, 128);
+        int barrierLvl = 0;
+        for (int i = 0; i < activeBuffs.buffCount; i++) {
+            if (activeBuffs.buffs[i].type == BARRIER_LVL_UP) {
+                barrierLvl = activeBuffs.buffs[i].level;
+                break;
+            }
+        }
+        CP_Image_Draw(get_barrier_image(barrierLvl), mouse_x, mouse_y, BARRIER_WIDTH, BARRIER_HEIGHT, 128);
         // Place barrier when left mouse button is clicked
         if (CP_Input_MouseTriggered(MOUSE_BUTTON_LEFT)) {
             int barrierIndex = get_barrier_count();
@@ -445,6 +454,7 @@ void player_placeables(float mouse_x, float mouse_y, float dt) {
             _currentBarrierState = BARRIER_IDLE;
         }
         break;
+    }
     }
 
     switch (_currentAllyState) {
@@ -459,7 +469,14 @@ void player_placeables(float mouse_x, float mouse_y, float dt) {
         enableShooting = false;
          // Render translucent preview
         CP_Settings_Fill(CP_Color_Create(0, 255, 0, 128));
-        CP_Image prevImg = get_ally_image(playerInstance.buffs.allyLevel);
+        int allyLvl = 0;
+        for (int i = 0; i < activeBuffs.buffCount; i++) {
+            if (activeBuffs.buffs[i].type == ALLY_LVL_UP) {
+                allyLvl = activeBuffs.buffs[i].level;
+                break;
+            }
+        }
+        CP_Image prevImg = get_ally_image(allyLvl);
         float preservedHeight = get_preserved_heightf(CP_Image_GetWidth(prevImg), CP_Image_GetHeight(prevImg), ALLY_WIDTH);
         CP_Image_Draw(prevImg, mouse_x, mouse_y, ALLY_WIDTH, preservedHeight, 128);
 
@@ -629,17 +646,18 @@ void render_ui(float window_width, float window_height, float mouse_x, float mou
 
     // TODO: Rework buff UI
     #pragma region Buff slots
-    float slotX[MAX_BUFF_SLOT] = { window_width / 10 };
-    float slotY = window_height / 10;
-    float slotW = 40.f, slotH = 40.f;
+    float slotX[MAX_BUFF_SLOT] = { window_width / 10.f };
+    float slotY = window_height * 9.f / 10.f;
+    float slotW = 80.f, slotH = 80.f;
     float gap = 40.f;
 
     CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255));
     for (int i = 0; i < MAX_BUFF_SLOT; i++) {
-        slotX[i] = (i * (gap + slotW / 2.f)) + slotX[0];
+        slotX[i] = (i * (gap + slotW)) + slotX[0];
         CP_Graphics_DrawRect(slotX[i], slotY, slotW, slotH);
     }
     #pragma endregion
+    
     /*
     CP_Settings_TextSize(20.0f);
 
@@ -1014,7 +1032,17 @@ void enemy_move_attack(float dt) {
         _boss.primaryAttack(&_boss, &playerInstance, dt);
     else if (_boss.canSecondaryAttack(_boss, playerInstance))
         _boss.secondaryAttack(&_boss, &playerInstance, dt);
-#pragma endregion
+    #pragma endregion
+
+    BuffType randomBuff = update_buff_meter(&playerInstance, dt);
+    // Apply the buff if it is upgrades buff
+    if (randomBuff >= ATTACK_UP && randomBuff <= BARRIER_LVL_UP) {
+        apply_buff(&activeBuffs, randomBuff, &playerInstance, barriers, allies);
+    }
+    else {
+        //active buff
+        
+    }
 }
 
 void place_barrier(int index, float x, float y) {

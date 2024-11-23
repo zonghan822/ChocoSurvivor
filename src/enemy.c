@@ -94,8 +94,6 @@ int enemy_take_damage(struct ChocoRoach* roach, int dmg) {
     roach->isTakingDamage = true;
     if (roach->health <= 0) {
         roach->currentState = ENEMY_STATE_DIED;
-        // set element to 0
-        memset(roach, 0, sizeof(roach));
         return 1;
     }
     return 0;
