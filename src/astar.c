@@ -21,13 +21,13 @@ void init_grid(Grid* grid, float levelWidth, float levelHeight, float nodeWidth,
 
 	float paddingX = nodeWidth / 2;
 	float paddingY = nodeHeight / 2;
-	float marginX = paddingX + (levelWidth - (nodeWidth * grid->nodeCountX))/2;
-	float marginY = paddingY + (levelHeight - (nodeHeight * grid->nodeCountY))/2;
+	float marginX = paddingX + (levelWidth - (nodeWidth * grid->nodeCountX)) / 2;
+	float marginY = paddingY + (levelHeight - (nodeHeight * grid->nodeCountY)) / 2;
 
 	for (int i = 0; i < grid->nodeCountX; i++) {
 		for (int j = 0; j < grid->nodeCountY; j++) {
 			CP_Vector nodePos = { marginX + nodeWidth * i , marginY + nodeHeight * j };
-			/****************************************** 
+			/******************************************
 			grid indexes are stored in following order:
 			(row major)
 			e.g.:
@@ -42,7 +42,7 @@ void init_grid(Grid* grid, float levelWidth, float levelHeight, float nodeWidth,
 	}
 }
 
-static bool is_valid_node(PathNode node, float nodeWidth, float nodeHeight, struct Rectangle* worldClips, int clipsSize){
+static bool is_valid_node(PathNode node, float nodeWidth, float nodeHeight, struct Rectangle* worldClips, int clipsSize) {
 	struct Rectangle currentRect = { node.pos, .width = nodeWidth, .height = nodeHeight };
 	for (int clipIndex = 0; clipIndex < clipsSize; clipIndex++) {
 		if (are_rects_intersecting(currentRect, worldClips[clipIndex])) {
@@ -74,7 +74,7 @@ void update_grid(Grid* grid, struct Rectangle* worldClips, int clipsSize, struct
 			int nodeIndex = i + j * grid->nodeCountX;
 			grid->nodes[nodeIndex].connectionCount = 0;
 
-			if (is_valid_node(grid->nodes[nodeIndex], grid->nodeWidth, grid->nodeHeight, tempArray, size)){
+			if (is_valid_node(grid->nodes[nodeIndex], grid->nodeWidth, grid->nodeHeight, tempArray, size)) {
 
 				int connectionStartIndexI = max(0, i - 1);
 				int connectionStartIndexJ = max(0, j - 1);
@@ -117,7 +117,7 @@ int get_nearest_node_index(PathNode* grid, int nodeCount, CP_Vector position) {
 	for (int i = 1; i < nodeCount; i++) {
 		// if the valid node has shorter distance to position
 		float distance = CP_Vector_Distance(position, grid[i].pos);
-		if (grid[i].connectionCount != 0 &&  distance < closestDistance) {
+		if (grid[i].connectionCount != 0 && distance < closestDistance) {
 			closestNodeIndex = i;
 			closestDistance = distance;
 		}
@@ -126,7 +126,7 @@ int get_nearest_node_index(PathNode* grid, int nodeCount, CP_Vector position) {
 }
 
 static void init_list(AStarList* nodeList, int size) {
-	nodeList->list = (AStarNode *)malloc(size * sizeof(AStarNode));
+	nodeList->list = (AStarNode*)malloc(size * sizeof(AStarNode));
 	if (nodeList->list == NULL) {
 		fprintf(stderr, "Memory allocation failed\n");
 		return;
@@ -138,11 +138,12 @@ static void init_list(AStarList* nodeList, int size) {
 static void append_list(AStarList* nodeList, AStarNode node) {
 	if (nodeList->nodeCount == nodeList->size) {
 		nodeList->size++;
-		nodeList->list = realloc(nodeList->list, nodeList->size * sizeof(AStarNode));
-		if (nodeList->list == NULL) {
+		AStarNode* ptr = (AStarNode*)realloc(nodeList->list, nodeList->size * sizeof(AStarNode));
+		if (ptr == NULL) {
 			fprintf(stderr, "Memory reallocation failed\n");
 			return;
 		}
+		nodeList->list = ptr;
 	}
 	nodeList->list[nodeList->nodeCount++] = node;
 }
@@ -150,12 +151,8 @@ static void append_list(AStarList* nodeList, AStarNode node) {
 static void pop_list(AStarList* nodeList, AStarNode node) {
 	for (int i = 0; i < nodeList->nodeCount; i++) {
 		if (nodeList->list[i].nodeIndex == node.nodeIndex) {
-			int remainingCount = nodeList->nodeCount - i;
-			while (--remainingCount) {
-				AStarNode temp = nodeList->list[i];
-				nodeList->list[i] = nodeList->list[i+1];
-				nodeList->list[i + 1] = temp;
-				i++;
+			for (int j = i; j < nodeList->nodeCount - 1; j++) {
+				nodeList->list[j] = nodeList->list[j + 1];
 			}
 			nodeList->nodeCount--;
 			break;
@@ -171,7 +168,7 @@ static void reverse_array(int* array, int arrayCount) {
 	}
 }
 
-int find_astar_path(PathNode* grid, int nodeCount, int startNodeIndex, int endNodeIndex, int *pathArray) {
+int find_astar_path(PathNode* grid, int nodeCount, int startNodeIndex, int endNodeIndex, int* pathArray) {
 
 	AStarNode startNode = { .nodeIndex = startNodeIndex, .fCost = 0.f, .gCost = 0.f, .hCost = 0.f, .parentNode = NULL };
 	AStarNode endNode = { .nodeIndex = endNodeIndex, .fCost = 0.f, .gCost = 0.f, .hCost = 0.f, .parentNode = NULL };
@@ -186,15 +183,19 @@ int find_astar_path(PathNode* grid, int nodeCount, int startNodeIndex, int endNo
 	append_list(&openList, startNode);
 
 	// loop until find end
-	while (openList.nodeCount > 0 && openList.nodeCount < nodeCount) {
-		
+	int pathNodeCount = 0;
+	while (openList.nodeCount > 0) {
+
 		// Get the current Node which has the least f cost.
-		AStarNode currentNode = openList.list[0];
+		int currentIndex = 0;
 		for (int i = 1; i < openList.nodeCount; i++) {
-			if (openList.list[i].fCost < currentNode.fCost) {
-				currentNode = openList.list[i];
+			if (openList.list[i].fCost < openList.list[currentIndex].fCost ||
+				(openList.list[i].fCost == openList.list[currentIndex].fCost &&
+					openList.list[i].hCost < openList.list[currentIndex].hCost)) {
+				currentIndex = i;
 			}
 		}
+		AStarNode currentNode = openList.list[currentIndex];
 
 		// remove current node from open list and add it to closed list
 		pop_list(&openList, currentNode);
@@ -203,86 +204,94 @@ int find_astar_path(PathNode* grid, int nodeCount, int startNodeIndex, int endNo
 		// Goal is found
 		if (currentNode.nodeIndex == endNode.nodeIndex) {
 			AStarNode current = currentNode;
-			int pathNodeCount = 0;
 
 			// backtrack and store path in array
 			while (current.nodeIndex != startNode.nodeIndex) {
 				pathArray[pathNodeCount++] = current.nodeIndex;
+				if (current.parentNode == NULL)
+					break;
 				current = *(current.parentNode);
 			}
+			pathArray[pathNodeCount++] = startNode.nodeIndex;
 			reverse_array(pathArray, pathNodeCount);
-			while (--(openList.nodeCount) >= 0) {
-				if (openList.list[openList.nodeCount].parentNode != NULL && openList.list[openList.nodeCount].parentNode->nodeIndex > 0) {
-					free(openList.list[openList.nodeCount].parentNode);
-				}
-			}
-			while (--(closedList.nodeCount) >= 0) {
-				if (closedList.list[closedList.nodeCount].parentNode != NULL && closedList.list[closedList.nodeCount].parentNode->nodeIndex > 0) {
-					free(closedList.list[closedList.nodeCount].parentNode);
-				}
-			}
-			free(openList.list);
-			free(closedList.list);
-			return pathNodeCount;
+			break;
 		}
-		
 
 		for (int i = 0; i < grid[currentNode.nodeIndex].connectionCount; i++) {
-			
+			int neighbourIndex = grid[currentNode.nodeIndex].connections[i];
+
 			// ignore if neighbour node in closed list
 			bool isNeighbourInClosed = false;
 			for (int closedListIndex = 0; closedListIndex < closedList.nodeCount; closedListIndex++) {
-				if (closedList.list[closedListIndex].nodeIndex == grid[currentNode.nodeIndex].connections[i]) {
+				if (closedList.list[closedListIndex].nodeIndex == neighbourIndex) {
 					isNeighbourInClosed = true;
 					break;
 				}
 			}
 
-			if (!isNeighbourInClosed) {
-				AStarNode* parentNode = (AStarNode*)malloc(sizeof(AStarNode));
-				if (parentNode == NULL) {
-					fprintf(stderr, "Memory allocation failed\n");
-					return 0;
-				}
+			if (isNeighbourInClosed)
+				continue;
 
-				parentNode->nodeIndex = currentNode.nodeIndex;
-				parentNode->fCost = currentNode.fCost;
-				parentNode->gCost = currentNode.gCost;
-				parentNode->hCost = currentNode.hCost;
-				parentNode->parentNode = currentNode.parentNode;
-
-				// create f, g, h values
-				AStarNode neighbourNode = { .nodeIndex = grid[currentNode.nodeIndex].connections[i],
-											.parentNode = parentNode, 
-											.gCost = currentNode.gCost+1, 
-											.hCost = CP_Vector_Distance(grid[grid[currentNode.nodeIndex].connections[i]].pos, grid[endNode.nodeIndex].pos),
-				};
-				neighbourNode.fCost = neighbourNode.gCost + neighbourNode.hCost;
-
-
-				bool addNeighbourToOpen = true;
-				for (int openListIndex = 0; openListIndex < openList.nodeCount; openListIndex++) {
-					if ((openList.list[i].nodeIndex == neighbourNode.nodeIndex) && (openList.list[i].gCost < neighbourNode.gCost)) {
-						addNeighbourToOpen = false;
-					}
-				}
-				
-				if (addNeighbourToOpen)
-					append_list(&openList, neighbourNode);
+			// Check if neighbour is in open list
+			int existingNodeIndex = -1;
+			for (int i = 0; i < openList.nodeCount; i++) {
+				if (openList.list[i].nodeIndex == neighbourIndex)
+					existingNodeIndex = i;
 			}
+			if (existingNodeIndex > -1) {
+				if (currentNode.gCost < openList.list[existingNodeIndex].gCost) {
+					if (openList.list[existingNodeIndex].parentNode != NULL)
+						free(openList.list[existingNodeIndex].parentNode);
+
+					AStarNode* parentNode = (AStarNode*)malloc(sizeof(AStarNode));
+					if (parentNode == NULL)
+						return 0;
+					*parentNode = currentNode;
+
+					openList.list[existingNodeIndex].gCost = currentNode.gCost;
+					openList.list[existingNodeIndex].fCost = currentNode.gCost + openList.list[existingNodeIndex].hCost;
+					openList.list[existingNodeIndex].parentNode = parentNode;
+				}
+				continue;
+			}
+
+			// Create new AStarNode for neighbour
+			AStarNode* parentNode = (AStarNode*)malloc(sizeof(AStarNode));
+			if (parentNode == NULL) {
+				fprintf(stderr, "Memory allocation failed\n");
+				return 0;
+			}
+
+			parentNode->nodeIndex = currentNode.nodeIndex;
+			parentNode->fCost = currentNode.fCost;
+			parentNode->gCost = currentNode.gCost;
+			parentNode->hCost = currentNode.hCost;
+			parentNode->parentNode = currentNode.parentNode;
+
+			// create f, g, h values
+			AStarNode neighbourNode = { .nodeIndex = grid[currentNode.nodeIndex].connections[i],
+										.parentNode = parentNode,
+										.gCost = currentNode.gCost + 1.f,
+										.hCost = CP_Vector_Distance(grid[grid[currentNode.nodeIndex].connections[i]].pos, grid[endNode.nodeIndex].pos),
+			};
+			neighbourNode.fCost = neighbourNode.gCost + neighbourNode.hCost;
+
+			append_list(&openList, neighbourNode);
 		}
 	}
-	while (--(openList.nodeCount) >= 0) {
-		if (openList.list[openList.nodeCount].parentNode != NULL && openList.list[openList.nodeCount].parentNode->nodeIndex > 0) {
-			free(openList.list[openList.nodeCount].parentNode);
-		}
-	}
-	while (--(closedList.nodeCount) >= 0) {
-		if (closedList.list[closedList.nodeCount].parentNode != NULL && closedList.list[closedList.nodeCount].parentNode->nodeIndex > 0) {
-			free(closedList.list[closedList.nodeCount].parentNode);
+
+	for (int i = 0; i < openList.nodeCount; i++) {
+		if (openList.list[i].parentNode != NULL && openList.list[i].parentNode->nodeIndex >= 0) {
+			free(openList.list[i].parentNode);
 		}
 	}
 	free(openList.list);
+	for (int i = 0; i < closedList.nodeCount; i++) {
+		if (closedList.list[i].parentNode != NULL && closedList.list[i].parentNode->nodeIndex >= 0) {
+			free(closedList.list[i].parentNode);
+		}
+	}
 	free(closedList.list);
-	return 0;
+
+	return pathNodeCount;
 }
