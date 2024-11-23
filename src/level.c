@@ -23,7 +23,6 @@
 
 // Macros
 #define MAX_ENEMY_COUNT 100
-#define MAX_BUFF_SLOT 3
 
 #pragma region Spawn Properties
 static float _spawnMinY = 0.f, _spawnMaxY = 0.f, _spawnWidth = 0.f;
@@ -75,7 +74,8 @@ static enum AllyState _currentAllyState = ALLY_IDLE;
 #pragma endregion
 
 #pragma region Buff Properties
-static BuffType buffSlot[MAX_BUFF_SLOT];
+BuffSlot buffSlot;
+BuffType tempSlot;
 #pragma endregion
 
 
@@ -148,7 +148,7 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
     playerProjectiles.activeCount = 0;
     memset(&playerProjectiles, 0, sizeof(playerProjectiles.projectiles));
     memset(&allyProjectiles, 0, sizeof(allyProjectiles->projectiles));
-    memset(buffSlot, 0, sizeof(buffSlot));
+    memset(&buffSlot, 0, sizeof(buffSlot));
 
     float halfWindowWidth = window_width / 2.f,
         halfWindowHeight = window_height / 2.f;
@@ -194,6 +194,7 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
 
         // Init Buffs
         memset(&activeBuffs, 0, sizeof(activeBuffs));
+        tempSlot = 0;
 
         // Init placeables
         init_barrier_images();
@@ -652,105 +653,12 @@ void render_ui(float window_width, float window_height, float mouse_x, float mou
         CP_Settings_StrokeWeight(3.f);
     }
 
-    // TODO: Rework buff UI
-    #pragma region Buff slots
-    float slotX[MAX_BUFF_SLOT] = { window_width / 10.f };
-    float slotY = window_height * 9.f / 10.f;
-    float slotW = 80.f, slotH = 80.f;
-    float gap = 40.f;
 
-    CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255));
-    for (int i = 0; i < MAX_BUFF_SLOT; i++) {
-        slotX[i] = (i * (gap + slotW)) + slotX[0];
-        CP_Graphics_DrawRect(slotX[i], slotY, slotW, slotH);
-    }
+    #pragma region Buffs
+    render_buff_slot(&buffSlot, window_width, window_height);
+    render_buff(&activeBuffs, window_width, window_height, dt);
     #pragma endregion
     
-    /*
-    CP_Settings_TextSize(20.0f);
-
-    // Display the active buff slot
-    CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255));
-    CP_Graphics_DrawCircle(600, 825, 100);
-
-    for (int i = 0; i < 3; i++) {
-        // Set the position of each buff slot circle
-        CP_Settings_Fill(CP_Color_Create(255, 255, 255, 255));
-
-        float slotPositions[] = { 150, 300, 450 }; // Positions for buff slots
-
-        for (int i = 0; i < 3; i++) {
-            switch (playerInstance.buffs.type[i]) {
-            case ATTACK_UP:
-                CP_Font_DrawText(
-                    playerInstance.buffs.attackPowerLevel > 3 ? "A Max Lvl" :
-                    playerInstance.buffs.attackPowerLevel == 1 ? "A Lvl 1" :
-                    playerInstance.buffs.attackPowerLevel == 2 ? "A Lvl 2" : "A Lvl 3",
-                    slotPositions[i], 825);
-                break;
-            case ATTACK_SPEED_UP:
-                CP_Font_DrawText(
-                    playerInstance.buffs.attackSpeedLevel > 3 ? "AS Max Lvl" :
-                    playerInstance.buffs.attackSpeedLevel == 1 ? "AS Lvl 1" :
-                    playerInstance.buffs.attackSpeedLevel == 2 ? "AS Lvl 2" : "AS Lvl 3",
-                    slotPositions[i], 825);
-                break;
-            case HEALTH_UP:
-                CP_Font_DrawText(
-                    playerInstance.buffs.healthLevel > 3 ? "HP Max Lvl" :
-                    playerInstance.buffs.healthLevel == 1 ? "HP Lvl 1" :
-                    playerInstance.buffs.healthLevel == 2 ? "HP Lvl 2" : "HP Lvl 3",
-                    slotPositions[i], 825);
-                break;
-            default:
-                CP_Font_DrawText("Empty", slotPositions[i], 825);
-                break;
-            }
-
-            if (CP_Input_KeyTriggered(KEY_1) && playerInstance.buffs.type[0] != NO_BUFF) {
-                activate_buff_from_slot(&playerInstance, 1);
-            }
-            if (CP_Input_KeyTriggered(KEY_2) && playerInstance.buffs.type[1] != NO_BUFF) {
-                activate_buff_from_slot(&playerInstance, 2);
-            }
-            if (CP_Input_KeyTriggered(KEY_3) && playerInstance.buffs.type[2] != NO_BUFF) {
-                activate_buff_from_slot(&playerInstance, 3);
-            }
-            if (playerInstance.activeBuffType != NO_BUFF) {
-                const char* activeBuffName;
-
-                // Determine the name based on the active buff type
-                switch (playerInstance.activeBuffType) {
-                case ATTACK_UP:
-                    activeBuffName = "ATTACK UP";
-                    break;
-                case ATTACK_SPEED_UP:
-                    activeBuffName = "ATTACK SPEED UP";
-                    break;
-                case HEALTH_UP:
-                    activeBuffName = "HEALTH UP";
-                    break;
-                default:
-                    activeBuffName = "NO BUFF";
-                    break;
-                }
-
-                CP_Font_DrawText(activeBuffName, 600, 750);
-                if (playerInstance.activeBuffLevel == 1) {
-                    CP_Font_DrawText("Level 1", 600, 770);
-                }
-                else if (playerInstance.activeBuffLevel == 2) {
-                    CP_Font_DrawText("Level 2", 600, 770);
-                }
-                else if (playerInstance.activeBuffLevel == 3) {
-                    CP_Font_DrawText("Level 3", 600, 770);
-                }
-                else if (playerInstance.activeBuffLevel > 3) {
-                    CP_Font_DrawText("Max Level", 600, 770);
-                }
-            }
-        }
-    }*/
 }
 
 void render_new_wave_counter(float window_width, float window_height) {
@@ -1060,16 +968,47 @@ void enemy_move_attack(float dt) {
     else if (_boss.canSecondaryAttack(_boss, playerInstance))
         _boss.secondaryAttack(&_boss, &playerInstance, dt);
     #pragma endregion
+}
 
+void buff_update(float dt) {
     BuffType randomBuff = update_buff_meter(&playerInstance, dt);
     // Apply the buff if it is upgrades buff
-    if (randomBuff >= ATTACK_UP && randomBuff <= BARRIER_LVL_UP) {
-        apply_buff(&activeBuffs, randomBuff, &playerInstance, barriers, allies);
+    if (randomBuff) {
+        if (randomBuff >= ATTACK_UP && randomBuff <= BARRIER_LVL_UP) {
+            apply_buff(&activeBuffs, randomBuff, &playerInstance, barriers, allies);
+        }
+        else {
+            //active buff
+            if (buffSlot.buffCount < MAX_BUFF_SLOT) {
+                assign_buff_to_slot(&buffSlot, randomBuff);
+            }
+            else {
+                tempSlot = randomBuff;
+            }
+        }
     }
-    else {
-        //active buff
-        
+
+    if (tempSlot && buffSlot.buffCount < MAX_BUFF_SLOT) {
+        assign_buff_to_slot(&buffSlot, tempSlot);
     }
+
+    if (CP_Input_KeyTriggered(KEY_1) && buffSlot.buffs[0] != NO_BUFF) {
+        apply_buff(&activeBuffs, buffSlot.buffs[0], &playerInstance, barriers, allies);
+        buffSlot.buffs[0] = NO_BUFF;
+        buffSlot.buffCount--;
+    }
+    if (CP_Input_KeyTriggered(KEY_2) && buffSlot.buffs[1] != NO_BUFF) {
+        apply_buff(&activeBuffs, buffSlot.buffs[1], &playerInstance, barriers, allies);
+        buffSlot.buffs[1] = NO_BUFF;
+        buffSlot.buffCount--;
+    }
+    if (CP_Input_KeyTriggered(KEY_3) && buffSlot.buffs[2] != NO_BUFF) {
+        apply_buff(&activeBuffs, buffSlot.buffs[2], &playerInstance, barriers, allies);
+        buffSlot.buffs[2] = NO_BUFF;
+        buffSlot.buffCount--;
+    }
+
+    update_timer_buff(&activeBuffs, dt);
 }
 
 void place_barrier(int index, float x, float y) {

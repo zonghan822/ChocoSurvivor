@@ -277,6 +277,7 @@ void level_one_update(void) {
         player_shoot(dt, enableShooting, mouseX, mouseY);
     check_collision(); // For player
     enemy_move_attack(dt);
+    buff_update(dt);
 
     // Render any UI here
     CP_Settings_ResetMatrix();

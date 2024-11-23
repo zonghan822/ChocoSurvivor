@@ -48,6 +48,8 @@ void place_barrier(int index, float x, float y);
 
 void place_ally(int index, float x, float y);
 
+void buff_update(float dt);
+
 #if _DEBUG
 void debug_render_grid(void);
 #endif
