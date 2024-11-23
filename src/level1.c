@@ -263,8 +263,6 @@ void level_one_update(void) {
      // debug_render_grid();
 #endif
 
-    CP_Graphics_DrawRect(playerInstance.hitbox.pos.x, playerInstance.hitbox.pos.y, playerInstance.hitbox.width, playerInstance.hitbox.height);
-
     render_barriers();
     render_allies();
     render_entities(dt, mouseX);
