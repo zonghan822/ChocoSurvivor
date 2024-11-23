@@ -88,3 +88,4 @@ void update_rect_hitbox(struct Rectangle* rect, float resized_width, float resiz
 bool is_same_hitbox(struct Rectangle lhs, struct Rectangle rhs) {
 	return (lhs.pos.x == rhs.pos.x) && (lhs.pos.y == rhs.pos.y) && (lhs.width == rhs.width) && (lhs.height == rhs.height);
 }
+

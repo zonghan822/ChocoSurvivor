@@ -424,6 +424,12 @@ void player_placeables(float mouse_x, float mouse_y, float dt) {
     // Update allies
     ally_shoot(dt, _roaches, _roachesMax);
     sort_barriers();
+    for (int i = 0; i < get_barrier_count(); i++) {
+        _worldClips[_obstaclesCount + i] = barriers[i].hitbox;
+    }
+    _worldClipsCount = _obstaclesCount + get_barrier_count();
+    update_grid(&_enemyGrid, _worldClips, _worldClipsCount, _enemyClips, 4);
+    update_grid(&_bossGrid, _worldClips, _worldClipsCount, _enemyClips, 4);
 
     // Right click to cancel any previews
     if (CP_Input_MouseTriggered(MOUSE_BUTTON_RIGHT)) {
@@ -867,6 +873,7 @@ void enemy_move_attack(float dt) {
     }
     #pragma endregion
 
+    bool isBarrierDestroyed = false;
     for (int i = 0; i < _roachesMax; i++) {
         if (_roaches[i].currentState) { // if enemy is alive
             #pragma region Enemy Movement & Attack 
@@ -906,32 +913,7 @@ void enemy_move_attack(float dt) {
                         case TARGET_BARRIER: 
                             if (_roaches[i].attackCooldown <= 0) {
                                 _roaches[i].attackCooldown = _enemyMaxAttackCD;
-                                if (!barrier_take_damage(_roaches[i].barrierAttack, _roaches[i].dmg)) {
-                                    int barrierCount = get_barrier_count(),
-                                        index = (_worldClipsCount - _obstaclesCount) - (barrierCount + 1);
-                                    for (; index < (barrierCount == 0 ? 1 : barrierCount); index++) {
-                                        // Assume _worldClipsCount = 9, _obstaclesCount = 6, barrierCount = 2
-                                        // To get the first barrier index in the _worldClips, (9 - 6) - (2 + 1)
-                                        // Because get_barrier_count will always return the updated count
-                                        struct Rectangle temp = _worldClips[index + _obstaclesCount];
-                                        if (CP_Vector_Distance(temp.pos, barriers[_roaches[i].barrierAttack].pos)) { // Not the same barrier
-                                            continue;
-                                        }
-                                        else {
-                                            for (int i = index + _obstaclesCount; i < _worldClipsCount; i++)
-                                                _worldClips[i] = _worldClips[i + 1];
-                                            --_worldClipsCount;
-                                            break;
-                                        }
-                                    }
-                                    if ((get_barrier_count() + _obstaclesCount) != _worldClipsCount) {
-                                        printf("!!!!!!!!!!!!!!!!!!!!!!! Error in removing barrier !!!!!!!!!!!!!!!!!!!!!!!\n");
-                                        printf("!!!!!!!! Barriers: %d, Obstacles: %d, World Clips: %d, Index: %d !!!!!!!!\n",
-                                            get_barrier_count(), _obstaclesCount, _worldClipsCount, index);
-                                    }
-                                    update_grid(&_enemyGrid, _worldClips, _worldClipsCount, _enemyClips, 4);
-                                    update_grid(&_bossGrid, _worldClips, _worldClipsCount, _enemyClips, 4);
-                                }
+                                barrier_take_damage(_roaches[i].barrierAttack, _roaches[i].dmg);
                             }
                             _roaches[i].barrierAttack = MAX_BARRIERS;
                             break;
