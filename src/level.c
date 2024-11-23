@@ -62,9 +62,9 @@ static CP_Vector _finalPosition;
 #pragma endregion
 
 #pragma region Map Properties
-static struct Rectangle _worldClips[100];
+static struct Rectangle _worldClips[35];
 static struct Rectangle _playerClips[1];
-static struct Rectangle _enemyClips[1];
+static struct Rectangle _enemyClips[4];
 static int _obstaclesCount = 0;
 static int _worldClipsCount = 0;
 static Grid _enemyGrid, _bossGrid, _enemyGridNB, _bossGridNB;
@@ -177,7 +177,7 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
     default:
     case GAME_LEVEL_ONE:
         levelBg = CP_Image_Load("Assets/Levels/level1.png");
-        _boss = init_boss_one(BOSS_WIDTH, 30.f, 4500, 60, 1.03f);
+        _boss = init_boss_one(BOSS_WIDTH, 20.f, 4500, 60, 1.03f);
 
         // Init Defense Target Properties
         _tower.maxHealth = _tower.health = 3;
@@ -188,7 +188,7 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
 
         // Init Player Properties
         _respawnVec = CP_Vector_Set(_tower.pos.x / 1.15f, _tower.pos.y);
-        playerInstance = init_player(_respawnVec, 350.0f, 100, 21, 4.2f);
+        playerInstance = init_player(_respawnVec, 350.0f, 105, 22, 4.2f);
         playerInstance.playerMaxExp = 20; // Reset exp
         playerInstance.playerLevel = 1; // Reset level
 
@@ -202,7 +202,13 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
         // Clips
         // Enemy clips
         struct Rectangle oweoMissesEnemyClip = { .pos = CP_Vector_Set(730.f, 290.f), .width = 212.f, .height = 332.f };
+        struct Rectangle enemyClip1 = { .pos = CP_Vector_Set(545.f, 450.f), .width = 40.f, .height = 150.f };
+        struct Rectangle enemyClip2 = { .pos = CP_Vector_Set(895.f, 450.f), .width = 40.f, .height = 150.f };
+        struct Rectangle enemyClip3 = { .pos = CP_Vector_Set(1200.f, 390.f), .width = 150.f, .height = 70.f };
         _enemyClips[0] = oweoMissesEnemyClip;
+        _enemyClips[1] = enemyClip1;
+        _enemyClips[2] = enemyClip2;
+        _enemyClips[3] = enemyClip3;
 
         // Global/World Clips (for all)
         _worldClips[0] = get_tower_hitbox(_tower);
@@ -224,13 +230,13 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
         
         init_grid(&_enemyGrid, level_width, level_height, ENEMY_WIDTH, enemyHeight);
         init_grid(&_bossGrid, level_width, level_height, BOSS_WIDTH, bossHeight);
-        update_grid(&_enemyGrid, _worldClips, _worldClipsCount, _enemyClips, 1);
-        update_grid(&_bossGrid, _worldClips, _worldClipsCount, _enemyClips, 1);
+        update_grid(&_enemyGrid, _worldClips, _worldClipsCount, _enemyClips, 4);
+        update_grid(&_bossGrid, _worldClips, _worldClipsCount, _enemyClips, 4);
 
         init_grid(&_enemyGridNB, level_width, level_height, ENEMY_WIDTH, enemyHeight);
         init_grid(&_bossGridNB, level_width, level_height, BOSS_WIDTH, bossHeight);
-        update_grid(&_enemyGridNB, _worldClips, _worldClipsCount, _enemyClips, 1);
-        update_grid(&_bossGridNB, _worldClips, _worldClipsCount, _enemyClips, 1);
+        update_grid(&_enemyGridNB, _worldClips, _worldClipsCount, _enemyClips, 4);
+        update_grid(&_bossGridNB, _worldClips, _worldClipsCount, _enemyClips, 4);
         break;
     case GAME_LEVEL_TWO:
         break;
@@ -365,14 +371,14 @@ void spawn_enemies(float dt) {
                     nextSpawnDelay = -0.05f;
                     break;
                 case WAVE_2:
-                    _spawnInterval = 1.35f;
-                    enemySpeed = 105.f;
+                    _spawnInterval = 1.3f;
+                    enemySpeed = 110.f;
                     enemyMaxHealth = 250;
                     enemyDmg = 35;
                     _enemyMaxAttackCD = 1.5f;
-                    _roachesMax = 55;
-                    nextSpawnDelayIndex = 4;
-                    nextSpawnDelay = -0.4f;
+                    _roachesMax = 50;
+                    nextSpawnDelayIndex = 7;
+                    nextSpawnDelay = -1.55f;
                     break;
                 case WAVE_3:
                     if (_boss.state == BOSS_STATE_UNSPAWNED)
@@ -384,7 +390,7 @@ void spawn_enemies(float dt) {
                     _enemyMaxAttackCD = 1.5f;
                     _roachesMax = 45;
                     nextSpawnDelayIndex = 5;
-                    nextSpawnDelay = -0.60f;
+                    nextSpawnDelay = -0.75f;
                     break;
                 }
             #pragma endregion
@@ -610,11 +616,12 @@ void render_ui(float window_width, float window_height, float mouse_x, float mou
     CP_Image_Draw(_allyPortraitImg, window_width - 65.f, 70.f, 30.f, allyHeight, 200);
 
     // Render boss health bar
-    if (_boss.state != BOSS_STATE_UNSPAWNED) {
+    if (_boss.state != BOSS_STATE_UNSPAWNED && _boss.state != BOSS_STATE_DIED) {
         CP_Settings_StrokeWeight(5.f);
-        const float bossHpMaxWidth = 1350.f,
-            bossHpMaxHeight = 35.f;
-        float currentBossHpWidth;
+        const float bossHpMaxWidth = 1150.f,
+            bossHpMaxHeight = 30.f;
+        float currentBossHpWidth,
+            currentBossHpX = window_width / 2.f;
 
         // Increase the health bar like an animation
         if (_currentBossHealthWidth < bossHpMaxWidth)
@@ -628,7 +635,7 @@ void render_ui(float window_width, float window_height, float mouse_x, float mou
         else { // This is for correcting the health bar, and perform calculations if boss is damaged
             _currentBossHealthWidth = bossHpMaxWidth;
             currentBossHpWidth = ((float)_boss.health / (float)_boss.maxHealth) * bossHpMaxWidth;
-            CP_Settings_StrokeWeight(3.f);
+            currentBossHpX -= (bossHpMaxWidth - currentBossHpWidth) / 2.f;
         }
 
 
@@ -641,7 +648,8 @@ void render_ui(float window_width, float window_height, float mouse_x, float mou
 
         // Value
         CP_Settings_Fill(CP_Color_Create(255, 0, 0, 255));
-        CP_Graphics_DrawRect(window_width / 2.f, window_height - 60.f, currentBossHpWidth, bossHpMaxHeight);
+        CP_Graphics_DrawRect(currentBossHpX, window_height - 60.f, currentBossHpWidth, bossHpMaxHeight);
+        CP_Settings_StrokeWeight(3.f);
     }
 
     // TODO: Rework buff UI
@@ -822,7 +830,6 @@ void check_collision(void) {
     }
 
     // Player Projectiles
-    // Loop from the end to avoid issues when removing projectiles
     for (int j = 0; j < playerProjectiles.activeCount; j++) {
         if (playerProjectiles.projectiles[j].isActive) {
             struct Projectile projectile = playerProjectiles.projectiles[j];
@@ -831,8 +838,10 @@ void check_collision(void) {
             // Obstacles
             for (int i = 0; i < _worldClipsCount; i++) {
                 struct Rectangle worldClip = _worldClips[i];
-                if (are_circle_rect_intersecting(projectileHitbox, worldClip)) // bullet cannot go through walls and barricades...
+                if (are_circle_rect_intersecting(projectileHitbox, worldClip)) {// bullet cannot go through walls and barricades...
                     remove_projectile(&playerProjectiles, j);
+                    break;
+                }
             }
 
             // Common Enemies (roaches)
@@ -845,8 +854,8 @@ void check_collision(void) {
                         playerInstance.expGained = _get_exp(_roaches[i].maxHealth, _roaches[i].speed, _roachesMax);
                         memset(&_roaches[i], 0, sizeof(_roaches[i]));
                     }
-                    // Cancel bullet after hit enemy
                     remove_projectile(&playerProjectiles, j);
+                    break;
                 }
             }
 
@@ -859,6 +868,7 @@ void check_collision(void) {
                     dispose_boss(&_boss);
                 }
                 remove_projectile(&playerProjectiles, j);
+                continue;
             }
         }
     }
@@ -873,8 +883,10 @@ void check_collision(void) {
                 // Obstacles
                 for (int x = 0; x < _worldClipsCount; x++) {
                     struct Rectangle worldClip = _worldClips[x];
-                    if (are_circle_rect_intersecting(projectileHitbox, worldClip)) // bullet cannot go through walls and barricades...
+                    if (are_circle_rect_intersecting(projectileHitbox, worldClip)) {// bullet cannot go through walls and barricades...
                         remove_projectile(&allyProjectiles[i], j);
+                        break;
+                    }
                 }
 
                 // Common Enemies (roaches)
@@ -888,6 +900,7 @@ void check_collision(void) {
                             memset(&_roaches[x], 0, sizeof(_roaches[x]));
                         }
                         remove_projectile(&allyProjectiles[i], j);
+                        break;
                     }
                 }
 
@@ -900,6 +913,7 @@ void check_collision(void) {
                         dispose_boss(&_boss);
                     }
                     remove_projectile(&allyProjectiles[i], j);
+                    continue;
                 }
             }
         }
@@ -985,15 +999,28 @@ void enemy_move_attack(float dt) {
                             if (_roaches[i].attackCooldown <= 0) {
                                 _roaches[i].attackCooldown = _enemyMaxAttackCD;
                                 if (!barrier_take_damage(_roaches[i].barrierAttack, _roaches[i].dmg)) {
-                                    int worldClipsIndex = _obstaclesCount + _roaches[i].barrierAttack;
-                                    if (worldClipsIndex != (_worldClipsCount - 1)) {
-                                        struct Rectangle tmp = _worldClips[_worldClipsCount - 1];
-                                        _worldClips[_worldClipsCount - 1] = _worldClips[worldClipsIndex];
-                                        _worldClips[worldClipsIndex] = tmp;
+                                    int barrierCount = get_barrier_count(),
+                                        index = (_worldClipsCount - _obstaclesCount) - (barrierCount + 1);
+                                    for (; index < (barrierCount == 0 ? 1 : barrierCount); index++) {
+                                        // Assume _worldClipsCount = 9, _obstaclesCount = 6, barrierCount = 2
+                                        // To get the first barrier index in the _worldClips, (9 - 6) - (2 + 1)
+                                        // Because get_barrier_count will always return the updated count
+                                        struct Rectangle temp = _worldClips[index + _obstaclesCount];
+                                        if (CP_Vector_Distance(temp.pos, barriers[_roaches[i].barrierAttack].pos)) { // Not the same barrier
+                                            continue;
+                                        }
+                                        else {
+                                            int b4 = _worldClipsCount;
+                                            for (int i = index + _obstaclesCount; i < _worldClipsCount; i++)
+                                                _worldClips[i] = _worldClips[i + 1];
+                                            --_worldClipsCount;
+                                            break;
+                                        }
                                     }
-                                    _worldClipsCount--;
-                                    update_grid(&_enemyGrid, _worldClips, _worldClipsCount, _enemyClips, 1);
-                                    update_grid(&_bossGrid, _worldClips, _worldClipsCount, _enemyClips, 1);
+                                    if ((get_barrier_count() + _obstaclesCount) != _worldClipsCount)
+                                        printf("!!!!!!!!!!!!!! Error in removing barrier !!!!!!!!!!!!!!!!!\n");
+                                    update_grid(&_enemyGrid, _worldClips, _worldClipsCount, _enemyClips, 4);
+                                    update_grid(&_bossGrid, _worldClips, _worldClipsCount, _enemyClips, 4);
                                 }
                             }
                             _roaches[i].barrierAttack = MAX_BARRIERS;
@@ -1050,8 +1077,8 @@ void place_barrier(int index, float x, float y) {
     increment_barrier_count();
 
     _worldClips[_worldClipsCount++] = barriers[index].hitbox;
-    update_grid(&_enemyGrid, _worldClips, _worldClipsCount, _enemyClips, 1);
-    update_grid(&_bossGrid, _worldClips, _worldClipsCount, _enemyClips, 1);
+    update_grid(&_enemyGrid, _worldClips, _worldClipsCount, _enemyClips, 4);
+    update_grid(&_bossGrid, _worldClips, _worldClipsCount, _enemyClips, 4);
 }
 
 void place_ally(int index, float x, float y) {
@@ -1061,9 +1088,9 @@ void place_ally(int index, float x, float y) {
 
 #if _DEBUG
 void debug_render_grid(void) {
-    // draw_grid(_enemyGrid.nodes, _enemyGrid.nodeCount); // draw enemy grid for debugging
+    draw_grid(_enemyGrid.nodes, _enemyGrid.nodeCount); // draw enemy grid for debugging
     // draw_grid(_bossGrid.nodes, _bossGrid.nodeCount); // draw boss grid for debugging
-    // draw_grid(_enemyGridNB.nodes, _enemyGrid.nodeCount); // draw enemy grid for debugging
+    draw_grid(_enemyGridNB.nodes, _enemyGrid.nodeCount); // draw enemy grid for debugging
     // draw_grid(_bossGridNB.nodes, _bossGrid.nodeCount); // draw boss grid for debugging
 }
 #endif

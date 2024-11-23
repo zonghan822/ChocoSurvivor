@@ -32,12 +32,8 @@ int get_barrier_count(void) {
 }
 
 void increment_barrier_count(void) {
-    if (barrierCount < MAX_BARRIERS) {
+    if (barrierCount < MAX_BARRIERS)
         barrierCount++;
-    }
-    else {
-        printf("Max barriers reached. Cannot increment.\n");
-    }
 }
 
 void set_barrier_properties(int index, CP_Vector pos, float width, float height, int health) {
@@ -147,8 +143,8 @@ void init_ally(int index, CP_Vector pos, float width, float height) {
         allies[index].pos = pos;
         allies[index].width = width;
         allies[index].height = height;
-        allies[index].attackSpeed = 2.0f; // in milliseconds
-        allies[index].attackPower = 20;
+        allies[index].attackSpeed = 5.35f;
+        allies[index].attackPower = 2;
     }
     else {
        // printf("DEBUG: Unable to initialize ally at index %d (exceeds MAX_ALLIES).\n", index);
