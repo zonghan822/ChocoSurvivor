@@ -62,7 +62,7 @@ static CP_Vector _finalPosition;
 #pragma region Map Properties
 static struct Rectangle _worldClips[100];
 static struct Rectangle _playerClips[1];
-static struct Rectangle _enemyClips[1];
+static struct Rectangle _enemyClips[4];
 static int _obstaclesCount = 0;
 static int _worldClipsCount = 0;
 static Grid _enemyGrid, _bossGrid, _enemyGridNB, _bossGridNB;
@@ -196,7 +196,13 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
         // Clips
         // Enemy clips
         struct Rectangle oweoMissesEnemyClip = { .pos = CP_Vector_Set(730.f, 290.f), .width = 212.f, .height = 332.f };
+        struct Rectangle enemyClip1 = { .pos = CP_Vector_Set(545.f, 450.f), .width = 40.f, .height = 150.f };
+        struct Rectangle enemyClip2 = { .pos = CP_Vector_Set(895.f, 450.f), .width = 40.f, .height = 150.f };
+        struct Rectangle enemyClip3 = { .pos = CP_Vector_Set(1200.f, 390.f), .width = 150.f, .height = 70.f };
         _enemyClips[0] = oweoMissesEnemyClip;
+        _enemyClips[1] = enemyClip1;
+        _enemyClips[2] = enemyClip2;
+        _enemyClips[3] = enemyClip3;
 
         // Global/World Clips (for all)
         _worldClips[0] = get_tower_hitbox(_tower);
@@ -218,13 +224,13 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
         
         init_grid(&_enemyGrid, level_width, level_height, ENEMY_WIDTH, enemyHeight);
         init_grid(&_bossGrid, level_width, level_height, BOSS_WIDTH, bossHeight);
-        update_grid(&_enemyGrid, _worldClips, _worldClipsCount, _enemyClips, 1);
-        update_grid(&_bossGrid, _worldClips, _worldClipsCount, _enemyClips, 1);
+        update_grid(&_enemyGrid, _worldClips, _worldClipsCount, _enemyClips, 4);
+        update_grid(&_bossGrid, _worldClips, _worldClipsCount, _enemyClips, 4);
 
         init_grid(&_enemyGridNB, level_width, level_height, ENEMY_WIDTH, enemyHeight);
         init_grid(&_bossGridNB, level_width, level_height, BOSS_WIDTH, bossHeight);
-        update_grid(&_enemyGridNB, _worldClips, _worldClipsCount, _enemyClips, 1);
-        update_grid(&_bossGridNB, _worldClips, _worldClipsCount, _enemyClips, 1);
+        update_grid(&_enemyGridNB, _worldClips, _worldClipsCount, _enemyClips, 4);
+        update_grid(&_bossGridNB, _worldClips, _worldClipsCount, _enemyClips, 4);
         break;
     case GAME_LEVEL_TWO:
         break;
@@ -360,13 +366,13 @@ void spawn_enemies(float dt) {
                     break;
                 case WAVE_2:
                     _spawnInterval = 1.35f;
-                    enemySpeed = 105.f;
+                    enemySpeed = 102.f;
                     enemyMaxHealth = 250;
                     enemyDmg = 35;
                     _enemyMaxAttackCD = 1.5f;
                     _roachesMax = 55;
                     nextSpawnDelayIndex = 4;
-                    nextSpawnDelay = -0.4f;
+                    nextSpawnDelay = -0.5f;
                     break;
                 case WAVE_3:
                     if (_boss.state == BOSS_STATE_UNSPAWNED)
@@ -378,7 +384,7 @@ void spawn_enemies(float dt) {
                     _enemyMaxAttackCD = 1.5f;
                     _roachesMax = 45;
                     nextSpawnDelayIndex = 5;
-                    nextSpawnDelay = -0.60f;
+                    nextSpawnDelay = -0.6f;
                     break;
                 }
 #pragma endregion
@@ -585,7 +591,7 @@ void render_ui(float window_width, float window_height, float mouse_x, float mou
     CP_Image_Draw(_allyPortraitImg, window_width - 65.f, 70.f, 30.f, allyHeight, 200);
 
     // Render boss health bar
-    if (_boss.state != BOSS_STATE_UNSPAWNED) {
+    if (_boss.state != BOSS_STATE_UNSPAWNED && _boss.state != BOSS_STATE_DIED) {
         CP_Settings_StrokeWeight(5.f);
         const float bossHpMaxWidth = 1350.f,
             bossHpMaxHeight = 35.f;
@@ -974,8 +980,8 @@ void enemy_move_attack(float dt) {
                                         _worldClips[worldClipsIndex] = tmp;
                                     }
                                     _worldClipsCount--;
-                                    update_grid(&_enemyGrid, _worldClips, _worldClipsCount, _enemyClips, 1);
-                                    update_grid(&_bossGrid, _worldClips, _worldClipsCount, _enemyClips, 1);
+                                    update_grid(&_enemyGrid, _worldClips, _worldClipsCount, _enemyClips, 4);
+                                    update_grid(&_bossGrid, _worldClips, _worldClipsCount, _enemyClips, 4);
                                 }
                             }
                             _roaches[i].barrierAttack = MAX_BARRIERS;
@@ -1022,8 +1028,8 @@ void place_barrier(int index, float x, float y) {
     increment_barrier_count();
 
     _worldClips[_worldClipsCount++] = barriers[index].hitbox;
-    update_grid(&_enemyGrid, _worldClips, _worldClipsCount, _enemyClips, 1);
-    update_grid(&_bossGrid, _worldClips, _worldClipsCount, _enemyClips, 1);
+    update_grid(&_enemyGrid, _worldClips, _worldClipsCount, _enemyClips, 4);
+    update_grid(&_bossGrid, _worldClips, _worldClipsCount, _enemyClips, 4);
 }
 
 void place_ally(int index, float x, float y) {
@@ -1033,9 +1039,9 @@ void place_ally(int index, float x, float y) {
 
 #if _DEBUG
 void debug_render_grid(void) {
-    // draw_grid(_enemyGrid.nodes, _enemyGrid.nodeCount); // draw enemy grid for debugging
+    draw_grid(_enemyGrid.nodes, _enemyGrid.nodeCount); // draw enemy grid for debugging
     // draw_grid(_bossGrid.nodes, _bossGrid.nodeCount); // draw boss grid for debugging
-    // draw_grid(_enemyGridNB.nodes, _enemyGrid.nodeCount); // draw enemy grid for debugging
+    draw_grid(_enemyGridNB.nodes, _enemyGrid.nodeCount); // draw enemy grid for debugging
     // draw_grid(_bossGridNB.nodes, _bossGrid.nodeCount); // draw boss grid for debugging
 }
 #endif
