@@ -18,9 +18,11 @@
 #include "audio.h"
 #include "utils.h"
 #include "projectile.h"
+#include "buff.h"
 
 // Macros
 #define MAX_ENEMY_COUNT 100
+#define MAX_BUFF_SLOT 3
 
 #pragma region Spawn Properties
 static float _spawnMinY = 0.f, _spawnMaxY = 0.f, _spawnWidth = 0.f;
@@ -71,6 +73,8 @@ static enum AllyState _currentAllyState = ALLY_IDLE;
 #pragma endregion
 
 #pragma region HP/BUFF bar properties
+static BuffList activeBuffs;
+static BuffList passiveBuffs;
 static int activeBuffSlot = 0;          // 0 means no active buff, 1-3 represent the buff slots
 //static float activeBuffDuration = 0.0f;  // Duration in seconds for the active buff (10s when active)
 #pragma endregion
@@ -276,7 +280,7 @@ void spawn_enemies(float dt) {
             int nextSpawnDelayIndex = 0;
 
             switch (_currentLevel) {
-#pragma region LEVEL_ONE
+            #pragma region LEVEL_ONE
             case GAME_LEVEL_ONE:
                 switch (currentWave) {
                 case WAVE_1:
@@ -312,10 +316,11 @@ void spawn_enemies(float dt) {
                     nextSpawnDelay = -0.60f;
                     break;
                 }
-#pragma endregion
-#pragma region LEVEL_TWO
-                // Make one
-#pragma endregion
+            #pragma endregion
+
+            #pragma region LEVEL_TWO
+            // Make one
+            #pragma endregion
             }
             if (_enemySpawnIndex < _roachesMax) {
                 _roaches[_enemySpawnIndex++] = init_enemy(_spawnMinY, _spawnMaxY, _spawnWidth, enemySpeed, enemyMaxHealth, enemyDmg);
@@ -452,22 +457,30 @@ void render_health_heart(struct Rectangle entity, int health, int maxHealth) {
 }
 
 void render_ui(float window_width, float window_height, float mouse_x, float mouse_y) {
-    CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255));
 
+    #pragma region Wave Indicator
     // Wave
+    CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255)); // White
     CP_Settings_TextSize(60);
     char currentWaveStr[8];
     sprintf_s(currentWaveStr, sizeof(currentWaveStr), "Wave: %d", currentWave);
     CP_Font_DrawText(currentWaveStr, window_width / 2.f, 50.f);
+    #pragma endregion
+
+    #pragma region Buff slots
+    float slotX[MAX_BUFF_SLOT] = { window_width / 10 };
+    float slotY = window_height / 10;
+    float slotW = 40.f, slotH = 40.f;
+    float gap = 40.f;
+
+    CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255));
+    for (int i = 0; i < MAX_BUFF_SLOT; i++) {
+        slotX[i] = (i * (gap + slotW / 2.f)) + slotX[0];
+        CP_Graphics_DrawRect(slotX[i], slotY, slotW, slotH);
+    }
+    #pragma endregion
 
     CP_Settings_TextSize(20.0f);
-    CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255));
-    // buff slot 1 
-    CP_Graphics_DrawCircle(150, 825, 80);
-    //buff slot 2
-    CP_Graphics_DrawCircle(300, 825, 80);
-    // buff slot 3
-    CP_Graphics_DrawCircle(450, 825, 80);
 
     // Display the active buff slot
     CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255));
@@ -626,30 +639,6 @@ void render_entities(float dt, float mouse_x) {
 }
 #pragma endregion
 
-static void _on_enemy_killed(int i) {
-    _deadEnemies++;
-    // Base exp on this formula:
-    // (max health / speed) * (max enemies / 10)
-    int expGained = _get_exp(_roaches[i].maxHealth, _roaches[i].speed, _roachesMax);
-    enum BuffType randomBuff = update_buff_meter(&playerInstance, expGained);
-    memset(&_roaches[i], 0, sizeof(_roaches[i]));
-    // Apply the buff if one was granted
-    if (randomBuff != 0) {
-        apply_buff(&playerInstance, randomBuff, barriers, allies);
-    }
-}
-
-static void _on_boss_killed() {
-    _deadEnemies++;
-    float expGained = _get_exp(_boss.maxHealth, _boss.speed, 1);
-    enum BuffType randomBuff = update_buff_meter(&playerInstance, expGained * 12.f);
-
-    // Apply the buff if one was granted
-    if (randomBuff != 0) {
-        apply_buff(&playerInstance, randomBuff, barriers, allies);
-    }
-}
-
 // Check for collision
 // Currently it is just for player
 void check_collision(void) {
@@ -679,7 +668,11 @@ void check_collision(void) {
             for (int i = 0; i < _roachesMax; i++) {
                 if (are_circle_rect_intersecting(projectileHitbox, _roaches[i].hitbox)) {
                     if (enemy_take_damage(&_roaches[i], projectile.dmg)) {
-                        _on_enemy_killed(i);
+                        _deadEnemies++;
+                        // Base exp on this formula:
+                        // (max health / speed) * (max enemies / 10)
+                        playerInstance.expGained = _get_exp(_roaches[i].maxHealth, _roaches[i].speed, _roachesMax);
+                        memset(&_roaches[i], 0, sizeof(_roaches[i]));
                     }
                     // Cancel bullet after hit enemy
                     remove_projectile(&playerProjectiles, j);
@@ -689,7 +682,9 @@ void check_collision(void) {
             // Boss
             if (are_circle_rect_intersecting(projectileHitbox, _boss.hitbox)) {
                 if (boss_take_damage(&_boss, projectile.dmg)) {
-                    _on_boss_killed();
+                    _deadEnemies++;
+                    float expGained = _get_exp(_boss.maxHealth, _boss.speed, 1) * 12.f;
+                    playerInstance.expGained = expGained;
                     dispose_boss(&_boss);
                 }
                 remove_projectile(&playerProjectiles, j);
@@ -715,7 +710,11 @@ void check_collision(void) {
                 for (int x = 0; x < _roachesMax; x++) {
                     if (are_circle_rect_intersecting(projectileHitbox, _roaches[x].hitbox)) {
                         if (enemy_take_damage(&_roaches[x], projectile.dmg)) {
-                            _on_enemy_killed(x);
+                            _deadEnemies++;
+                            // Base exp on this formula:
+                            // (max health / speed) * (max enemies / 10)
+                            playerInstance.expGained = _get_exp(_roaches[x].maxHealth, _roaches[x].speed, _roachesMax);
+                            memset(&_roaches[x], 0, sizeof(_roaches[x]));
                         }
                         remove_projectile(&allyProjectiles[i], j);
                     }
@@ -724,7 +723,9 @@ void check_collision(void) {
                 // Boss
                 if (are_circle_rect_intersecting(projectileHitbox, _boss.hitbox)) {
                     if (boss_take_damage(&_boss, projectile.dmg)) {
-                        _on_boss_killed();
+                        _deadEnemies++;
+                        float expGained = _get_exp(_boss.maxHealth, _boss.speed, 1) * 12.f;
+                        playerInstance.expGained = expGained;
                         dispose_boss(&_boss);
                     }
                     remove_projectile(&allyProjectiles[i], j);
@@ -774,7 +775,6 @@ void enemy_move_attack(float dt) {
 
     for (int i = 0; i < _roachesMax; i++) {
         if (_roaches[i].currentState) { // if enemy is alive
-            
             #pragma region Enemy Movement & Attack 
             _roaches[i].attackCooldown = max(0, _roaches[i].attackCooldown - dt);
 
@@ -836,7 +836,7 @@ void enemy_move_attack(float dt) {
             }
             CP_Vector hitboxPos = { _roaches[i].pos.x + ENEMY_HITBOX_OFFSET_X(_roaches[i].width), _roaches[i].pos.y + ENEMY_HITBOX_OFFSET_Y(_roaches[i].height) };
             update_rect_hitbox(&_roaches[i].hitbox, 0.0f, 0.0f, hitboxPos); // Update hitbox of enemy
-#pragma endregion
+            #pragma endregion
         }
         // can use else statement here for dying animation...
     }

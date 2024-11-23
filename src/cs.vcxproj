@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClCompile Include="audio.c" />
     <ClCompile Include="astar.c" />
+    <ClCompile Include="buff.c" />
     <ClCompile Include="gui.c" />
     <ClCompile Include="level.c" />
     <ClCompile Include="pausemenu.c" />
@@ -46,6 +47,7 @@
   <ItemGroup>
     <ClInclude Include="audio.h" />
     <ClInclude Include="astar.h" />
+    <ClInclude Include="buff.h" />
     <ClInclude Include="gui.h" />
     <ClInclude Include="level.h" />
     <ClInclude Include="pausemenu.h" />

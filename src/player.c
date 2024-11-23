@@ -10,18 +10,15 @@
 
 static const float DASH_COOLDOWN = 1.f,
     DASH_DISTANCE = 150.f, DASH_SPEED = 20.f;
-static const float EXP_INCREASE_MULTIPLIER = 1.35f;
 static const float WALK_SOUND_INTERVAL = 0.5f;
 
 static BOOL _isDashing = FALSE;
 static float _dashProgress, _lastDash;
 static CP_Vector _dashTo;
 static float _walkSoundTimer;
-static bool _hasPlayedLevelUpMusic;
 
 struct ChocoShooter playerInstance; // Global variable, not private
 
-#pragma region Player
 // Returns 1 if still alive, 0 if not
 int player_take_damage(struct ChocoShooter* player, int damage) {
     if (player->flickerState.isFlickering) {
@@ -60,9 +57,9 @@ struct ChocoShooter init_player(CP_Vector pos, float speed, float maxHealth, int
         .width = 100.f,
         .attackSpeed = fireRate,
         .attackPower = atk,
-        .buffs = {0},
         .flickerState.isVisible = TRUE,
         .exp = 0,
+        .expGained = 0
     };
     player.height = get_preserved_heightf((float)CP_Image_GetWidth(player.img), (float)CP_Image_GetHeight(player.img), player.width);
     player.hitbox.width = player.width / 1.4f;
@@ -207,134 +204,3 @@ void render_health_bar(struct ChocoShooter* player, float dt, float windowWidth,
     CP_Settings_Fill(CP_Color_Create(225, 0, 0, 255));
     CP_Graphics_DrawRect(meterX, barOffsetY, interpolatedHealthWidth, meterHeight);
 }
-
-#pragma endregion
-
-#pragma region Buff
-void apply_buff(struct ChocoShooter* player, enum BuffType buff, struct Barrier* barrier, struct Ally* allies ) {
-  
-    switch (buff) {
-    case ATTACK_UP:
-        player->attackPower += 5;  // Increase player's attack power
-        player->buffs.attackPowerLevel++;  // Increase the attackPowerLevel in playerBuff
-        printf("Attack Power Level: %d\n", player->buffs.attackPowerLevel);
-        if (player->buffs.attackPowerLevel <= 1) {
-            assign_buff_to_slot(player, ATTACK_UP);
-        }
-       
-        break;
-    case ATTACK_SPEED_UP:
-        player->attackSpeed += 1;
-        player->buffs.attackSpeedLevel++;
-        printf("Attack Speed Level: %d\n", player->buffs.attackSpeedLevel);
-        if (player->buffs.attackSpeedLevel <= 1) {
-            assign_buff_to_slot(player, ATTACK_SPEED_UP);
-        }
-        break;
-    case HEALTH_UP:
-       player->maxHealth += 10;
-        player->buffs.healthLevel++;
-        player->health += 5;
-        printf("Health Level: %d\n", player->buffs.healthLevel);
-        if (player->buffs.healthLevel <= 1) {
-            assign_buff_to_slot(player, HEALTH_UP);
-        }
-        break;
-    
-     case HEAL:
-         player->health += 10;
-         printf("YOU ARE HEALED MY BOY");
-         if (player->health > player->maxHealth)
-         {
-             player->health = player->maxHealth;
-         }
-         break;
-     case ALLYLVL_UP:
-         allies->attackPower += 5;
-         player->buffs.allyLevel++;
-         printf("allies leveled up");
-        
-         break;
-     case BARRIERLVL_UP:
-         barrier->health += 10;
-         player->buffs.barrierLevel++;
-         printf("barrier leveled up");
-   
-         break;
-
-    }
-}
-
-// Sidenote: EXP would refer to buff meter
-int update_buff_meter(struct ChocoShooter* player, int expGained) {
-    player->exp += expGained;
-    printf("Current Exp: %d / %d\n", player->exp, playerInstance.playerMaxExp);
-
-    // Full or exceeded EXP
-    if (player->exp >= playerInstance.playerMaxExp) {
-        playerInstance.playerLevel++;
-        if (!_hasPlayedLevelUpMusic) {
-            play_sound_advanced(SOUND_MUSIC_LEVEL_UP, 1.f, 0);
-            _hasPlayedLevelUpMusic = true;
-        }
-        // Do nothing if EXP == playerMaxExp
-        // But do return the buff
-        // Wrap around only if exceeding
-        if (player->exp > playerInstance.playerMaxExp) {
-            // Wrap around then increase maxExp
-            player->exp -= playerInstance.playerMaxExp;
-            playerInstance.playerMaxExp *= EXP_INCREASE_MULTIPLIER;
-        }
-        enum BuffType randomBuff = CP_Random_RangeInt(1, 6);
-        return randomBuff;
-    }
-    else if (_hasPlayedLevelUpMusic)
-        _hasPlayedLevelUpMusic = false;
-
-    return 0; // Return 0 if no buff is granted
-}
-
-void activate_buff_from_slot(struct ChocoShooter* player, int slot) {
-    //debug
-    if (player->buffs.type[slot - 1] == NO_BUFF) {
-        printf("Slot %d is empty, cannot activate buff.\n", slot);
-        return;
-    }
-
-    // Capture the buff type and level from the selected slot before clearing it
-    player->activeBuffType = player->buffs.type[slot - 1];
-
-    switch (player->activeBuffType) {
-    case ATTACK_UP:
-        player->activeBuffLevel = player->buffs.attackPowerLevel;
-        printf("Active buff set to ATTACK_UP with level %d\n", player->activeBuffLevel);
-        break;
-    case ATTACK_SPEED_UP:
-        player->activeBuffLevel = player->buffs.attackSpeedLevel;
-        printf("Active buff set to ATTACK_SPEED_UP with level %d\n", player->activeBuffLevel);
-        break;
-    case HEALTH_UP:
-        player->activeBuffLevel = player->buffs.healthLevel;
-        printf("Active buff set to HEALTH_UP with level %d\n", player->activeBuffLevel);
-        break;
-    default:
-        player->activeBuffLevel = 0;  
-        printf("No valid buff in slot %d.\n", slot);
-        return;
-    }
-
-    // Set the slot visually to empty
-    player->buffs.type[slot - 1] = NO_BUFF;
-    printf("Cleared buff type from slot %d.\n", slot);  // Debug 
-}
-
-void assign_buff_to_slot(struct ChocoShooter* player, enum BuffType buffType) {
-    for (int i = 0; i < 3; i++) {
-        if (player->buffs.type[i] == NO_BUFF) {  // Find the first empty slot
-            player->buffs.type[i] = buffType;
-            break;
-        }
-    }
-}
-
-#pragma endregion

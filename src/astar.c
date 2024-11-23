@@ -212,12 +212,16 @@ int find_astar_path(PathNode* grid, int nodeCount, int startNodeIndex, int endNo
 			}
 			reverse_array(pathArray, pathNodeCount);
 			while (--(openList.nodeCount) >= 0) {
-				if (openList.list[openList.nodeCount].parentNode != NULL && openList.list[openList.nodeCount].parentNode->nodeIndex > 0) {
+				if (openList.list[openList.nodeCount].parentNode != NULL && 
+					openList.list[openList.nodeCount].parentNode->nodeIndex >= 0 && 
+					openList.list[openList.nodeCount].parentNode->nodeIndex < nodeCount) {
 					free(openList.list[openList.nodeCount].parentNode);
 				}
 			}
 			while (--(closedList.nodeCount) >= 0) {
-				if (closedList.list[closedList.nodeCount].parentNode != NULL && closedList.list[closedList.nodeCount].parentNode->nodeIndex > 0) {
+				if (closedList.list[closedList.nodeCount].parentNode != NULL && 
+					closedList.list[closedList.nodeCount].parentNode->nodeIndex > 0 &&
+					closedList.list[closedList.nodeCount].parentNode->nodeIndex < nodeCount) {
 					free(closedList.list[closedList.nodeCount].parentNode);
 				}
 			}
@@ -273,12 +277,16 @@ int find_astar_path(PathNode* grid, int nodeCount, int startNodeIndex, int endNo
 		}
 	}
 	while (--(openList.nodeCount) >= 0) {
-		if (openList.list[openList.nodeCount].parentNode != NULL && openList.list[openList.nodeCount].parentNode->nodeIndex > 0) {
+		if (openList.list[openList.nodeCount].parentNode != NULL &&
+			openList.list[openList.nodeCount].parentNode->nodeIndex >= 0 &&
+			openList.list[openList.nodeCount].parentNode->nodeIndex < nodeCount) {
 			free(openList.list[openList.nodeCount].parentNode);
 		}
 	}
 	while (--(closedList.nodeCount) >= 0) {
-		if (closedList.list[closedList.nodeCount].parentNode != NULL && closedList.list[closedList.nodeCount].parentNode->nodeIndex > 0) {
+		if (closedList.list[closedList.nodeCount].parentNode != NULL &&
+			closedList.list[closedList.nodeCount].parentNode->nodeIndex > 0 &&
+			closedList.list[closedList.nodeCount].parentNode->nodeIndex < nodeCount) {
 			free(closedList.list[closedList.nodeCount].parentNode);
 		}
 	}
