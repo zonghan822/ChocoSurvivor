@@ -918,15 +918,17 @@ void enemy_move_attack(float dt) {
                                             continue;
                                         }
                                         else {
-                                            int b4 = _worldClipsCount;
                                             for (int i = index + _obstaclesCount; i < _worldClipsCount; i++)
                                                 _worldClips[i] = _worldClips[i + 1];
                                             --_worldClipsCount;
                                             break;
                                         }
                                     }
-                                    if ((get_barrier_count() + _obstaclesCount) != _worldClipsCount)
-                                        printf("!!!!!!!!!!!!!! Error in removing barrier !!!!!!!!!!!!!!!!!\n");
+                                    if ((get_barrier_count() + _obstaclesCount) != _worldClipsCount) {
+                                        printf("!!!!!!!!!!!!!!!!!!!!!!! Error in removing barrier !!!!!!!!!!!!!!!!!!!!!!!\n");
+                                        printf("!!!!!!!! Barriers: %d, Obstacles: %d, World Clips: %d, Index: %d !!!!!!!!\n",
+                                            get_barrier_count(), _obstaclesCount, _worldClipsCount, index);
+                                    }
                                     update_grid(&_enemyGrid, _worldClips, _worldClipsCount, _enemyClips, 4);
                                     update_grid(&_bossGrid, _worldClips, _worldClipsCount, _enemyClips, 4);
                                 }

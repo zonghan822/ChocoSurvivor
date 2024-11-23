@@ -92,6 +92,11 @@ void ally_shoot(float dt, struct ChocoRoach* enemies, int enemyCount) {
             continue;
         }
 
+        CP_Vector dst = CP_Vector_Subtract(closestEnemy->pos, allies[i].pos);
+        allies[i].width = (dst.x > 0 && allies[i].width > 0) || (dst.x <= 0 && allies[i].width < 0)
+            ? -allies[i].width 
+            : allies[i].width;
+
         // Shoot if ready and target found
         if (_allyLastShotTime[i] >= (1 / allies[i].attackSpeed)) {
             CP_Vector direction = CP_Vector_Subtract(closestEnemy->pos, allies[i].pos);

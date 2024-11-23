@@ -1,6 +1,7 @@
 #include "placeables.h"
 #include <stdio.h>
 #include <float.h>
+#include <math.h>
 #include <stdlib.h>
 #include "hittest.h"
 #include "enemy.h"
@@ -129,27 +130,22 @@ int get_ally_count(void) {
 }
 
 void increment_ally_count(void) {
-    if (allyCount < MAX_ALLIES) {
+    if (allyCount < MAX_ALLIES)
         allyCount++;
-      //  printf("DEBUG: Incremented ally count to %d.\n", allyCount);
-    }
-    else {
-       // printf("DEBUG: Max allies reached. Cannot increment.\n");
-    }
 }
 
+// Not actually an error
+#pragma warning( push )
+#pragma warning( disable : 6386)
 void init_ally(int index, CP_Vector pos, float width, float height) {
-    if (index < MAX_ALLIES) {
+    if (index < MAX_ALLIES)
         allies[index].pos = pos;
         allies[index].width = width;
         allies[index].height = height;
         allies[index].attackSpeed = 5.35f;
         allies[index].attackPower = 2;
-    }
-    else {
-       // printf("DEBUG: Unable to initialize ally at index %d (exceeds MAX_ALLIES).\n", index);
-    }
 }
+#pragma warning( pop )
 
 void render_allies() {
     for (int i = 0; i < get_ally_count(); i++) {
@@ -167,7 +163,7 @@ void render_allies() {
                 CP_Image_GetHeight(img), allies[i].width);
             CP_Image_Draw(img,
                 allies[i].pos.x, allies[i].pos.y,
-                allies[i].width, preservedHeight,
+                allies[i].width, fabsf(preservedHeight),
                 255);
         }
     }
