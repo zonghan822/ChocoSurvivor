@@ -98,7 +98,7 @@ void level_two_update(void) {
     // Render any UI here
     CP_Settings_ResetMatrix();
     render_new_wave_counter(_windowWidth, _windowHeight);
-    render_ui(_windowWidth, _windowHeight, mouseX, mouseY);
+    render_ui(_windowWidth, _windowHeight, mouseX, mouseY, dt);
     render_cursor(_cursor);
     apply_camera();
 

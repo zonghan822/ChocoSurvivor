@@ -27,7 +27,7 @@ struct Boss {
     enum BossState state;
     int health, maxHealth;
     CP_Vector moveDirection;
-    void (*move)(struct Boss* boss, struct ChocoShooter player, struct Rectangle hitbox, float dt, PathNode* grid, int nodeCount);
+    void (*move)(struct Boss* boss, struct ChocoShooter player, struct Rectangle hitbox, float dt, PathNode* grid, PathNode* gridNoBarrier, int nodeCount);
     void (*primaryAttack)(struct Boss*, struct ChocoShooter*, float);
     int (*canPrimaryAttack)(struct Boss, struct ChocoShooter);
     void (*secondaryAttack)(struct Boss*, struct ChocoShooter*, float);
@@ -49,10 +49,10 @@ void boss_one_pri_atk(struct Boss*, struct ChocoShooter*, float dt);
 int can_boss_one_pri_atk(struct Boss, struct ChocoShooter);
 void boss_one_sec_atk(struct Boss*, struct ChocoShooter*, float dt);
 int can_boss_one_sec_atk(struct Boss, struct ChocoShooter);
-void boss_one_move(struct Boss* boss, struct ChocoShooter player, struct Rectangle hitbox, float dt, PathNode* grid, int nodeCount);
+void boss_one_move(struct Boss* boss, struct ChocoShooter player, struct Rectangle hitbox, float dt, PathNode* grid, PathNode* gridNoBarrier, int nodeCount);
 
 void boss_two_pri_atk(struct Boss*, struct ChocoShooter*, float dt);
 int can_boss_two_pri_atk(struct Boss, struct ChocoShooter);
 void boss_two_sec_atk(struct Boss*, struct ChocoShooter*, float dt);
 int can_boss_two_sec_atk(struct Boss, struct ChocoShooter);
-void boss_two_move(struct Boss* boss, struct ChocoShooter player, struct Rectangle hitbox, float dt, PathNode* grid, int nodeCount);
+void boss_two_move(struct Boss* boss, struct ChocoShooter player, struct Rectangle hitbox, float dt, PathNode* grid, PathNode* gridNoBarrier, int nodeCount);

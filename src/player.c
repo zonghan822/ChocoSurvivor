@@ -78,13 +78,13 @@ void move_player(struct ChocoShooter *player, float dt, float level_width, float
 
     // Player movement and setting movement
     player->movement = STOPPED;
-    if (CP_Input_KeyDown(KEY_W))
+    if (CP_Input_KeyDown(KEY_W) || CP_Input_KeyDown(KEY_UP))
         player->movement |= MOVING_UP;
-    if (CP_Input_KeyDown(KEY_S))
+    if (CP_Input_KeyDown(KEY_S) || CP_Input_KeyDown(KEY_DOWN))
         player->movement |= MOVING_DOWN;
-    if (CP_Input_KeyDown(KEY_A))
+    if (CP_Input_KeyDown(KEY_A) || CP_Input_KeyDown(KEY_LEFT))
         player->movement |= MOVING_LEFT;
-    if (CP_Input_KeyDown(KEY_D))
+    if (CP_Input_KeyDown(KEY_D) || CP_Input_KeyDown(KEY_RIGHT))
         player->movement |= MOVING_RIGHT;
 
     // W+S and A+D inputs should stop the character

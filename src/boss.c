@@ -47,22 +47,27 @@ void dispose_boss(struct Boss* boss) {
 	boss = NULL;*/
 }
 
-static void _move_to_target(struct Boss* boss, struct Rectangle hitbox, float dt, PathNode* grid, int nodeCount) {
+static void _move_to_target(struct Boss* boss, struct Rectangle hitbox, float dt, PathNode* grid, PathNode* gridNoBarrier, int nodeCount) {
 	int pathArray[50];
 	int pathNodeCount = 0;
 	int startNodeIndex = get_nearest_node_index(grid, nodeCount, boss->pos);
 	int endNodeIndex = get_nearest_node_index(grid, nodeCount, hitbox.pos);
-
-	if (startNodeIndex == endNodeIndex)
+	if (startNodeIndex == endNodeIndex) {
 		boss->moveDirection = CP_Vector_Normalize((CP_Vector_Subtract(hitbox.pos, boss->pos)));
+	}
 	else {
 		pathNodeCount = find_astar_path(grid, nodeCount, startNodeIndex, endNodeIndex, pathArray);
-		if (pathNodeCount)
-			boss->moveDirection = CP_Vector_Normalize((CP_Vector_Subtract(grid[pathArray[0]].pos, boss->pos)));
-		else
-			boss->moveDirection = CP_Vector_Zero();
-	}
 
+		if (pathNodeCount) {
+			boss->moveDirection = CP_Vector_Normalize((CP_Vector_Subtract(grid[pathArray[0]].pos, boss->pos)));
+		}
+		else {
+			int startNodeIndexNB = get_nearest_node_index(gridNoBarrier, nodeCount, boss->pos);
+			int endNodeIndexNB = get_nearest_node_index(gridNoBarrier, nodeCount, hitbox.pos);
+			find_astar_path(gridNoBarrier, nodeCount, startNodeIndexNB, endNodeIndexNB, pathArray);
+			boss->moveDirection = CP_Vector_Normalize((CP_Vector_Subtract(grid[pathArray[0]].pos, boss->pos)));
+		}
+	}
 	boss->width = (boss->moveDirection.x < 0.f && boss->width > 0.f) || (boss->moveDirection.x > 0.f && boss->width < 0.f) ? -boss->width : boss->width;
 	boss->pos.x += boss->moveDirection.x * boss->speed * dt;
 	boss->pos.y += boss->moveDirection.y * boss->speed * dt;
@@ -124,14 +129,14 @@ struct Boss init_boss_two(float width, float speed, int health, int attack_power
 }
 
 void render_boss(struct Boss boss) {
-	CP_Image_Draw(boss.img, boss.pos.x, boss.pos.x, boss.width, boss.height, 255);
+	CP_Image_Draw(boss.img, boss.pos.x, boss.pos.y, boss.width, boss.height, 255);
 }
 
 void spawn_boss(struct Boss* boss, float x, float y) {
 	CP_Vector vec = CP_Vector_Set(x, y);
-	boss->hitbox.pos = vec;
 	boss->pos = vec;
 	boss->state = BOSS_STATE_MOVING_TO_TOWER;
+	update_rect_hitbox(&boss->hitbox, 0.f, 0.f, vec);
 }
 
 int boss_take_damage(struct Boss* boss, int damage) {
@@ -245,7 +250,7 @@ int can_boss_one_sec_atk(struct Boss boss, struct ChocoShooter player) {
 		boss.state == BOSS_STATE_ATTACKING_SECONDARY;
 }
 
-void boss_one_move(struct Boss* boss, struct ChocoShooter player, struct Rectangle hitbox, float dt, PathNode* grid, int nodeCount) {
+void boss_one_move(struct Boss* boss, struct ChocoShooter player, struct Rectangle hitbox, float dt, PathNode* grid, PathNode* gridNoBarrier, int nodeCount) {
 	if (_secAtkCooldown < 15.f)
 		_secAtkCooldown += dt;
 
@@ -255,7 +260,7 @@ void boss_one_move(struct Boss* boss, struct ChocoShooter player, struct Rectang
 	if (are_circle_rect_intersecting(radar, player.hitbox))
 		boss->state = BOSS_STATE_MOVING_TO_PLAYER;
 
-	_move_to_target(boss, hitbox, dt, grid, nodeCount);
+	_move_to_target(boss, hitbox, dt, grid, gridNoBarrier ,nodeCount);
 }
 #pragma endregion
 
@@ -345,7 +350,7 @@ int can_boss_two_sec_atk(struct Boss boss, struct ChocoShooter player) {
 	return _secAtkCooldown >= 45.f || boss.state == BOSS_STATE_ATTACKING_SECONDARY;
 }
 
-void boss_two_move(struct Boss* boss, struct ChocoShooter player, struct Rectangle hitbox, float dt, PathNode* grid, int nodeCount) {
+void boss_two_move(struct Boss* boss, struct ChocoShooter player, struct Rectangle hitbox, float dt, PathNode* grid, PathNode* gridNoBarrier, int nodeCount) {
 	if (_secAtkCooldown < 45.f)
 		_secAtkCooldown += dt;
 
@@ -355,6 +360,6 @@ void boss_two_move(struct Boss* boss, struct ChocoShooter player, struct Rectang
 	if (are_circle_rect_intersecting(radar, player.hitbox))
 		boss->state = BOSS_STATE_MOVING_TO_PLAYER;
 
-	_move_to_target(boss, hitbox, dt, grid, nodeCount);
+	_move_to_target(boss, hitbox, dt, grid, gridNoBarrier, nodeCount);
 }
 #pragma endregion
