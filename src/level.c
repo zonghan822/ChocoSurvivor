@@ -19,6 +19,7 @@
 #include "utils.h"
 #include "projectile.h"
 #include "buff.h"
+#include "optionsmenu.h"
 
 // Macros
 #define MAX_ENEMY_COUNT 100
@@ -43,6 +44,7 @@ static unsigned short int _roachesMax = 0;
 static struct ChocoRoach _roaches[MAX_ENEMY_COUNT];
 static int _deadEnemies = 0;
 static struct Boss _boss;
+static float _currentBossHealthWidth;
 static float _enemyMaxAttackCD = 0.f;
 #pragma endregion
 
@@ -72,7 +74,7 @@ static Grid _enemyGrid, _bossGrid, _enemyGridNB, _bossGridNB;
 static enum AllyState _currentAllyState = ALLY_IDLE;
 #pragma endregion
 
-#pragma region HP/BUFF bar properties
+#pragma region Buff properties
 static BuffList activeBuffs;
 static BuffList passiveBuffs;
 static int activeBuffSlot = 0;          // 0 means no active buff, 1-3 represent the buff slots
@@ -81,19 +83,27 @@ static int activeBuffSlot = 0;          // 0 means no active buff, 1-3 represent
 
 enum SpawnWave currentWave;
 
-static struct Button _menuButton;
+static struct Button _gameOverMenuButton;
 static bool _isMovingToNextLevel;
 static bool _hasPlayedGameOverMusic,
     _hasPlayedNewWaveMusic;
 static enum GameLevel _currentLevel;
 static float _levelWidth, _levelHeight;
 static CP_Image _heartImg;
+static CP_Image _playerPortraitImg, _barrierPortraitImg, _allyPortraitImg;
 
-// Naming convention: No prefix if level-related
-//                    player_xyz if player-related
-//                    render_xyz if render-related
-// etc
+bool isPaused;
+static struct Button _resumeButton, _pauseBackToMenuButton, _optionsButton;
 
+// ***************** Naming Convention ***************** //
+//  No prefix           if level-related                 //
+//  player_xyz          if player-related                //
+//  render_xyz          if render-related                //
+//  try_xyz             if returns a bool                //
+//  etc                                                  //
+// ***************************************************** //
+
+#pragma region Private Methods
 static void _draw_shadows(float x, float y, float width, float height) {
     CP_Settings_StrokeWeight(0.f);
     CP_Settings_Fill(CP_Color_Create(0, 0, 0, 105));
@@ -106,6 +116,7 @@ static void _draw_shadows(float x, float y, float width, float height) {
 static int _get_exp(int health, float speed, int max_enemies) {
     return (int)((float)(health / speed) * (float)(max_enemies / 10.f));
 }
+#pragma endregion
 
 // Returns an instance of the level background
 CP_Image init_level(enum GameLevel level, float level_width, float level_height, float window_width, float window_height) {
@@ -114,8 +125,13 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
     _levelWidth = level_width;
     _levelHeight = level_height;
     _heartImg = CP_Image_Load("Assets/heart.png");
+    _playerPortraitImg = CP_Image_Load("Assets/player_portrait.png");
+    _allyPortraitImg = CP_Image_Load("Assets/ally_portrait.png");
+    _barrierPortraitImg = CP_Image_Load("Assets/barrier_portrait.png");
+    _currentBossHealthWidth = 0.f;
 
     // Reset values
+    isPaused = false;
     _isMovingToNextLevel = false;
     _hasPlayedGameOverMusic = false;
     _hasPlayedNewWaveMusic = false;
@@ -133,7 +149,16 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
     _deadEnemies = 0;
     playerProjectiles.activeCount = 0;
     memset(&playerProjectiles, 0, sizeof(playerProjectiles.projectiles));
-    memset(allyProjectiles, 0, sizeof(allyProjectiles));
+    memset(&allyProjectiles, 0, sizeof(allyProjectiles->projectiles));
+
+    float halfWindowWidth = window_width / 2.f,
+        halfWindowHeight = window_height / 2.f;
+    _resumeButton = init_button(halfWindowWidth, halfWindowHeight - 75.f, 200.f, 50.f,
+        BUTTON_TYPE_SUCCESS, "Resume", CP_Color_Create(0, 0, 0, 255), 24.0f);
+    _optionsButton = init_button(halfWindowWidth, halfWindowHeight, 200.f, 50.f,
+        BUTTON_TYPE_DEFAULT, "Options", CP_Color_Create(255, 255, 255, 255), 24.0f);
+    _pauseBackToMenuButton = init_button(halfWindowWidth, halfWindowHeight + 75.f, 200.f, 50.f,
+        BUTTON_TYPE_WARNING, "Back to Menu", CP_Color_Create(255, 255, 255, 255), 24.0f);
 
     // Can move to level specific cases
     _spawnMinY = level_height * 1 / 5;
@@ -144,8 +169,8 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
     float enemyHeight = get_preserved_heightf((float)CP_Image_GetWidth(enemyImg),
         (float)CP_Image_GetHeight(enemyImg), ENEMY_WIDTH);
 
-    _menuButton = init_button(window_width / 2.f, window_height / 1.25f, 250.f, 75.f,
-        BUTTON_TYPE_DEFAULT, "Back to Menu", CP_Color_Create(0, 0, 0, 255), 45.f);
+    _gameOverMenuButton = init_button(halfWindowWidth, window_height / 1.25f, 300.f, 75.f,
+        BUTTON_TYPE_DEFAULT, "Back to Menu", CP_Color_Create(255, 255, 255, 255), 40.f);
 
     CP_Image levelBg = NULL;
 
@@ -213,6 +238,48 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
     return levelBg;
 }
 
+bool try_pause(float window_width, float window_height) {
+    if (CP_Input_KeyTriggered(KEY_ESCAPE))
+        isPaused = !isPaused;
+    if (!isPaused) return false;
+    if (isPaused) {
+        CP_Settings_StrokeWeight(0.f);
+        float mouseX = CP_Input_GetMouseX(),
+            mouseY = CP_Input_GetMouseY();
+
+        // Render a dim background overlay
+        CP_Settings_Fill(CP_Color_Create(0, 0, 0, 210));
+        CP_Graphics_DrawRect(window_width / 2.f, window_height / 2.f, window_width, window_height);
+
+        CP_Settings_Fill(CP_Color_Create(220, 220, 220, 255));
+        CP_Settings_TextSize(85.f);
+        CP_Font_DrawText("PAUSED", window_width / 2.f, window_height / 4.f);
+
+        // Render buttons
+        render_button(_resumeButton);
+        render_button(_pauseBackToMenuButton);
+        render_button(_optionsButton);
+
+        update_button_state(&_resumeButton, mouseX, mouseY);
+        update_button_state(&_pauseBackToMenuButton, mouseX, mouseY);
+        update_button_state(&_optionsButton, mouseX, mouseY);
+
+        // Check for button clicks and handle actions
+        if (_resumeButton.state == BUTTON_STATE_CLICKED) {
+            isPaused = false;
+            return false;
+        }
+        if (_pauseBackToMenuButton.state == BUTTON_STATE_CLICKED) {
+            CP_Engine_SetNextGameState(main_menu_init, main_menu_update, main_menu_exit);
+            return false;
+        }
+        if (_optionsButton.state == BUTTON_STATE_CLICKED || is_options_menu_open())
+            render_options_menu(mouseX, mouseY, window_width, window_height);
+        CP_Settings_StrokeWeight(3.f);
+        return true;
+    }
+}
+
 // Move to next wave or level, if possible
 void next_wave_or_level(void) {
     if (_deadEnemies <= 0) return;
@@ -247,8 +314,8 @@ bool try_game_over(float window_width, float window_height, CP_Image cursor) {
         CP_Settings_TextSize(175.f);
         CP_Settings_Fill(CP_Color_Create(220, 220, 220, 255));
         CP_Font_DrawText("GAME OVER", window_width / 2.f, window_height / 2.4f);
-        render_button(_menuButton);
-        update_button_state(&_menuButton, mouseX, mouseY);
+        render_button(_gameOverMenuButton);
+        update_button_state(&_gameOverMenuButton, mouseX, mouseY);
         render_cursor(cursor);
 
         if (!_hasPlayedGameOverMusic) {
@@ -256,7 +323,7 @@ bool try_game_over(float window_width, float window_height, CP_Image cursor) {
             _hasPlayedGameOverMusic = true;
         }
 
-        if (_menuButton.state == BUTTON_STATE_CLICKED)
+        if (_gameOverMenuButton.state == BUTTON_STATE_CLICKED)
             CP_Engine_SetNextGameState(main_menu_init, main_menu_update, main_menu_exit);
         return true;
     }
@@ -265,6 +332,8 @@ bool try_game_over(float window_width, float window_height, CP_Image cursor) {
 
 // Enemy spawning function
 void spawn_enemies(float dt) {
+    if (isPaused) return;
+
     if (_waveTimer >= _waveDelay) {
         if (_spawnInterval > _spawnTimer)
             _spawnTimer += dt;
@@ -341,16 +410,24 @@ void spawn_enemies(float dt) {
 
 // Placeables function for player
 void player_placeables(float mouse_x, float mouse_y, float dt) {
+    if (isPaused) return;
+
     // Update allies
     ally_shoot(dt, _roaches, _roachesMax);
     sort_barriers();
+
+    // Right click to cancel any previews
+    if (CP_Input_MouseTriggered(MOUSE_BUTTON_RIGHT)) {
+        _currentBarrierState = 0;
+        _currentAllyState = 0;
+    }
 
     // Barriers
     switch (_currentBarrierState) {
     case BARRIER_IDLE:
         if (_currentAllyState) break;
-        // Start preview mode when 'P' is pressed
-        if (get_barrier_count() < MAX_BARRIERS && CP_Input_KeyTriggered(KEY_P))
+        // Start preview mode when 'B' is pressed
+        if (get_barrier_count() < MAX_BARRIERS && CP_Input_KeyTriggered(KEY_B))
             _currentBarrierState = BARRIER_PREVIEW;
         break;
 
@@ -363,17 +440,9 @@ void player_placeables(float mouse_x, float mouse_y, float dt) {
         // Place barrier when left mouse button is clicked
         if (CP_Input_MouseTriggered(MOUSE_BUTTON_LEFT)) {
             int barrierIndex = get_barrier_count();
-            if (barrierIndex < MAX_BARRIERS) {
-                // Initialize barrier properties
-                set_barrier_properties(barrierIndex, CP_Vector_Set(mouse_x, mouse_y), BARRIER_WIDTH, BARRIER_HEIGHT, BARRIER_INITIAL_HEALTH);
-                increment_barrier_count();
-                _currentBarrierState = BARRIER_IDLE;
-
-                // store the barrier in worldClips
-                _worldClips[_worldClipsCount++] = barriers[barrierIndex].hitbox;
-                update_grid(&_enemyGrid, _worldClips, _worldClipsCount, _enemyClips, 1);
-                update_grid(&_bossGrid, _worldClips, _worldClipsCount, _enemyClips, 1);
-            }
+            if (barrierIndex < MAX_BARRIERS)
+                place_barrier(barrierIndex, mouse_x, mouse_y);
+            _currentBarrierState = BARRIER_IDLE;
         }
         break;
     }
@@ -381,8 +450,8 @@ void player_placeables(float mouse_x, float mouse_y, float dt) {
     switch (_currentAllyState) {
     case ALLY_IDLE:
         if (_currentBarrierState) break;
-        // Start preview mode when 'I' is pressed
-        if (CP_Input_KeyTriggered(KEY_I) && get_ally_count() < MAX_ALLIES) {
+        // Start preview mode when 'V' is pressed
+        if (CP_Input_KeyTriggered(KEY_V) && get_ally_count() < MAX_ALLIES) {
             _currentAllyState = ALLY_PREVIEW;
         }
         break;
@@ -390,17 +459,14 @@ void player_placeables(float mouse_x, float mouse_y, float dt) {
         enableShooting = false;
          // Render translucent preview
         CP_Settings_Fill(CP_Color_Create(0, 255, 0, 128));
-        CP_Image_Draw(get_ally_image(playerInstance.buffs.allyLevel), mouse_x, mouse_y, ALLY_WIDTH, ALLY_HEIGHT, 128);
+        CP_Image prevImg = get_ally_image(playerInstance.buffs.allyLevel);
+        float preservedHeight = get_preserved_heightf(CP_Image_GetWidth(prevImg), CP_Image_GetHeight(prevImg), ALLY_WIDTH);
+        CP_Image_Draw(prevImg, mouse_x, mouse_y, ALLY_WIDTH, preservedHeight, 128);
 
         if (CP_Input_MouseTriggered(MOUSE_BUTTON_LEFT)) {
             int allyIndex = get_ally_count();
-            if (allyIndex < MAX_ALLIES) {
-                init_ally(allyIndex, CP_Vector_Set(mouse_x, mouse_y), ALLY_WIDTH, ALLY_HEIGHT);
-                increment_ally_count();
-                // Transition back to IDLE
-            }
-            else
-                printf("Max allies reached. Cannot place new ally.\n");
+            if (allyIndex < MAX_ALLIES)
+                place_ally(allyIndex, mouse_x, mouse_y);
             _currentAllyState = ALLY_IDLE;
         }
         break;
@@ -456,17 +522,112 @@ void render_health_heart(struct Rectangle entity, int health, int maxHealth) {
     }
 }
 
-void render_ui(float window_width, float window_height, float mouse_x, float mouse_y) {
+void render_ui(float window_width, float window_height, float mouse_x, float mouse_y, float dt) {
+    // Info panel
+    CP_Settings_Fill(CP_Color_Create(0, 0, 0, 150));
+    CP_Graphics_DrawRect(window_width / 2.f, 45.f, window_width + 10.f, 110.f);
 
     #pragma region Wave Indicator
     // Wave
     CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255)); // White
     CP_Settings_TextSize(60);
-    char currentWaveStr[8];
-    sprintf_s(currentWaveStr, sizeof(currentWaveStr), "Wave: %d", currentWave);
-    CP_Font_DrawText(currentWaveStr, window_width / 2.f, 50.f);
+    char currentWaveStr[10];
+    if (_boss.state == BOSS_STATE_UNSPAWNED) {
+        CP_Settings_Fill(CP_Color_Create(220, 220, 220, 255));
+        sprintf_s(currentWaveStr, sizeof(currentWaveStr), "Wave: %d", currentWave);
+    }
+    else {
+        CP_Settings_Fill(CP_Color_Create(255, 127, 127, 255));
+        sprintf_s(currentWaveStr, sizeof(currentWaveStr), "BOSS WAVE");
+    }
+    CP_Font_DrawText(currentWaveStr, window_width / 2.f, 35.f);
     #pragma endregion
 
+    // Render player portrait (image source is a square)
+    CP_Image_Draw(_playerPortraitImg, 40.f, 45.f, 60.f, 60.f, 200);
+
+    // Render Health bar
+    render_progressbar_custom(150.f, 23.f, 270.f, 30.f, CP_Color_Create(50, 50, 50, 255),
+        PROGRESSBAR_COLOR_RED, (float)playerInstance.health, (float)playerInstance.maxHealth);
+
+    // Render EXP bar
+    enum ProgressBarColor expBarColor = playerInstance.exp >= playerInstance.playerMaxExp ? PROGRESSBAR_COLOR_BLUE : PROGRESSBAR_COLOR_GREEN;
+    render_progressbar_custom(150.f, 23.f, 270.f, 70.f, CP_Color_Create(50, 50, 50, 255),
+        expBarColor, (float)playerInstance.exp, (float)playerInstance.playerMaxExp);
+
+    // Render player level and health
+    CP_Settings_Fill(CP_Color_Create(220, 220, 220, 255));
+    CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_RIGHT, CP_TEXT_ALIGN_V_MIDDLE);
+    CP_Settings_TextSize(30.f);
+    char levelStr[12];
+    char healthStr[12];
+    sprintf_s(levelStr, sizeof(levelStr), "Lvl. %d", playerInstance.playerLevel);
+    sprintf_s(healthStr, sizeof(healthStr), "%d / %d", playerInstance.health, playerInstance.maxHealth);
+    CP_Font_DrawText(levelStr, 180.f, 70.f);
+    CP_Font_DrawText(healthStr, 180.f, 30.f);
+    CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_CENTER, CP_TEXT_ALIGN_V_MIDDLE);
+
+    // Render remaining enemies
+    CP_Settings_Fill(CP_Color_Create(200, 200, 200, 255));
+    CP_Settings_TextSize(25.f);
+    char remainingStr[16];
+    sprintf_s(remainingStr, sizeof(remainingStr), "Remaining: %d", (_roachesMax - _deadEnemies) + (_boss.state != BOSS_STATE_UNSPAWNED));
+    CP_Font_DrawText(remainingStr, window_width / 2.f, 75.f);
+
+    // Render placeables on UI
+    CP_Settings_Fill(CP_Color_Create(220, 220, 220, 255));
+    CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_LEFT, CP_TEXT_ALIGN_V_MIDDLE);
+    CP_Settings_TextSize(30.f);
+    char barrierStr[7];
+    char allyStr[7];
+    sprintf_s(barrierStr, sizeof(barrierStr), "%d / %d", get_barrier_count(), MAX_BARRIERS);
+    sprintf_s(allyStr, sizeof(allyStr), "%d / %d", get_ally_count(), MAX_ALLIES);
+    CP_Font_DrawText(barrierStr, window_width - 140.f, 30.f);
+    CP_Font_DrawText(allyStr, window_width - 140.f, 70.f);
+    CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_CENTER, CP_TEXT_ALIGN_V_MIDDLE);
+
+    // Placeables portraits
+    float barrierHeight = get_preserved_heightf(CP_Image_GetWidth(_barrierPortraitImg), CP_Image_GetHeight(_barrierPortraitImg), 30.f),
+        allyHeight = get_preserved_heightf(CP_Image_GetWidth(_allyPortraitImg), CP_Image_GetHeight(_allyPortraitImg), 30.f);
+    CP_Image_Draw(_barrierPortraitImg, window_width - 65.f, 30.f, 30.f, barrierHeight, 200);
+    CP_Image_Draw(_allyPortraitImg, window_width - 65.f, 70.f, 30.f, allyHeight, 200);
+
+    // Render boss health bar
+    if (_boss.state != BOSS_STATE_UNSPAWNED) {
+        CP_Settings_StrokeWeight(5.f);
+        const float bossHpMaxWidth = 1350.f,
+            bossHpMaxHeight = 35.f;
+        float currentBossHpWidth;
+
+        // Increase the health bar like an animation
+        if (_currentBossHealthWidth < bossHpMaxWidth)
+            _currentBossHealthWidth += 250.f * dt;
+        else
+            _currentBossHealthWidth = bossHpMaxWidth; // Correct the width
+
+        // Set the value of health bar according to conditions
+        if (_boss.health == _boss.maxHealth)
+            currentBossHpWidth = _currentBossHealthWidth;
+        else { // This is for correcting the health bar, and perform calculations if boss is damaged
+            _currentBossHealthWidth = bossHpMaxWidth;
+            currentBossHpWidth = ((float)_boss.health / (float)_boss.maxHealth) * bossHpMaxWidth;
+            CP_Settings_StrokeWeight(3.f);
+        }
+
+
+        // Draw health bar rect
+        // Need to use POSITION_CENTER for animation
+
+        // Base
+        CP_Settings_Fill(CP_Color_Create(100, 100, 100, 255));
+        CP_Graphics_DrawRect(window_width / 2.f, window_height - 60.f, _currentBossHealthWidth, bossHpMaxHeight);
+
+        // Value
+        CP_Settings_Fill(CP_Color_Create(255, 0, 0, 255));
+        CP_Graphics_DrawRect(window_width / 2.f, window_height - 60.f, currentBossHpWidth, bossHpMaxHeight);
+    }
+
+    // TODO: Rework buff UI
     #pragma region Buff slots
     float slotX[MAX_BUFF_SLOT] = { window_width / 10 };
     float slotY = window_height / 10;
@@ -479,7 +640,7 @@ void render_ui(float window_width, float window_height, float mouse_x, float mou
         CP_Graphics_DrawRect(slotX[i], slotY, slotW, slotH);
     }
     #pragma endregion
-
+    /*
     CP_Settings_TextSize(20.0f);
 
     // Display the active buff slot
@@ -563,27 +724,13 @@ void render_ui(float window_width, float window_height, float mouse_x, float mou
                 }
             }
         }
-    }
-
-    // Render EXP bar
-    enum ProgressBarColor expBarColor = playerInstance.exp >= playerInstance.playerMaxExp ? PROGRESSBAR_COLOR_BLUE : PROGRESSBAR_COLOR_GREEN;
-    render_progressbar_custom(125.f, 25.f, 100.f, 100.f, CP_Color_Create(50, 50, 50, 255),
-        expBarColor, (float)playerInstance.exp, (float)playerInstance.playerMaxExp);
-
-    // Render player level
-    CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_RIGHT, CP_TEXT_ALIGN_V_MIDDLE);
-    CP_Settings_TextSize(30.f);
-    CP_Settings_Fill(CP_Color_Create(255, 255, 255, 255));
-    char levelStr[10];
-+    sprintf_s(levelStr, sizeof(levelStr), "Lvl. %d", playerInstance.playerLevel);
-    CP_Font_DrawText(levelStr, 25.f, 25.f);
-    CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_CENTER, CP_TEXT_ALIGN_V_MIDDLE);
+    }*/
 }
 
 void render_new_wave_counter(float window_width, float window_height) {
     if (_waveTimer > (_waveDelay - 1.f)) return;
     char buffer[20];
-    sprintf_s(buffer, sizeof(buffer), "Next Wave in %d", (int)(_waveDelay - _waveTimer));
+    sprintf_s(buffer, sizeof(buffer), "Wave Starting in %d", (int)(_waveDelay - _waveTimer));
     CP_Settings_Fill(CP_Color_Create(255, 0, 0, 255));
     CP_Settings_TextSize(100.0f);
     CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_CENTER, CP_TEXT_ALIGN_V_MIDDLE);
@@ -593,12 +740,14 @@ void render_new_wave_counter(float window_width, float window_height) {
 void render_entities(float dt, float mouse_x) {
 #pragma region Projectiles
     // Update and render bullets
-    update_all_projectiles(dt);
+    if (!isPaused)
+        update_all_projectiles(dt);
     render_all_projectiles();
 #pragma endregion
 
 #pragma region Tower
-    update_flicker(&_tower.flickerState, dt);
+    if (!isPaused)
+        update_flicker(&_tower.flickerState, dt);
     if (_tower.flickerState.isVisible) {
         render_tower(_tower);
         render_health_heart(get_tower_hitbox(_tower), _tower.health, _tower.maxHealth);
@@ -626,12 +775,14 @@ void render_entities(float dt, float mouse_x) {
 
 #pragma region Render_Player
     // Update and render player
-    CP_Vector mouseVec = CP_Vector_Set(mouse_x, 0.f);
-    if (playerInstance.pos.x > mouseVec.x)
-        playerInstance.width = playerInstance.width > 0 ? -playerInstance.width : playerInstance.width;
-    else
-        playerInstance.width = playerInstance.width < 0 ? -playerInstance.width : playerInstance.width;
-    update_flicker(&playerInstance.flickerState, dt);
+    if (!isPaused) {
+        CP_Vector mouseVec = CP_Vector_Set(mouse_x, 0.f);
+        if (playerInstance.pos.x > mouseVec.x)
+            playerInstance.width = playerInstance.width > 0 ? -playerInstance.width : playerInstance.width;
+        else
+            playerInstance.width = playerInstance.width < 0 ? -playerInstance.width : playerInstance.width;
+        update_flicker(&playerInstance.flickerState, dt);
+    }
     update_rect_hitbox(&playerInstance.hitbox, 0.0f, 0.0f, playerInstance.pos); // Update hitbox of player
     if (playerInstance.flickerState.isVisible)
         render_player(playerInstance, 255);
@@ -642,6 +793,8 @@ void render_entities(float dt, float mouse_x) {
 // Check for collision
 // Currently it is just for player
 void check_collision(void) {
+    if (isPaused) return;
+
     // Player
     // Prevent player from moving into non-movable path
     for (int i = 0; i < _worldClipsCount; i++) {
@@ -735,8 +888,9 @@ void check_collision(void) {
     }
 }
 
-// TODO: Need rework
 void enemy_move_attack(float dt) {
+    if (isPaused) return;
+
     #pragma region Enemy Attack State
     for (int i = 0; _roaches[i].currentState; i++) {
         // Attack defense target when collide
@@ -844,11 +998,11 @@ void enemy_move_attack(float dt) {
     #pragma region Boss Movement & Attack
     switch (_boss.state) {
     case BOSS_STATE_MOVING_TO_TOWER:
-        _boss.move(&_boss, playerInstance, get_tower_hitbox(_tower), dt, _bossGrid.nodes, _bossGrid.nodeCount);
+        _boss.move(&_boss, playerInstance, get_tower_hitbox(_tower), dt, _bossGrid.nodes, _bossGridNB.nodes, _bossGrid.nodeCount);
         break;
 
     case BOSS_STATE_MOVING_TO_PLAYER:
-        _boss.move(&_boss, playerInstance, playerInstance.hitbox, dt, _bossGrid.nodes, _bossGrid.nodeCount);
+        _boss.move(&_boss, playerInstance, playerInstance.hitbox, dt, _bossGrid.nodes, _bossGridNB.nodes, _bossGrid.nodeCount);
         break;
 
     case BOSS_STATE_IDLE:
@@ -861,6 +1015,20 @@ void enemy_move_attack(float dt) {
     else if (_boss.canSecondaryAttack(_boss, playerInstance))
         _boss.secondaryAttack(&_boss, &playerInstance, dt);
 #pragma endregion
+}
+
+void place_barrier(int index, float x, float y) {
+    set_barrier_properties(index, CP_Vector_Set(x, y), BARRIER_WIDTH, BARRIER_HEIGHT, BARRIER_INITIAL_HEALTH);
+    increment_barrier_count();
+
+    _worldClips[_worldClipsCount++] = barriers[index].hitbox;
+    update_grid(&_enemyGrid, _worldClips, _worldClipsCount, _enemyClips, 1);
+    update_grid(&_bossGrid, _worldClips, _worldClipsCount, _enemyClips, 1);
+}
+
+void place_ally(int index, float x, float y) {
+    init_ally(index, CP_Vector_Set(x, y), ALLY_WIDTH, ALLY_HEIGHT);
+    increment_ally_count();
 }
 
 #if _DEBUG
@@ -876,6 +1044,9 @@ void dispose_resources(void) {
     if (!_isMovingToNextLevel)
         CP_Image_Free(&playerInstance.img);
     CP_Image_Free(&_heartImg);
+    CP_Image_Free(&_playerPortraitImg);
+    CP_Image_Free(&_allyPortraitImg);
+    CP_Image_Free(&_barrierPortraitImg);
     
     for (int i = 0; i < _roachesMax; i++) {
         struct ChocoRoach roach = _roaches[i];

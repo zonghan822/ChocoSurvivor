@@ -9,6 +9,7 @@
 #include "slider.h"
 #include "progressbar.h"
 #include "gui.h"
+#include "optionsmenu.h"
 
 #include <stdio.h>
 
@@ -18,13 +19,6 @@ static CP_Color _bg;
 
 static int _windowWidth, _windowHeight;
 static float _buttonRectX, _buttonRectY, _buttonRectHeight, _buttonRectWidth;
-static bool _isOptionsActive = false;
-
-// Options Menu
-static float _musicVol, _sfxVol, _uiVol;
-static struct Button _applyButton, _defaultButton;
-static struct Slider _musicVolSlider, _sfxVolSlider, _uiVolSlider;
-static struct Rectangle _optionsPanel = { .width = 800, .height = 550 };
 
 void main_menu_init(void) {
 	init_sounds();
@@ -46,30 +40,15 @@ void main_menu_init(void) {
 	_buttonRectHeight = 85.0f;
 	_buttonRectWidth = 300.0f;
 
-	CP_Color black = CP_Color_Create(0, 0, 0, 255);
+	CP_Color white = CP_Color_Create(255, 255, 255, 255);
 	_playButton = init_button(_buttonRectX, _buttonRectY - (_buttonRectHeight * 2.f), _buttonRectWidth, _buttonRectHeight, BUTTON_TYPE_SUCCESS,
-		"Play", black, 55.f);
+		"Play", CP_Color_Create(0, 0, 0, 255), 55.f);
 
 	_optionsButton = init_button(_buttonRectX, _buttonRectY, _buttonRectWidth, _buttonRectHeight, BUTTON_TYPE_DEFAULT,
-		"Options", black, 55.f);
+		"Options", white, 55.f);
 
 	_quitButton = init_button(_buttonRectX, _buttonRectY + (_buttonRectHeight * 2.f), _buttonRectWidth, _buttonRectHeight, BUTTON_TYPE_WARNING,
-		"Quit", black, 55.f);
-
-	_optionsPanel.pos.x = _windowWidth / 2.f;
-	_optionsPanel.pos.y = _windowHeight / 2.f;
-
-	float buttonWidth = 125.f;
-	_applyButton = init_button(_optionsPanel.pos.x + _optionsPanel.width / 2.65f, _optionsPanel.pos.y + _optionsPanel.height / 2.35f,
-		buttonWidth, 40.f, BUTTON_TYPE_DEFAULT, "Apply", black, 20.f);
-	_defaultButton = init_button(_applyButton.rect.pos.x - (buttonWidth * 1.25f), _applyButton.rect.pos.y,
-		buttonWidth, 40.f, BUTTON_TYPE_WARNING, "Default", black, 20.f);
-
-	float sliderLength = _optionsPanel.width / 2.5f,
-		sliderY = (_optionsPanel.pos.y - _optionsPanel.height / 2.f) * 2.25f;
-	_musicVolSlider = init_slider(sliderLength, 16, _optionsPanel.pos.x, sliderY, 26.5f);
-	_sfxVolSlider = init_slider(sliderLength, 16, _optionsPanel.pos.x, sliderY * 1.2f, 26.5f);
-	_uiVolSlider = init_slider(sliderLength, 16, _optionsPanel.pos.x, sliderY * 1.4f, 26.5f);
+		"Quit", white, 55.f);
 }
 
 void main_menu_update(void) {
@@ -85,84 +64,15 @@ void main_menu_update(void) {
 	render_button(_playButton);
 	render_button(_optionsButton);
 	render_button(_quitButton);
-	if (!_isOptionsActive) {
+	if (!is_options_menu_open()) {
 		update_button_state(&_playButton, mouseX, mouseY);
 		update_button_state(&_optionsButton, mouseX, mouseY);
 		update_button_state(&_quitButton, mouseX, mouseY);
 	}
 
 	// Options menu is open
-	if (_isOptionsActive) {
-		// Semi translucent background
-		CP_Settings_Fill(CP_Color_Create(0, 0, 0, 185));
-		CP_Settings_RectMode(CP_POSITION_CORNER);
-		CP_Graphics_DrawRect(0, 0, _windowWidth, _windowHeight);
-		CP_Settings_RectMode(CP_POSITION_CENTER);
-
-		render_panel(_optionsPanel.width, _optionsPanel.height, _optionsPanel.pos.x, _optionsPanel.pos.y);
-		
-		render_slider(_musicVolSlider);
-		render_slider(_sfxVolSlider);
-		render_slider(_uiVolSlider);
-
-		render_button(_applyButton);
-		render_button(_defaultButton);
-
-		CP_Settings_TextSize(65.0f);
-		CP_Font_DrawText("SETTINGS", _optionsPanel.pos.x, (_optionsPanel.pos.y - _optionsPanel.height / 2.f) * 1.55f);
-
-		CP_Settings_TextSize(30.0f);
-		CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_RIGHT, CP_TEXT_ALIGN_V_MIDDLE);
-		// Names
-		CP_Font_DrawText("Music", (_musicVolSlider.track.pos.x - _musicVolSlider.track.width / 2.f) / 1.04f,
-			_musicVolSlider.track.pos.y);
-		CP_Font_DrawText("SFX", (_sfxVolSlider.track.pos.x - _sfxVolSlider.track.width / 2.f) / 1.04f,
-			_sfxVolSlider.track.pos.y);
-		CP_Font_DrawText("Interface", (_uiVolSlider.track.pos.x - _uiVolSlider.track.width / 2.f) / 1.04f,
-			_uiVolSlider.track.pos.y);
-
-		// Values
-		CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_LEFT, CP_TEXT_ALIGN_V_MIDDLE);
-		char musicVal[5], sfxVal[5], uiVal[5];
-		sprintf_s(musicVal, sizeof(musicVal), "%.0f%%", _musicVol * 100.f);
-		sprintf_s(sfxVal, sizeof(sfxVal), "%.0f%%", _sfxVol * 100.f);
-		sprintf_s(uiVal, sizeof(uiVal), "%.0f%%", _uiVol * 100.f);
-		CP_Font_DrawText(musicVal, (_musicVolSlider.track.pos.x + _musicVolSlider.track.width / 2.f) * 1.04f,
-			_musicVolSlider.track.pos.y);
-		CP_Font_DrawText(sfxVal, (_sfxVolSlider.track.pos.x + _sfxVolSlider.track.width / 2.f) * 1.04f,
-			_sfxVolSlider.track.pos.y);
-		CP_Font_DrawText(uiVal, (_uiVolSlider.track.pos.x + _uiVolSlider.track.width / 2.f) * 1.04f,
-			_uiVolSlider.track.pos.y);
-		CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_CENTER, CP_TEXT_ALIGN_V_MIDDLE);
-
-		update_button_state(&_applyButton, mouseX, mouseY);
-		update_button_state(&_defaultButton, mouseX, mouseY);
-		update_slider_by_mouse(&_uiVolSlider, mouseX, mouseY);
-		update_slider_by_mouse(&_musicVolSlider, mouseX, mouseY);
-		update_slider_by_mouse(&_sfxVolSlider, mouseX, mouseY);
-
-		// Continuously update values if slider was moved with mouse
-		_uiVol = _uiVolSlider.value;
-		_musicVol = _musicVolSlider.value;
-		_sfxVol = _sfxVolSlider.value;
-		set_volume_group(SOUNDGROUP_UI, _uiVol);
-		set_volume_group(SOUNDGROUP_MUSIC, _musicVol);
-		set_volume_group(SOUNDGROUP_SFX, _sfxVol);
-
-		// Save
-		if (_applyButton.state == BUTTON_STATE_CLICKED || CP_Input_KeyTriggered(KEY_ESCAPE)) {
-			_isOptionsActive = false;
-		}
-		// Reset to default
-		else if (_defaultButton.state == BUTTON_STATE_CLICKED) {
-			// Set to default values
-			_musicVol = _uiVol = _sfxVol = 1.f;
-
-			// Update
-			update_slider(&_uiVolSlider, _uiVol);
-			update_slider(&_musicVolSlider, _musicVol);
-			update_slider(&_sfxVolSlider, _sfxVol);
-		}
+	if (is_options_menu_open()) {
+		render_options_menu(mouseX, mouseY, _windowWidth, _windowHeight);
 	}
 	else {
 		// Play
@@ -170,20 +80,8 @@ void main_menu_update(void) {
 			CP_Engine_SetNextGameState(level_one_init, level_one_update, level_one_exit);
 
 		// Options
-		if (_optionsButton.state == BUTTON_STATE_CLICKED) {
-			// Get values
-			_sfxVolSlider.value = _sfxVol = get_volume_group(SOUNDGROUP_SFX);
-			_musicVolSlider.value = _musicVol = get_volume_group(SOUNDGROUP_MUSIC);
-			_uiVolSlider.value = _uiVol = get_volume_group(SOUNDGROUP_UI);
-
-			// Open options
-			_isOptionsActive = true;
-
-			// Update
-			update_slider(&_uiVolSlider, _uiVol);
-			update_slider(&_musicVolSlider, _musicVol);
-			update_slider(&_sfxVolSlider, _sfxVol);
-		}
+		if (_optionsButton.state == BUTTON_STATE_CLICKED)
+			render_options_menu(mouseX, mouseY, _windowWidth, _windowHeight);
 
 		// Maybe Credits?
 

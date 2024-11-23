@@ -154,9 +154,12 @@ void render_allies() {
             // PLACEHOLDER
             // TODO: Remove
             int allyLevel = playerInstance.buffs.allyLevel; // PH: Stored here until allies have upgrade images
-            CP_Image_Draw(get_ally_image(0),
+            CP_Image img = get_ally_image(0);
+            float preservedHeight = get_preserved_heightf(CP_Image_GetWidth(img),
+                CP_Image_GetHeight(img), allies[i].width);
+            CP_Image_Draw(img,
                 allies[i].pos.x, allies[i].pos.y,
-                allies[i].width, allies[i].height,
+                allies[i].width, preservedHeight,
                 255);
         }
     }

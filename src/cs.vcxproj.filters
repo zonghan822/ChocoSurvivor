@@ -46,9 +46,6 @@
     <ClCompile Include="slider.c">
       <Filter>Source Files\UI</Filter>
     </ClCompile>
-    <ClCompile Include="pausemenu.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="level.c">
       <Filter>Source Files\Levels</Filter>
     </ClCompile>
@@ -72,6 +69,9 @@
     </ClCompile>
     <ClCompile Include="projectile.c">
       <Filter>Source Files\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="optionsmenu.c">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -114,9 +114,6 @@
     <ClInclude Include="slider.h">
       <Filter>Header Files\UI</Filter>
     </ClInclude>
-    <ClInclude Include="pausemenu.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="level.h">
       <Filter>Header Files\Levels</Filter>
     </ClInclude>
@@ -140,6 +137,9 @@
     </ClInclude>
     <ClInclude Include="flicker.h">
       <Filter>Header Files\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="optionsmenu.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

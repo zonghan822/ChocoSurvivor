@@ -143,7 +143,7 @@ void render_progressbar(struct ProgressBar progressBar) {
         leftMostX,
         leftMostX + trackEdgeWidth,
         leftMostX + fillLength - trackEdgeWidth,
-        leftMostX + fillLength + trackEdgeWidth
+        leftMostX + fillLength
     };
 
     float yTrackPos[4] = {
@@ -157,7 +157,7 @@ void render_progressbar(struct ProgressBar progressBar) {
     for (int row = 0; row < 3; row++) {
         for (int col = 0; col < 3; col++) {
             // Calculate patch dimensions based on position
-            float patchWidth = (col == 1) ? fillLength : trackEdgeWidth;
+            float patchWidth = fillLength < 1 ? 0 : ((col == 1) ? fillLength : trackEdgeWidth);
             float patchHeight = (row == 1) ? innerTrackHeight : trackEdgeHeight;
 
             // Calculate the draw position (center of each patch)
