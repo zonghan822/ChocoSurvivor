@@ -239,6 +239,7 @@ bool try_pause(float window_width, float window_height) {
         isPaused = !isPaused;
     if (!isPaused) return false;
     if (isPaused) {
+        CP_Settings_StrokeWeight(0.f);
         float mouseX = CP_Input_GetMouseX(),
             mouseY = CP_Input_GetMouseY();
 
@@ -270,7 +271,7 @@ bool try_pause(float window_width, float window_height) {
         }
         if (_optionsButton.state == BUTTON_STATE_CLICKED || is_options_menu_open())
             render_options_menu(mouseX, mouseY, window_width, window_height);
-
+        CP_Settings_StrokeWeight(3.f);
         return true;
     }
 }

@@ -37,6 +37,7 @@ bool is_options_menu_open() {
 
 void render_options_menu(float mouse_x, float mouse_y, float window_width, float window_height) {
 	if (!_isInitialized) {
+		_isInitialized = true;
 		_init(window_width, window_height);
 
 		// Get values
@@ -54,6 +55,7 @@ void render_options_menu(float mouse_x, float mouse_y, float window_width, float
 	}
 
 	// Semi translucent background
+	CP_Settings_StrokeWeight(0.f);
 	CP_Settings_Fill(CP_Color_Create(0, 0, 0, 185));
 	CP_Settings_RectMode(CP_POSITION_CORNER);
 	CP_Graphics_DrawRect(0, 0, window_width, window_height);
@@ -124,4 +126,5 @@ void render_options_menu(float mouse_x, float mouse_y, float window_width, float
 		update_slider(&_musicVolSlider, _musicVol);
 		update_slider(&_sfxVolSlider, _sfxVol);
 	}
+	CP_Settings_StrokeWeight(3.f);
 }
