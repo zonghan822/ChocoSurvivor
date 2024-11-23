@@ -14,7 +14,7 @@ static float _playerProjectileSpeed = 1000.f, _playerProjectileDiameter = 14.f;
 static float _playerLastShotTime = 0.f;
 
 ProjectilePool allyProjectiles[MAX_ALLIES];
-static float _allyProjectileSpeed = 650.f, _allyProjectileDiameter = 10.f;
+static float _allyProjectileSpeed = 750.f, _allyProjectileDiameter = 11.f;
 static float _allyLastShotTime[MAX_ALLIES] = { 0 };
 
 static bool _add_projectile(ProjectilePool* pool, struct Projectile projectile) {
@@ -49,10 +49,12 @@ void player_shoot(float dt, bool can_shoot, float mouse_x, float mouse_y) {
             // Shoot projectile logic
             {
                 // x is the min or max x of player (extreme left or right of player)
-                float playerWidth = fabsf(playerInstance.width);//playerInstance.width < 0 ? -playerInstance.width : playerInstance.width;
-                projectile.pos.x = (projectile.shootDirection.x < 0)
-                    ? playerInstance.pos.x - (playerWidth / 2) 
-                    : playerInstance.pos.x + (playerWidth / 2);
+                // Disabled for gameplay adjustment
+                // float playerWidth = fabsf(playerInstance.width);//playerInstance.width < 0 ? -playerInstance.width : playerInstance.width;
+                //projectile.pos.x = (projectile.shootDirection.x < 0)
+                //    ? playerInstance.pos.x - (playerWidth / 2) 
+                //    : playerInstance.pos.x + (playerWidth / 2);
+                projectile.pos.x = playerInstance.pos.x;
                 projectile.pos.y = playerInstance.pos.y;
 
                 _add_projectile(&playerProjectiles, projectile);
@@ -91,7 +93,7 @@ void ally_shoot(float dt, struct ChocoRoach* enemies, int enemyCount) {
         }
 
         // Shoot if ready and target found
-        if (_allyLastShotTime[i] >= allies[i].attackSpeed) {
+        if (_allyLastShotTime[i] >= (1 / allies[i].attackSpeed)) {
             CP_Vector direction = CP_Vector_Subtract(closestEnemy->pos, allies[i].pos);
             struct Projectile projectile = init_projectile(NORMAL_PROJECTILE,
                 _allyProjectileSpeed, _allyProjectileDiameter,
@@ -113,9 +115,8 @@ void remove_projectile(ProjectilePool* pool, int index) {
         pool->projectiles[index].isActive = false;
     struct Projectile temp = pool->projectiles[index];
 
-    for (int i = index; i < pool->activeCount; i++) {
+    for (int i = index; i < pool->activeCount; i++)
         pool->projectiles[i] = pool->projectiles[i + 1];
-    }
 
     if (pool->projectiles[index].isActive)
         pool->projectiles[--pool->activeCount] = temp;

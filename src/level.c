@@ -60,7 +60,7 @@ static CP_Vector _finalPosition;
 #pragma endregion
 
 #pragma region Map Properties
-static struct Rectangle _worldClips[100];
+static struct Rectangle _worldClips[35];
 static struct Rectangle _playerClips[1];
 static struct Rectangle _enemyClips[4];
 static int _obstaclesCount = 0;
@@ -185,7 +185,7 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
 
         // Init Player Properties
         _respawnVec = CP_Vector_Set(_tower.pos.x / 1.15f, _tower.pos.y);
-        playerInstance = init_player(_respawnVec, 350.0f, 100, 21, 4.2f);
+        playerInstance = init_player(_respawnVec, 350.0f, 105, 22, 4.2f);
         playerInstance.playerMaxExp = 20; // Reset exp
         playerInstance.playerLevel = 1; // Reset level
 
@@ -372,7 +372,7 @@ void spawn_enemies(float dt) {
                     _enemyMaxAttackCD = 1.5f;
                     _roachesMax = 55;
                     nextSpawnDelayIndex = 4;
-                    nextSpawnDelay = -0.5f;
+                    nextSpawnDelay = -0.8f;
                     break;
                 case WAVE_3:
                     if (_boss.state == BOSS_STATE_UNSPAWNED)
@@ -821,7 +821,6 @@ void check_collision(void) {
     }
 
     // Player Projectiles
-    // Loop from the end to avoid issues when removing projectiles
     for (int j = 0; j < playerProjectiles.activeCount; j++) {
         if (playerProjectiles.projectiles[j].isActive) {
             struct Projectile projectile = playerProjectiles.projectiles[j];
@@ -830,8 +829,10 @@ void check_collision(void) {
             // Obstacles
             for (int i = 0; i < _worldClipsCount; i++) {
                 struct Rectangle worldClip = _worldClips[i];
-                if (are_circle_rect_intersecting(projectileHitbox, worldClip)) // bullet cannot go through walls and barricades...
+                if (are_circle_rect_intersecting(projectileHitbox, worldClip)) {// bullet cannot go through walls and barricades...
                     remove_projectile(&playerProjectiles, j);
+                    break;
+                }
             }
 
             // Common Enemies (roaches)
@@ -842,6 +843,7 @@ void check_collision(void) {
                     }
                     // Cancel bullet after hit enemy
                     remove_projectile(&playerProjectiles, j);
+                    break;
                 }
             }
 
@@ -852,6 +854,7 @@ void check_collision(void) {
                     dispose_boss(&_boss);
                 }
                 remove_projectile(&playerProjectiles, j);
+                continue;
             }
         }
     }
@@ -866,8 +869,10 @@ void check_collision(void) {
                 // Obstacles
                 for (int x = 0; x < _worldClipsCount; x++) {
                     struct Rectangle worldClip = _worldClips[x];
-                    if (are_circle_rect_intersecting(projectileHitbox, worldClip)) // bullet cannot go through walls and barricades...
+                    if (are_circle_rect_intersecting(projectileHitbox, worldClip)) {// bullet cannot go through walls and barricades...
                         remove_projectile(&allyProjectiles[i], j);
+                        break;
+                    }
                 }
 
                 // Common Enemies (roaches)
@@ -877,6 +882,7 @@ void check_collision(void) {
                             _on_enemy_killed(x);
                         }
                         remove_projectile(&allyProjectiles[i], j);
+                        break;
                     }
                 }
 
@@ -887,6 +893,7 @@ void check_collision(void) {
                         dispose_boss(&_boss);
                     }
                     remove_projectile(&allyProjectiles[i], j);
+                    continue;
                 }
             }
         }
@@ -979,7 +986,7 @@ void enemy_move_attack(float dt) {
                                         _worldClips[_worldClipsCount - 1] = _worldClips[worldClipsIndex];
                                         _worldClips[worldClipsIndex] = tmp;
                                     }
-                                    _worldClipsCount--;
+                                    --_worldClipsCount;
                                     update_grid(&_enemyGrid, _worldClips, _worldClipsCount, _enemyClips, 4);
                                     update_grid(&_bossGrid, _worldClips, _worldClipsCount, _enemyClips, 4);
                                 }
