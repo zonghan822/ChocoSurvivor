@@ -38,7 +38,7 @@ int tower_revive_player(struct DefenseTarget* tower, struct ChocoShooter* player
 struct Rectangle get_tower_hitbox(struct DefenseTarget tower) {
 	struct Rectangle rect = {
 		.height = tower.height,
-		.width = tower.width,
+		.width = (tower.hitwidth),
 		.pos = tower.pos
 	};
 
@@ -46,10 +46,8 @@ struct Rectangle get_tower_hitbox(struct DefenseTarget tower) {
 }
 
 void render_tower(struct DefenseTarget tower) {
-	// PLACEHOLDER
 	CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255));
-	CP_Settings_RectMode(CP_POSITION_CENTER);
-	CP_Graphics_DrawRect(tower.pos.x, tower.pos.y, tower.width, tower.height);
+	CP_Image_Draw(tower.img, tower.pos.x, tower.pos.y, tower.width, tower.height, 255);
 	CP_Settings_TextSize(30);
 	CP_Settings_Fill(CP_Color_Create(255, 255, 255, 255));
 	CP_Font_DrawText("TOWER", tower.pos.x, tower.pos.y);

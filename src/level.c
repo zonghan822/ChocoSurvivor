@@ -179,11 +179,12 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
 
         // Init Defense Target Properties
         _tower.maxHealth = _tower.health = 3;
-        _tower.height = 300.0;
-        _tower.width = 150.0;
+        _tower.height = 350.0;
+        _tower.width = 170.0;
+        _tower.hitwidth = 80.0;
         _tower.pos = CP_Vector_Set(level_width / 1.05f, level_height / 2.f);
         _tower.flickerState.isVisible = true;
-
+        _tower.img = CP_Image_Load("Assets/tower.png");
         // Init Player Properties
         _respawnVec = CP_Vector_Set(_tower.pos.x / 1.15f, _tower.pos.y);
         playerInstance = init_player(_respawnVec, 350.0f, 105, 22, 4.2f);

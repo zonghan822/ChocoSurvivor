@@ -7,6 +7,7 @@ struct DefenseTarget {
 	CP_Image img;
 	CP_Vector pos;
 	float width;
+	float hitwidth;
 	float height;
 	int health;
 	int maxHealth;
