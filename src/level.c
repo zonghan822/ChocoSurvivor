@@ -45,6 +45,8 @@ static int _deadEnemies = 0;
 static struct Boss _boss;
 static float _currentBossHealthWidth;
 static float _enemyMaxAttackCD = 0.f;
+static float enemySpeed = 0.f;
+static float bossSpeed = 0.f;
 #pragma endregion
 
 #pragma region Player_Properties
@@ -175,7 +177,8 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
     default:
     case GAME_LEVEL_ONE:
         levelBg = CP_Image_Load("Assets/Levels/level1.png");
-        _boss = init_boss_one(BOSS_WIDTH, 20.f, 4500, 60, 1.03f);
+        bossSpeed = 20.f;
+        _boss = init_boss_one(BOSS_WIDTH, bossSpeed, 4500, 60, 1.03f);
 
         // Init Defense Target Properties
         _tower.maxHealth = _tower.health = 3;
@@ -352,7 +355,6 @@ void spawn_enemies(float dt) {
                 _hasPlayedNewWaveMusic = true;
             }
 
-            float enemySpeed = 0.f;
             int enemyMaxHealth = 0, enemyDmg = 0;
             float nextSpawnDelay = 0.f;
             int nextSpawnDelayIndex = 0;
@@ -760,28 +762,52 @@ void check_collision(void) {
             // Common Enemies (roaches)
             for (int i = 0; i < _roachesMax; i++) {
                 if (are_circle_rect_intersecting(projectileHitbox, _roaches[i].hitbox)) {
+                    if (playerProjectiles.projectiles[j].type & FREEZING_PROJECTILE) {
+                        _roaches[i].speed = enemySpeed / 2;
+                    }
+                    else {
+                        _roaches[i].speed = enemySpeed;
+                    }
                     if (enemy_take_damage(&_roaches[i], projectile.dmg)) {
                         _deadEnemies++;
                         // Base exp on this formula:
                         // (max health / speed) * (max enemies / 10)
-                        playerInstance.expGained = _get_exp(_roaches[i].maxHealth, _roaches[i].speed, _roachesMax);
+                        playerInstance.expGained += _get_exp(_roaches[i].maxHealth, _roaches[i].speed, _roachesMax);
                         memset(&_roaches[i], 0, sizeof(_roaches[i]));
                     }
                     remove_projectile(&playerProjectiles, j);
                     break;
                 }
+                if (playerProjectiles.projectiles[j].type & TRACKING_PROJECTILE) {
+                    struct Circle radarBullet = { .pos = playerProjectiles.projectiles[j].pos, .diameter = 2 * fabs(playerInstance.width) }; // define bullet radar
+                    if (are_circle_rect_intersecting(radarBullet, _roaches[i].hitbox)) {
+                        playerProjectiles.projectiles[j].shootDirection = CP_Vector_Normalize(CP_Vector_Subtract(_roaches[i].hitbox.pos, playerProjectiles.projectiles[j].pos));
+                    }
+                }
             }
 
             // Boss
             if (are_circle_rect_intersecting(projectileHitbox, _boss.hitbox)) {
+                if (playerProjectiles.projectiles[j].type & FREEZING_PROJECTILE) {
+                    _boss.speed = bossSpeed / 2;
+                }
+                else {
+                    _boss.speed = bossSpeed;
+                }
                 if (boss_take_damage(&_boss, projectile.dmg)) {
                     _deadEnemies++;
                     float expGained = _get_exp(_boss.maxHealth, _boss.speed, 1) * 12.f;
-                    playerInstance.expGained = expGained;
+                    playerInstance.expGained += expGained;
                     dispose_boss(&_boss);
                 }
                 remove_projectile(&playerProjectiles, j);
                 continue;
+            }
+            if (playerProjectiles.projectiles[j].type & TRACKING_PROJECTILE) {
+                struct Circle radarBullet = { .pos = playerProjectiles.projectiles[j].pos, .diameter = 2 * fabs(playerInstance.width) }; // define bullet radar
+                if (are_circle_rect_intersecting(radarBullet, _boss.hitbox)) {
+                    playerProjectiles.projectiles[j].shootDirection = CP_Vector_Normalize(CP_Vector_Subtract(_boss.hitbox.pos, playerProjectiles.projectiles[j].pos));
+                }
             }
         }
     }
@@ -809,7 +835,7 @@ void check_collision(void) {
                             _deadEnemies++;
                             // Base exp on this formula:
                             // (max health / speed) * (max enemies / 10)
-                            playerInstance.expGained = _get_exp(_roaches[x].maxHealth, _roaches[x].speed, _roachesMax);
+                            playerInstance.expGained += _get_exp(_roaches[x].maxHealth, _roaches[x].speed, _roachesMax);
                             memset(&_roaches[x], 0, sizeof(_roaches[x]));
                         }
                         remove_projectile(&allyProjectiles[i], j);
@@ -822,7 +848,7 @@ void check_collision(void) {
                     if (boss_take_damage(&_boss, projectile.dmg)) {
                         _deadEnemies++;
                         float expGained = _get_exp(_boss.maxHealth, _boss.speed, 1) * 12.f;
-                        playerInstance.expGained = expGained;
+                        playerInstance.expGained += expGained;
                         dispose_boss(&_boss);
                     }
                     remove_projectile(&allyProjectiles[i], j);
@@ -899,6 +925,19 @@ void enemy_move_attack(float dt) {
                     // if animation end then...
                     switch (_enemyAttackTarget) {
                         case TARGET_PLAYER:
+                            if (playerInstance.isReflectingDmg) {
+                                if (_roaches[i].attackCooldown <= 0) {
+                                    _roaches[i].attackCooldown = _enemyMaxAttackCD;
+                                    if (enemy_take_damage(&_roaches[i], _roaches[i].dmg)) {
+                                        _deadEnemies++;
+                                        // Base exp on this formula:
+                                        // (max health / speed) * (max enemies / 10)
+                                        playerInstance.expGained += _get_exp(_roaches[i].maxHealth, _roaches[i].speed, _roachesMax);
+                                        memset(&_roaches[i], 0, sizeof(_roaches[i]));
+                                    }
+                                }
+                                break;
+                            }
                             if (!player_take_damage(&playerInstance, _roaches[i].dmg)) { // Returns 0 if player dies from damage
                                 if (tower_revive_player(&_tower, &playerInstance)) // Returns 1 if tower is still alive after reviving
                                     playerInstance.pos = _respawnVec;

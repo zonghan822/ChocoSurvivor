@@ -66,6 +66,8 @@ void apply_buff(BuffList* activeBuffs, enum BuffType buff, struct ChocoShooter* 
             else if (buff != HEAL) {
                 activeBuffs->buffs[i].timeLeft += BUFF_TIME;
             }
+            activeBuffs->buffs[i].renderStage = SHOWING;
+            activeBuffs->buffs[i].renderTime = 0.f;
             isNotApplied = false;
             break;
         }
@@ -97,7 +99,7 @@ void apply_buff(BuffList* activeBuffs, enum BuffType buff, struct ChocoShooter* 
                 .type = buff,
                 .isTimerBuff = true,
                 .level = 0,
-                .timeLeft = 2.f,
+                .timeLeft = BUFF_SHOW_TIME,
                 .renderStage = SHOWING
             };
             activeBuffs->buffs[activeBuffs->buffCount++] = temp;
@@ -122,14 +124,17 @@ void apply_buff(BuffList* activeBuffs, enum BuffType buff, struct ChocoShooter* 
             activeBuffs->buffs[activeBuffs->buffCount - 1].renderText = "Attack Speed Up";
         }
         break;
-    case HEALTH_UP:
+    case HEALTH_UP: {
         printf("Health Up!\n");
+        float healthPercent = (float)player->health / (float)player->maxHealth;
         player->maxHealth += 20;
+        player->health = (int)(healthPercent * (float)player->maxHealth);
         if (isNotApplied) {
             activeBuffs->buffs[activeBuffs->buffCount - 1].img = CP_Image_Load("Assets/atkbuff.png");
             activeBuffs->buffs[activeBuffs->buffCount - 1].renderText = "Health Up";
         }
         break;
+    }   
     case ALLY_LVL_UP:
         printf("Sentry Level Up!\n");
         allies->attackPower += ALLY_ATTACK_POWER_INCREMENT;
@@ -157,6 +162,7 @@ void apply_buff(BuffList* activeBuffs, enum BuffType buff, struct ChocoShooter* 
         break;
     case SMART_PISTOL:
         printf("Smart Gun Activated!\n");
+        player->currentProjectileType |= TRACKING_PROJECTILE;
         if (isNotApplied) {
             activeBuffs->buffs[activeBuffs->buffCount - 1].img = CP_Image_Load("Assets/atkbuff.png");
             activeBuffs->buffs[activeBuffs->buffCount - 1].renderText = "Smart Gun";
@@ -164,6 +170,7 @@ void apply_buff(BuffList* activeBuffs, enum BuffType buff, struct ChocoShooter* 
         break;
     case FROZING_SHOTS:
         printf("Freezing Shots Activated!\n");
+        player->currentProjectileType |= FREEZING_PROJECTILE;
         if (isNotApplied) {
             activeBuffs->buffs[activeBuffs->buffCount - 1].img = CP_Image_Load("Assets/atkbuff.png");
             activeBuffs->buffs[activeBuffs->buffCount - 1].renderText = "Freezing Shots";
@@ -171,13 +178,15 @@ void apply_buff(BuffList* activeBuffs, enum BuffType buff, struct ChocoShooter* 
         break;
     case MULTI_SHOTS:
         printf("Multi Shots Activated!\n");
+        player->currentProjectileType |= FAST_PROJECTILE;
         if (isNotApplied) {
             activeBuffs->buffs[activeBuffs->buffCount - 1].img = CP_Image_Load("Assets/atkbuff.png");
-            activeBuffs->buffs[activeBuffs->buffCount - 1].renderText = "Multi Shots";
+            activeBuffs->buffs[activeBuffs->buffCount - 1].renderText = "Fast Shots";
         }
         break;
     case REFLECT_DMG:
         printf("Reflect Damage Activated!\n");
+        player->isReflectingDmg = true;
         if (isNotApplied) {
             activeBuffs->buffs[activeBuffs->buffCount - 1].img = CP_Image_Load("Assets/atkbuff.png");
             activeBuffs->buffs[activeBuffs->buffCount - 1].renderText = "Reflect Damage";
@@ -191,6 +200,20 @@ void update_timer_buff(BuffList* activeBuffs, float dt) {
         if (activeBuffs->buffs[i].isTimerBuff) {
             activeBuffs->buffs[i].timeLeft -= dt;
             if (activeBuffs->buffs[i].timeLeft <= 0) {
+                switch (activeBuffs->buffs[i].type) {
+                case SMART_PISTOL:
+                    playerInstance.currentProjectileType ^= TRACKING_PROJECTILE;
+                    break;
+                case FROZING_SHOTS:
+                    playerInstance.currentProjectileType ^= FREEZING_PROJECTILE;
+                    break;
+                case MULTI_SHOTS:
+                    playerInstance.currentProjectileType ^= FAST_PROJECTILE;
+                    break;
+                case REFLECT_DMG:
+                    playerInstance.isReflectingDmg = false;
+                    break;
+                }
                 for (int j = i; j < activeBuffs->buffCount; j++) {
                     Buff temp = activeBuffs->buffs[j];
                     activeBuffs->buffs[j] = activeBuffs->buffs[j + 1];
@@ -248,13 +271,26 @@ void render_buff_slot(BuffSlot* buffSlot, float windowWidth, float windowHeight)
 }
 
 void render_buff(BuffList* activeBuffs, float windowWidth, float windowHeight, float dt) {
+    int showCount = 0;
+    for (int j = 0; j < activeBuffs->buffCount; j++) {
+        if (activeBuffs->buffs[j].renderStage == SHOWING) {
+            showCount++;
+        }
+    }
+    int showIndex = 0;
+    float showGap = BUFF_ICON_SIDE * 2;
+    float showXfirst = (windowWidth / 2.f) - ((((float)showCount - 1.f) / 2.f) * ((float)BUFF_ICON_SIDE + showGap));
+    /*if (showCount >= 1) {
+        printf("buff display count: %d, first x : %lf\n", showCount, showXfirst);
+    }*/
+
     for (int i = 0; i < activeBuffs->buffCount; i++) {
         activeBuffs->buffs[i].renderTime += dt;
 
         switch (activeBuffs->buffs[i].renderStage) {
-        case SHOWING:
-            activeBuffs->buffs[i].renderPos.x = windowWidth / 2.f;
-            activeBuffs->buffs[i].renderPos.y = windowHeight / 3.f;
+        case SHOWING: {
+            activeBuffs->buffs[i].renderPos.x = showXfirst + (showIndex++ * (BUFF_ICON_SIDE + showGap));
+            activeBuffs->buffs[i].renderPos.y = windowHeight / 4.f;
             activeBuffs->buffs[i].renderSide = BUFF_ICON_SIDE;
 
             float textPosX = activeBuffs->buffs[i].renderPos.x;
@@ -270,10 +306,10 @@ void render_buff(BuffList* activeBuffs, float windowWidth, float windowHeight, f
             CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_CENTER, CP_TEXT_ALIGN_V_MIDDLE);
             CP_Settings_TextSize(50.f);
             CP_Font_DrawText(activeBuffs->buffs[i].renderText, textPosX, textPosY);
-            if (activeBuffs->buffs[i].renderTime >= 2)
+            if (activeBuffs->buffs[i].renderTime >= BUFF_SHOW_TIME)
                 activeBuffs->buffs[i].renderStage = MOVING;
             break;
-
+        }
         case MOVING: {
             float moveProgress = min(1, activeBuffs->buffs[i].renderTime - 2);
             float destSide = BUFF_ICON_SIDE / 2;
@@ -306,11 +342,18 @@ void render_buff(BuffList* activeBuffs, float windowWidth, float windowHeight, f
                 activeBuffs->buffs[i].renderSide,
                 activeBuffs->buffs[i].renderSide, 255);
             if (activeBuffs->buffs[i].isTimerBuff) {
-                CP_Settings_Fill(CP_Color_Create(200, 200, 200, 235));
+                CP_Settings_Fill(CP_Color_Create(0, 0, 0, 235));
                 CP_Settings_TextSize(32.f);
                 char timerBuf[5];
                 sprintf_s(timerBuf, sizeof(timerBuf), "%d", (int)(activeBuffs->buffs[i].timeLeft));
                 CP_Font_DrawText(timerBuf, x, activeBuffs->buffs[i].renderPos.y + 37.5f);
+            }
+            else {
+                CP_Settings_Fill(CP_Color_Create(0, 0, 0, 235));
+                CP_Settings_TextSize(20.f);
+                char lvlBuf[10];
+                sprintf_s(lvlBuf, sizeof(lvlBuf), "Lvl. %d", (int)(activeBuffs->buffs[i].level));
+                CP_Font_DrawText(lvlBuf, x, activeBuffs->buffs[i].renderPos.y + 37.5f);
             }
             break;
         }      

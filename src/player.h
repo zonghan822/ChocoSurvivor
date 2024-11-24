@@ -30,6 +30,7 @@ struct ChocoShooter {
     int playerMaxExp;
     int playerLevel;
     enum ProjectileType currentProjectileType;
+    bool isReflectingDmg;
 };
 
 int player_take_damage(struct ChocoShooter* player, int damage);
