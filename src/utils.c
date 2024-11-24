@@ -59,24 +59,24 @@ float resize_by_divisor(float dimension, int divisor) {
     return dimension;
 }
 
-void render_health_bar_rel(struct Rectangle entity, int health, int maxHealth) {
+void render_health_bar(struct Rectangle entity, int health, int maxHealth) {
     // Set position of health bar
-    float health_bar_w = entity.width;
-    float health_bar_h = 15.f;
-    float health_bar_x = entity.pos.x - (health_bar_w / 2);
-    float health_bar_y = (entity.pos.y) - (entity.height / 2) - 20.f;
+    float healthBarW = entity.width;
+    float healthBarH = 15.f;
+    float healthBarX = entity.pos.x - (healthBarW / 2);
+    float healthBarY = (entity.pos.y) - (entity.height / 2) - 20.f;
 
     CP_Settings_RectMode(CP_POSITION_CORNER);
 
     // Draw health bar rect
     CP_Settings_Fill(CP_Color_Create(255, 0, 0, 255));
-    CP_Graphics_DrawRect(health_bar_x, health_bar_y, health_bar_w, health_bar_h);
+    CP_Graphics_DrawRect(healthBarX, healthBarY, healthBarW, healthBarH);
 
-    float health_gap_x = health_bar_x + ((float)health / (float)maxHealth) * health_bar_w;
-    float health_gap_w = health_bar_w * (1.f - ((float)health / (float)maxHealth));
+    float healthGapX = healthBarX + ((float)health / (float)maxHealth) * healthBarW;
+    float healthGapW = healthBarW * (1.f - ((float)health / (float)maxHealth));
 
     CP_Settings_Fill(CP_Color_Create(100, 100, 100, 255));
-    CP_Graphics_DrawRect(health_gap_x, health_bar_y, health_gap_w, health_bar_h);
+    CP_Graphics_DrawRect(healthGapX, healthBarY, healthGapW, healthBarH);
     CP_Settings_RectMode(CP_POSITION_CENTER);
 }
 

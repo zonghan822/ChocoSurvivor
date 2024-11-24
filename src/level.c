@@ -512,7 +512,7 @@ void render_health_bars(float dt) {
     for (int i = 0; i < get_barrier_count(); i++) {
         if (barriers[i].isTakingDamage) {
             if (barriers[i].healthBarDisplayTime < BARRIER_HEALTHBAR_DISPLAY_TIME) {
-                render_health_bar_rel(barriers[i].hitbox, barriers[i].health, barriers[i].maxHealth);
+                render_health_bar(barriers[i].hitbox, barriers[i].health, barriers[i].maxHealth);
                 barriers[i].healthBarDisplayTime += dt;
             }
             else {
@@ -528,7 +528,7 @@ void render_health_bars(float dt) {
         if (_roaches[i].isTakingDamage) {
             if (_roaches[i].healthBarDisplayTime < ENEMY_HEALTHBAR_DISPLAY_TIME) {
                 struct Rectangle roachRect = { _roaches[i].pos, _roaches[i].width, _roaches[i].height };
-                render_health_bar_rel(roachRect, _roaches[i].health, _roaches[i].maxHealth);
+                render_health_bar(roachRect, _roaches[i].health, _roaches[i].maxHealth);
                 _roaches[i].healthBarDisplayTime += dt;
             }
             else {

@@ -48,12 +48,13 @@ void player_shoot(float dt, bool can_shoot, float mouse_x, float mouse_y) {
 
             // Shoot projectile logic
             {
-                // x is the min or max x of player (extreme left or right of player)
                 // Disabled for gameplay adjustment
+                // x is the min or max x of player (extreme left or right of player)
                 // float playerWidth = fabsf(playerInstance.width);//playerInstance.width < 0 ? -playerInstance.width : playerInstance.width;
                 //projectile.pos.x = (projectile.shootDirection.x < 0)
                 //    ? playerInstance.pos.x - (playerWidth / 2) 
                 //    : playerInstance.pos.x + (playerWidth / 2);
+
                 projectile.pos.x = playerInstance.pos.x;
                 projectile.pos.y = playerInstance.pos.y;
 

@@ -147,13 +147,12 @@ void move_player(struct ChocoShooter *player, float dt, float level_width, float
     }
 
     if (_isDashing) {
-        _dashProgress += DASH_SPEED * dt;
+        _dashProgress += (DASH_SPEED * dt) / 3.f;
 
         player->pos.x = CP_Math_LerpFloat(player->pos.x, _dashTo.x, _dashProgress);
         player->pos.y = CP_Math_LerpFloat(player->pos.y, _dashTo.y, _dashProgress);
 
-        if (_dashProgress >= 1.5f)
-            _isDashing = FALSE;
+        _isDashing = _dashProgress < 1.f;
     }
 
     // Use hitbox instead because images can have whitespaces in them
@@ -173,33 +172,4 @@ void move_player(struct ChocoShooter *player, float dt, float level_width, float
 
 void render_player(struct ChocoShooter player, float alpha) {
     CP_Image_Draw(player.img, player.pos.x, player.pos.y, player.width, player.height, alpha);
-}
-
-void render_health_bar(struct ChocoShooter* player, float dt, float windowWidth, float windowHeight, float meterX, float meterY, float meterWidth, float meterHeight) {
-    // Health bar properties
-
-    float barWidth = meterWidth;      // Match the buff bar width
-    float barHeight = 10.0f;          // Slightly smaller than the buff bar
-    float barOffsetY = meterY - 30.0f; // Position slightly above the buff bar
-    static float interpolatedHealthWidth = 0.0f; // Smooth interpolation width
-
-    // Calculate target width based on current health percentage
-    float targetHealthWidth = (player->health / (float)player->maxHealth) * barWidth;
-
-    // Interpolate the width towards the target
-    if (interpolatedHealthWidth != targetHealthWidth) {
-        float delta = targetHealthWidth - interpolatedHealthWidth;
-        interpolatedHealthWidth += delta * 10.0f * dt; // Adjust speed
-        interpolatedHealthWidth = CP_Math_ClampFloat(interpolatedHealthWidth, 0, barWidth);
-    }
-
-    CP_Settings_RectMode(CP_POSITION_CORNER);
-
-    // Render the background of the health bar (gray)
-    CP_Settings_Fill(CP_Color_Create(50, 50, 50, 255));
-    CP_Graphics_DrawRect(meterX, barOffsetY, barWidth, meterHeight);
-
-    // Render the interpolated health bar (green to red gradient)
-    CP_Settings_Fill(CP_Color_Create(225, 0, 0, 255));
-    CP_Graphics_DrawRect(meterX, barOffsetY, interpolatedHealthWidth, meterHeight);
 }

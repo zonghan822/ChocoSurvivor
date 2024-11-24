@@ -36,4 +36,3 @@ int player_take_damage(struct ChocoShooter* player, int damage);
 struct ChocoShooter init_player(CP_Vector pos, float speed, float maxHealth, int atk, float fireRate);
 void move_player(struct ChocoShooter* player, float dt, float level_width, float level_height);
 void render_player(struct ChocoShooter player, float alpha);
-void render_health_bar(struct ChocoShooter* player, float dt, float windowWidth, float windowHeight, float meterX, float meterY, float meterWidth, float meterHeight);
