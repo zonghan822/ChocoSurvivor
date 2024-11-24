@@ -7,7 +7,6 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-static enum ProjectileType _projectileType = NORMAL_PROJECTILE;
 
 ProjectilePool playerProjectiles;
 static float _playerProjectileSpeed = 1000.f, _playerProjectileDiameter = 14.f;
@@ -40,10 +39,11 @@ struct Projectile init_projectile(enum ProjectileType projectileType, float proj
 void player_shoot(float dt, bool can_shoot, float mouse_x, float mouse_y) {
     _playerLastShotTime += dt;
     if (CP_Input_MouseDown(MOUSE_BUTTON_LEFT) && can_shoot) {
-        if (_playerLastShotTime >= (1 / playerInstance.attackSpeed)) { // control fire rate
+        float shootSpd = (playerInstance.currentProjectileType & FAST_PROJECTILE) ? playerInstance.attackSpeed * 2.f: playerInstance.attackSpeed;
+        if (_playerLastShotTime >= 1/shootSpd) { // control fire rate
             // projectile direction is the vector of player with mouse pointer
             CP_Vector projectileDirection = CP_Vector_Subtract(CP_Vector_Set(mouse_x, mouse_y), playerInstance.pos);
-            struct Projectile projectile = init_projectile(_projectileType, _playerProjectileSpeed,
+            struct Projectile projectile = init_projectile(playerInstance.currentProjectileType, _playerProjectileSpeed,
                 _playerProjectileDiameter, playerInstance.attackPower, projectileDirection);
 
             // Shoot projectile logic
@@ -132,7 +132,7 @@ void remove_projectile(ProjectilePool* pool, int index) {
 void update_projectiles(ProjectilePool* pool, float dt) {
     for (int i = 0; i < pool->activeCount; i++) {
         struct Projectile* proj = &pool->projectiles[i];
-        if (proj->isActive) {
+        if (proj->isActive) {       
             proj->pos.x += proj->shootDirection.x * proj->speed * dt;
             proj->pos.y += proj->shootDirection.y * proj->speed * dt;
             proj->range -= proj->speed * dt;

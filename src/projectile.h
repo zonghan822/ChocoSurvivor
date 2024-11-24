@@ -6,9 +6,10 @@
 #define MAX_PLAYER_PROJECTILES 20
 
 enum ProjectileType {
-    NORMAL_PROJECTILE,
-    FREEZING_PROJECTILE,
-    TRACKING_PROJECTILE
+    NORMAL_PROJECTILE = 0,
+    FREEZING_PROJECTILE = 1 << 0,   // 0b_00000001 // 1
+    TRACKING_PROJECTILE = 1 << 1,   // 0b_00000010 // 2
+    FAST_PROJECTILE = 1 << 2,       // 0b_00000100 // 4
 };
 
 struct Projectile {

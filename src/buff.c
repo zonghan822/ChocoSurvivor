@@ -97,7 +97,7 @@ void apply_buff(BuffList* activeBuffs, enum BuffType buff, struct ChocoShooter* 
                 .type = buff,
                 .isTimerBuff = true,
                 .level = 0,
-                .timeLeft = 2.f,
+                .timeLeft = BUFF_SHOW_TIME,
                 .renderStage = SHOWING
             };
             activeBuffs->buffs[activeBuffs->buffCount++] = temp;
@@ -157,6 +157,7 @@ void apply_buff(BuffList* activeBuffs, enum BuffType buff, struct ChocoShooter* 
         break;
     case SMART_PISTOL:
         printf("Smart Gun Activated!\n");
+        player->currentProjectileType |= TRACKING_PROJECTILE;
         if (isNotApplied) {
             activeBuffs->buffs[activeBuffs->buffCount - 1].img = CP_Image_Load("Assets/atkbuff.png");
             activeBuffs->buffs[activeBuffs->buffCount - 1].renderText = "Smart Gun";
@@ -164,6 +165,7 @@ void apply_buff(BuffList* activeBuffs, enum BuffType buff, struct ChocoShooter* 
         break;
     case FROZING_SHOTS:
         printf("Freezing Shots Activated!\n");
+        player->currentProjectileType |= FREEZING_PROJECTILE;
         if (isNotApplied) {
             activeBuffs->buffs[activeBuffs->buffCount - 1].img = CP_Image_Load("Assets/atkbuff.png");
             activeBuffs->buffs[activeBuffs->buffCount - 1].renderText = "Freezing Shots";
@@ -171,6 +173,7 @@ void apply_buff(BuffList* activeBuffs, enum BuffType buff, struct ChocoShooter* 
         break;
     case MULTI_SHOTS:
         printf("Multi Shots Activated!\n");
+        player->currentProjectileType |= FAST_PROJECTILE;
         if (isNotApplied) {
             activeBuffs->buffs[activeBuffs->buffCount - 1].img = CP_Image_Load("Assets/atkbuff.png");
             activeBuffs->buffs[activeBuffs->buffCount - 1].renderText = "Multi Shots";
@@ -178,6 +181,7 @@ void apply_buff(BuffList* activeBuffs, enum BuffType buff, struct ChocoShooter* 
         break;
     case REFLECT_DMG:
         printf("Reflect Damage Activated!\n");
+        player->isReflectingDmg = true;
         if (isNotApplied) {
             activeBuffs->buffs[activeBuffs->buffCount - 1].img = CP_Image_Load("Assets/atkbuff.png");
             activeBuffs->buffs[activeBuffs->buffCount - 1].renderText = "Reflect Damage";
@@ -191,6 +195,20 @@ void update_timer_buff(BuffList* activeBuffs, float dt) {
         if (activeBuffs->buffs[i].isTimerBuff) {
             activeBuffs->buffs[i].timeLeft -= dt;
             if (activeBuffs->buffs[i].timeLeft <= 0) {
+                switch (activeBuffs->buffs[i].type) {
+                case SMART_PISTOL:
+                    playerInstance.currentProjectileType ^= TRACKING_PROJECTILE;
+                    break;
+                case FROZING_SHOTS:
+                    playerInstance.currentProjectileType ^= FREEZING_PROJECTILE;
+                    break;
+                case MULTI_SHOTS:
+                    playerInstance.currentProjectileType ^= FAST_PROJECTILE;
+                    break;
+                case REFLECT_DMG:
+                    playerInstance.isReflectingDmg = false;
+                    break;
+                }
                 for (int j = i; j < activeBuffs->buffCount; j++) {
                     Buff temp = activeBuffs->buffs[j];
                     activeBuffs->buffs[j] = activeBuffs->buffs[j + 1];
@@ -270,7 +288,7 @@ void render_buff(BuffList* activeBuffs, float windowWidth, float windowHeight, f
             CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_CENTER, CP_TEXT_ALIGN_V_MIDDLE);
             CP_Settings_TextSize(50.f);
             CP_Font_DrawText(activeBuffs->buffs[i].renderText, textPosX, textPosY);
-            if (activeBuffs->buffs[i].renderTime >= 2)
+            if (activeBuffs->buffs[i].renderTime >= BUFF_SHOW_TIME)
                 activeBuffs->buffs[i].renderStage = MOVING;
             break;
 
