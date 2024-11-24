@@ -779,7 +779,7 @@ void check_collision(void) {
                     break;
                 }
                 if (playerProjectiles.projectiles[j].type & TRACKING_PROJECTILE) {
-                    struct Circle radarBullet = { .pos = playerProjectiles.projectiles[j].pos, .diameter = 5 * fabs(playerInstance.width) }; // define bullet radar
+                    struct Circle radarBullet = { .pos = playerProjectiles.projectiles[j].pos, .diameter = 2 * fabs(playerInstance.width) }; // define bullet radar
                     if (are_circle_rect_intersecting(radarBullet, _roaches[i].hitbox)) {
                         playerProjectiles.projectiles[j].shootDirection = CP_Vector_Normalize(CP_Vector_Subtract(_roaches[i].hitbox.pos, playerProjectiles.projectiles[j].pos));
                     }
@@ -804,7 +804,7 @@ void check_collision(void) {
                 continue;
             }
             if (playerProjectiles.projectiles[j].type & TRACKING_PROJECTILE) {
-                struct Circle radarBullet = { .pos = playerProjectiles.projectiles[j].pos, .diameter = 5 * fabs(playerInstance.width) }; // define bullet radar
+                struct Circle radarBullet = { .pos = playerProjectiles.projectiles[j].pos, .diameter = 2 * fabs(playerInstance.width) }; // define bullet radar
                 if (are_circle_rect_intersecting(radarBullet, _boss.hitbox)) {
                     playerProjectiles.projectiles[j].shootDirection = CP_Vector_Normalize(CP_Vector_Subtract(_boss.hitbox.pos, playerProjectiles.projectiles[j].pos));
                 }
