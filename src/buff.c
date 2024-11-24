@@ -126,9 +126,9 @@ void apply_buff(BuffList* activeBuffs, enum BuffType buff, struct ChocoShooter* 
         break;
     case HEALTH_UP: {
         printf("Health Up!\n");
-        float healthPercent = player->health / player->maxHealth;
+        float healthPercent = (float)player->health / (float)player->maxHealth;
         player->maxHealth += 20;
-        player->health = healthPercent * player->maxHealth;
+        player->health = (int)(healthPercent * (float)player->maxHealth);
         if (isNotApplied) {
             activeBuffs->buffs[activeBuffs->buffCount - 1].img = CP_Image_Load("Assets/atkbuff.png");
             activeBuffs->buffs[activeBuffs->buffCount - 1].renderText = "Health Up";
@@ -278,11 +278,11 @@ void render_buff(BuffList* activeBuffs, float windowWidth, float windowHeight, f
         }
     }
     int showIndex = 0;
-    float showGap = 80.f;
+    float showGap = BUFF_ICON_SIDE * 2;
     float showXfirst = (windowWidth / 2.f) - ((((float)showCount - 1.f) / 2.f) * ((float)BUFF_ICON_SIDE + showGap));
-    if (showCount >= 1) {
+    /*if (showCount >= 1) {
         printf("buff display count: %d, first x : %lf\n", showCount, showXfirst);
-    }
+    }*/
 
     for (int i = 0; i < activeBuffs->buffCount; i++) {
         activeBuffs->buffs[i].renderTime += dt;
