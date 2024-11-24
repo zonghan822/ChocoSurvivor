@@ -208,6 +208,24 @@ void boss_one_sec_atk(struct Boss *boss, struct ChocoShooter* player, float dt) 
 	const float attackingDelay = 3.5f;
 	printf("Boss is performing charge attack\n");
 
+	// Set variables for telegraph, FF14 style
+	const float distancePadding = 20.f * 2.f;
+	const float maxDistance = (boss->hitbox.width / 2) + (player->hitbox.width / 2) + distancePadding;
+	/*if (_chargeProgress == 0.f) {
+		float angle = CP_Vector_Angle(boss->hitbox.pos, _chargeTo);
+		CP_Settings_Fill(CP_Color_Create(255, 0, 0, 75));
+		CP_Vector delta = CP_Vector_Subtract(_chargeTo, boss->hitbox.pos);
+
+		printf("Angle: %f, Charge pos: (%f,%f), Boss pos: (%f,%f)\n", angle, _chargeTo.x, _chargeTo.y, boss->pos.x, boss->pos.y);
+
+		CP_Vector midpoint = CP_Vector_Set(
+			((boss->hitbox.pos.x + _chargeTo.x) / 2.f) + distancePadding,
+			((boss->hitbox.pos.y + _chargeTo.y) / 2.f) + distancePadding);
+		CP_Graphics_DrawRectAdvanced(midpoint.x, midpoint.y,
+			CP_Vector_Distance(_chargeTo, boss->hitbox.pos) + distancePadding,
+			maxDistance, angle, 0.f);
+	}*/
+
 	// Set its charge to pos to player's
 	if (_chargeTo.x == 0 && _chargeTo.y == 0)
 		_chargeTo = player->pos;
@@ -222,14 +240,13 @@ void boss_one_sec_atk(struct Boss *boss, struct ChocoShooter* player, float dt) 
 
 	// Lerp
 	// Use speed instead
-	_chargeProgress += (boss->speed / 3.f) * dt;
+	_chargeProgress += (boss->speed * dt) / 15.f;
 	boss->pos.x = CP_Math_LerpFloat(boss->pos.x, _chargeTo.x, _chargeProgress);
 	boss->pos.y = CP_Math_LerpFloat(boss->pos.y, _chargeTo.y, _chargeProgress);
 
 	// Damage player
-	// 105 is the max distance to get hit by
-	if (CP_Vector_Distance(boss->pos, player->pos) + (boss->hitbox.width / 2) + (player->hitbox.width / 2)
-		<= 105)
+	// [(boss->hitbox.width / 2) + (player->hitbox.width / 2) + 20.f] is the max distance to get hit by
+	if (CP_Vector_Distance(boss->pos, player->pos) <= maxDistance)
 		player_take_damage(player, boss->attackPower);
 
 	// Done charging to pos
@@ -244,8 +261,8 @@ void boss_one_sec_atk(struct Boss *boss, struct ChocoShooter* player, float dt) 
 }
 
 int can_boss_one_sec_atk(struct Boss boss, struct ChocoShooter player) {
-	// 175 is for charging distance
-	float minDistance = 175 + (boss.hitbox.width / 2) + (player.hitbox.width / 2);
+	// 185 is for charging distance
+	float minDistance = 185 + (boss.hitbox.width / 2) + (player.hitbox.width / 2);
 	return (CP_Vector_Distance(boss.hitbox.pos, player.hitbox.pos) <= minDistance && _secAtkCooldown >= 15.f) ||
 		boss.state == BOSS_STATE_ATTACKING_SECONDARY;
 }
@@ -254,13 +271,15 @@ void boss_one_move(struct Boss* boss, struct ChocoShooter player, struct Rectang
 	if (_secAtkCooldown < 15.f)
 		_secAtkCooldown += dt;
 
-	if (boss->state != BOSS_STATE_MOVING_TO_TOWER && boss->state != BOSS_STATE_MOVING_TO_PLAYER) return;
+	if (boss->state != BOSS_STATE_MOVING_TO_TOWER &&
+		boss->state != BOSS_STATE_MOVING_TO_PLAYER && 
+		boss->state != BOSS_STATE_MOVING_TO_BARRIER) return;
 
-	struct Circle radar = { .pos = boss->pos, .diameter = 1.35f * boss->width };
-	if (are_circle_rect_intersecting(radar, player.hitbox))
-		boss->state = BOSS_STATE_MOVING_TO_PLAYER;
+	struct Circle radar = { .pos = boss->pos, .diameter = 2.85f * boss->width };
+	boss->state = are_circle_rect_intersecting(radar, player.hitbox)
+		? BOSS_STATE_MOVING_TO_PLAYER : BOSS_STATE_MOVING_TO_TOWER;
 
-	_move_to_target(boss, hitbox, dt, grid, gridNoBarrier ,nodeCount);
+	_move_to_target(boss, hitbox, dt, grid, gridNoBarrier, nodeCount);
 }
 #pragma endregion
 

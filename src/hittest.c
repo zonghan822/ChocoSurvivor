@@ -51,12 +51,12 @@ int are_circle_rect_intersecting(struct Circle circ, struct Rectangle rect) {
 	if (circ.diameter == 0.f)
 		return 0;
 
-	rect.pos.x -= (rect.width / 2);
-	rect.pos.y -= (rect.height / 2);
+	rect.pos.x -= (fabsf(rect.width) / 2);
+	rect.pos.y -= (fabsf(rect.height) / 2);
 
-	float radius = circ.diameter / 2.0,
-		nearestX = CP_Math_ClampFloat(circ.pos.x, rect.pos.x, rect.pos.x + rect.width),
-		nearestY = CP_Math_ClampFloat(circ.pos.y, rect.pos.y, rect.pos.y + rect.height);
+	float radius = fabsf(circ.diameter) / 2.f, // Diameter CANNOT be negative
+		nearestX = CP_Math_ClampFloat(circ.pos.x, rect.pos.x, rect.pos.x + fabsf(rect.width)),
+		nearestY = CP_Math_ClampFloat(circ.pos.y, rect.pos.y, rect.pos.y + fabsf(rect.height));
 
 	CP_Vector direction = CP_Vector_Subtract(circ.pos, CP_Vector_Set(nearestX, nearestY));
 	
