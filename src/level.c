@@ -88,7 +88,7 @@ static bool _hasPlayedGameOverMusic,
 static enum GameLevel _currentLevel;
 static float _levelWidth, _levelHeight;
 static CP_Image _heartImg;
-static CP_Image _playerPortraitImg, _barrierPortraitImg, _allyPortraitImg;
+static CP_Image _playerPortraitImg;
 
 bool isPaused;
 static struct Button _resumeButton, _pauseBackToMenuButton, _optionsButton;
@@ -123,9 +123,7 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
     _levelWidth = level_width;
     _levelHeight = level_height;
     _heartImg = CP_Image_Load("Assets/heart.png");
-    _playerPortraitImg = CP_Image_Load("Assets/player_portrait.png");
-    _allyPortraitImg = CP_Image_Load("Assets/ally_portrait.png");
-    _barrierPortraitImg = CP_Image_Load("Assets/barrier_portrait.png");
+    _playerPortraitImg = CP_Image_Load("Assets/player_portrait.png");\
     _currentBossHealthWidth = 0.f;
 
     // Reset values
@@ -374,12 +372,12 @@ void spawn_enemies(float dt) {
                 case WAVE_2:
                     _spawnInterval = 1.3f;
                     enemySpeed = 110.f;
-                    enemyMaxHealth = 250;
+                    enemyMaxHealth = 230;
                     enemyDmg = 35;
                     _enemyMaxAttackCD = 1.5f;
                     _roachesMax = 50;
-                    nextSpawnDelayIndex = 7;
-                    nextSpawnDelay = -1.55f;
+                    nextSpawnDelayIndex = 6;
+                    nextSpawnDelay = -1.5f;
                     break;
                 case WAVE_3:
                     if (_boss.state == BOSS_STATE_UNSPAWNED)
@@ -562,13 +560,13 @@ void render_ui(float window_width, float window_height, float mouse_x, float mou
     CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255)); // White
     CP_Settings_TextSize(60);
     char currentWaveStr[10];
-    if (_boss.state == BOSS_STATE_UNSPAWNED) {
-        CP_Settings_Fill(CP_Color_Create(220, 220, 220, 255));
-        sprintf_s(currentWaveStr, sizeof(currentWaveStr), "Wave: %d", currentWave);
-    }
-    else {
+    if (_boss.state != BOSS_STATE_UNSPAWNED) {
         CP_Settings_Fill(CP_Color_Create(255, 127, 127, 255));
         sprintf_s(currentWaveStr, sizeof(currentWaveStr), "BOSS WAVE");
+    }
+    else if ((_deadEnemies - _roachesMax)) {
+        CP_Settings_Fill(CP_Color_Create(220, 220, 220, 255));
+        sprintf_s(currentWaveStr, sizeof(currentWaveStr), "Wave: %d", currentWave);
     }
     CP_Font_DrawText(currentWaveStr, window_width / 2.f, 35.f);
     #pragma endregion
@@ -598,29 +596,28 @@ void render_ui(float window_width, float window_height, float mouse_x, float mou
     CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_CENTER, CP_TEXT_ALIGN_V_MIDDLE);
 
     // Render remaining enemies
-    CP_Settings_Fill(CP_Color_Create(200, 200, 200, 255));
-    CP_Settings_TextSize(25.f);
-    char remainingStr[16];
-    sprintf_s(remainingStr, sizeof(remainingStr), "Remaining: %d", (_roachesMax - _deadEnemies) + (_boss.state != BOSS_STATE_UNSPAWNED));
-    CP_Font_DrawText(remainingStr, window_width / 2.f, 75.f);
+    if ((_roachesMax - _deadEnemies)) {
+        CP_Settings_Fill(CP_Color_Create(200, 200, 200, 255));
+        CP_Settings_TextSize(25.f);
+        char remainingStr[16];
+        sprintf_s(remainingStr, sizeof(remainingStr), "Remaining: %d", (_roachesMax - _deadEnemies) + (_boss.state != BOSS_STATE_UNSPAWNED));
+        CP_Font_DrawText(remainingStr, window_width / 2.f, 75.f);
+    }
 
     // Render placeables on UI
     CP_Settings_Fill(CP_Color_Create(220, 220, 220, 255));
     CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_LEFT, CP_TEXT_ALIGN_V_MIDDLE);
     CP_Settings_TextSize(30.f);
-    char barrierStr[7];
-    char allyStr[7];
-    sprintf_s(barrierStr, sizeof(barrierStr), "%d / %d", get_barrier_count(), MAX_BARRIERS);
-    sprintf_s(allyStr, sizeof(allyStr), "%d / %d", get_ally_count(), MAX_ALLIES);
-    CP_Font_DrawText(barrierStr, window_width - 140.f, 30.f);
-    CP_Font_DrawText(allyStr, window_width - 140.f, 70.f);
+    char barrierAmountStr[7];
+    char allyAmountStr[7];
+    sprintf_s(barrierAmountStr, sizeof(barrierAmountStr), "%d / %d", get_barrier_count(), MAX_BARRIERS);
+    sprintf_s(allyAmountStr, sizeof(allyAmountStr), "%d / %d", get_ally_count(), MAX_ALLIES);
+    CP_Font_DrawText(barrierAmountStr, window_width - 120.f, 30.f);
+    CP_Font_DrawText(allyAmountStr, window_width - 120.f, 70.f);
+    CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_RIGHT, CP_TEXT_ALIGN_V_MIDDLE);
+    CP_Font_DrawText("Barricades:", window_width - 140.f, 30.f);
+    CP_Font_DrawText("Sentries:", window_width - 140.f, 70.f);
     CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_CENTER, CP_TEXT_ALIGN_V_MIDDLE);
-
-    // Placeables portraits
-    float barrierHeight = get_preserved_heightf(CP_Image_GetWidth(_barrierPortraitImg), CP_Image_GetHeight(_barrierPortraitImg), 30.f),
-        allyHeight = get_preserved_heightf(CP_Image_GetWidth(_allyPortraitImg), CP_Image_GetHeight(_allyPortraitImg), 30.f);
-    CP_Image_Draw(_barrierPortraitImg, window_width - 65.f, 30.f, 30.f, barrierHeight, 200);
-    CP_Image_Draw(_allyPortraitImg, window_width - 65.f, 70.f, 30.f, allyHeight, 200);
 
     // Render boss health bar
     if (_boss.state != BOSS_STATE_UNSPAWNED && _boss.state != BOSS_STATE_DIED) {
@@ -662,7 +659,7 @@ void render_ui(float window_width, float window_height, float mouse_x, float mou
 
     #pragma region Buffs
     render_buff_slot(&buffSlot, window_width, window_height);
-    render_buff(&activeBuffs, window_width, window_height, dt);
+    render_buff(&activeBuffs, window_width, window_height, isPaused ? 0.f : dt);
     #pragma endregion
     
 }
@@ -955,6 +952,7 @@ void enemy_move_attack(float dt) {
 }
 
 void buff_update(float dt) {
+    if (isPaused) return;
     BuffType randomBuff = update_buff_meter(&playerInstance, dt);
     // Apply the buff if it is upgrades buff
     if (randomBuff) {
@@ -1023,8 +1021,6 @@ void dispose_resources(void) {
         CP_Image_Free(&playerInstance.img);
     CP_Image_Free(&_heartImg);
     CP_Image_Free(&_playerPortraitImg);
-    CP_Image_Free(&_allyPortraitImg);
-    CP_Image_Free(&_barrierPortraitImg);
     
     for (int i = 0; i < _roachesMax; i++) {
         struct ChocoRoach roach = _roaches[i];

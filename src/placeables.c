@@ -7,6 +7,7 @@
 #include "enemy.h"
 #include "level1.h"
 #include "camera.h"
+#include "buff.h"
 
 // Barrier variables
 struct Barrier barriers[MAX_BARRIERS];
@@ -138,12 +139,18 @@ void increment_ally_count(void) {
 #pragma warning( push )
 #pragma warning( disable : 6386)
 void init_ally(int index, CP_Vector pos, float width, float height) {
+
+    int allyLevel = 0;
+    for (int i = 0; i < activeBuffs.buffCount; i++) {
+        if (activeBuffs.buffs[i].type == ALLY_LVL_UP)
+            allyLevel = activeBuffs.buffs[i].level;
+    }
     if (index < MAX_ALLIES)
         allies[index].pos = pos;
         allies[index].width = width;
         allies[index].height = height;
-        allies[index].attackSpeed = 5.35f;
-        allies[index].attackPower = 2;
+        allies[index].attackSpeed = 5.35f + (allyLevel * ALLY_ATTACK_POWER_INCREMENT);
+        allies[index].attackPower = 3; + (allyLevel * ALLY_ATTACK_SPEED_INCREMENT);
 }
 #pragma warning( pop )
 

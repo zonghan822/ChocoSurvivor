@@ -131,19 +131,20 @@ void apply_buff(BuffList* activeBuffs, enum BuffType buff, struct ChocoShooter* 
         }
         break;
     case ALLY_LVL_UP:
-        printf("Ally Level Up!\n");
-        allies->attackPower += 5;
+        printf("Sentry Level Up!\n");
+        allies->attackPower += ALLY_ATTACK_POWER_INCREMENT;
+        allies->attackSpeed += ALLY_ATTACK_SPEED_INCREMENT;
         if (isNotApplied) {
             activeBuffs->buffs[activeBuffs->buffCount - 1].img = CP_Image_Load("Assets/atkbuff.png");
-            activeBuffs->buffs[activeBuffs->buffCount - 1].renderText = "Ally Level Up";
+            activeBuffs->buffs[activeBuffs->buffCount - 1].renderText = "Sentry Level Up";
         }
         break;
     case BARRIER_LVL_UP:
-        printf("Barrier Level Up!\n");
+        printf("Barricade Level Up!\n");
         barrier->health += 10;
         if (isNotApplied) {
             activeBuffs->buffs[activeBuffs->buffCount - 1].img = CP_Image_Load("Assets/atkbuff.png");
-            activeBuffs->buffs[activeBuffs->buffCount - 1].renderText = "Barrier Level Up";
+            activeBuffs->buffs[activeBuffs->buffCount - 1].renderText = "Barricade Level Up";
         }
         break;
     case HEAL:
@@ -155,17 +156,17 @@ void apply_buff(BuffList* activeBuffs, enum BuffType buff, struct ChocoShooter* 
         }
         break;
     case SMART_PISTOL:
-        printf("Smart Pistol Activated!\n");
+        printf("Smart Gun Activated!\n");
         if (isNotApplied) {
             activeBuffs->buffs[activeBuffs->buffCount - 1].img = CP_Image_Load("Assets/atkbuff.png");
-            activeBuffs->buffs[activeBuffs->buffCount - 1].renderText = "Tracking Shots";
+            activeBuffs->buffs[activeBuffs->buffCount - 1].renderText = "Smart Gun";
         }
         break;
     case FROZING_SHOTS:
-        printf("Frozing Shots Activated!\n");
+        printf("Freezing Shots Activated!\n");
         if (isNotApplied) {
             activeBuffs->buffs[activeBuffs->buffCount - 1].img = CP_Image_Load("Assets/atkbuff.png");
-            activeBuffs->buffs[activeBuffs->buffCount - 1].renderText = "Frozing Shots";
+            activeBuffs->buffs[activeBuffs->buffCount - 1].renderText = "Freezing Shots";
         }
         break;
     case MULTI_SHOTS:
@@ -214,7 +215,7 @@ void assign_buff_to_slot(BuffSlot* buffSlot, BuffType buff) {
 
 void render_buff_slot(BuffSlot* buffSlot, float windowWidth, float windowHeight) {
     float slotX[MAX_BUFF_SLOT] = { windowWidth / 10.f };
-    float slotY = windowHeight * 9.f / 10.f;
+    float slotY = windowHeight * 5.5f / 6.5f;
     float slotW = BUFF_ICON_SIDE, slotH = BUFF_ICON_SIDE;
     float gap = 40.f;
 
@@ -277,8 +278,8 @@ void render_buff(BuffList* activeBuffs, float windowWidth, float windowHeight, f
             float moveProgress = min(1, activeBuffs->buffs[i].renderTime - 2);
             float destSide = BUFF_ICON_SIDE / 2;
             float gap = 5.f;
-            float destX = (i * (gap + destSide)) + (windowWidth * 8 / 10);
-            float destY = windowHeight * 14.f / 15.f;
+            float destX = (i * (gap + destSide)) + (windowWidth / 10 * .75f); // (windowWidth / 8 * 10);
+            float destY = 110.f + 20.f; // 110 is info panel y                // windowHeight * 14.f / 15.f;
 
             CP_Vector destPos = { destX, destY };
             CP_Vector moveDirection = (CP_Vector_Subtract(destPos, activeBuffs->buffs[i].renderPos));
@@ -299,11 +300,18 @@ void render_buff(BuffList* activeBuffs, float windowWidth, float windowHeight, f
         }
         case STAYING: {
             float gap = 5.f;
+            float x = (i * (gap + activeBuffs->buffs[i].renderSide)) + (windowWidth / 10 * .75f); // (windowWidth / 8 * 10);
             CP_Image_Draw(activeBuffs->buffs[i].img,
-                (i * (gap + activeBuffs->buffs[i].renderSide)) + (windowWidth * 8 / 10),
-                activeBuffs->buffs[i].renderPos.y,
+                x, activeBuffs->buffs[i].renderPos.y,
                 activeBuffs->buffs[i].renderSide,
                 activeBuffs->buffs[i].renderSide, 255);
+            if (activeBuffs->buffs[i].isTimerBuff) {
+                CP_Settings_Fill(CP_Color_Create(200, 200, 200, 235));
+                CP_Settings_TextSize(32.f);
+                char timerBuf[5];
+                sprintf_s(timerBuf, sizeof(timerBuf), "%d", (int)(activeBuffs->buffs[i].timeLeft));
+                CP_Font_DrawText(timerBuf, x, activeBuffs->buffs[i].renderPos.y + 37.5f);
+            }
             break;
         }      
         }

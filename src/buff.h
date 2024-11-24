@@ -7,6 +7,9 @@
 #define MAX_BUFF_SLOT 3
 #define BUFF_ICON_SIDE 80.f
 
+#define ALLY_ATTACK_POWER_INCREMENT 3
+#define ALLY_ATTACK_SPEED_INCREMENT 0.3f
+
 typedef enum BuffType {
     NO_BUFF,
     ATTACK_UP,
