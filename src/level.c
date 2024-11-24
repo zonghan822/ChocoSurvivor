@@ -303,7 +303,8 @@ void next_wave_or_level(void) {
             _isMovingToNextLevel = true;
             switch (_currentLevel) {
             case GAME_LEVEL_ONE:
-                CP_Engine_SetNextGameState(level_two_init, level_two_update, level_two_exit);
+                // TODO: Victory screen
+                // CP_Engine_SetNextGameState(level_two_init, level_two_update, level_two_exit);
                 break;
             default:
                 return;
@@ -372,7 +373,7 @@ void spawn_enemies(float dt) {
                 case WAVE_2:
                     _spawnInterval = 1.3f;
                     enemySpeed = 110.f;
-                    enemyMaxHealth = 230;
+                    enemyMaxHealth = 215;
                     enemyDmg = 35;
                     _enemyMaxAttackCD = 1.5f;
                     _roachesMax = 50;
