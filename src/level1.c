@@ -154,6 +154,7 @@ static void _render_tutorials() {
 }
 
 static bool _tutCanCancelPlaceablesRmb;
+
 static void _render_mouse_tutorials() {
     CP_Settings_StrokeWeight(5.f);
     CP_Settings_Fill(CP_Color_Create(0, 0, 0, 100));
@@ -237,19 +238,20 @@ void level_one_update(void) {
     if (try_game_over(_windowWidth, _windowHeight, _cursor))
         return; // Game over, so don't do anything else
 
-    if (!isPaused)
+    if (!isPaused && !isWin)
         move_player(&playerInstance, dt, LEVEL_WIDTH, LEVEL_HEIGHT);
     update_camera(playerInstance, dt);
 
     // Function to TRY to proceed to next wave or level
     // Function is slightly hardcoded
-    next_wave_or_level();
    
     // Render background
     CP_Graphics_ClearBackground(CP_Color_Create(170, 170, 170, 255));
     CP_Image_Draw(_levelBg, (LEVEL_WIDTH / 2.f), (LEVEL_HEIGHT / 2.f), LEVEL_WIDTH, LEVEL_HEIGHT, 255);
 
-    enableShooting = !isPaused;
+    next_wave_or_level();
+
+    enableShooting = !isPaused && !isWin;
 
     // Spawn enemies
     spawn_enemies(dt);
@@ -273,7 +275,7 @@ void level_one_update(void) {
     /*********************************
          Movement and Attack Logic
     **********************************/
-    if (!isPaused)
+    if (!isPaused && !isWin)
         player_shoot(dt, enableShooting, mouseX, mouseY);
     check_collision(); // For player
     enemy_move_attack(dt);
@@ -285,13 +287,11 @@ void level_one_update(void) {
     render_ui(_windowWidth, _windowHeight, mouseX, mouseY, dt);
     try_pause(_windowWidth, _windowHeight);
     _render_mouse_tutorials();
+    _render_victory_page(_windowWidth, _windowHeight);
+
     render_cursor(_cursor);
     apply_camera();
 
-    // Exit to Main Menu
-    if (!isPaused && CP_Input_KeyTriggered(KEY_Q)) {
-        CP_Engine_SetNextGameState(main_menu_init, main_menu_update, main_menu_exit);
-    }
 }
 
 void level_one_exit(void) {

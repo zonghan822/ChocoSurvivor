@@ -121,9 +121,9 @@ void dispose_barriers(void) {
 // Ally Functions
 void init_ally_images(void) {
     allyImages[0] = CP_Image_Load("Assets/ally_lvl1.png");
-    /*allyImages[1] = CP_Image_Load("Assets/barrier_2.png");
-    allyImages[2] = CP_Image_Load("Assets/barrier_3.png");
-    allyImages[3] = CP_Image_Load("Assets/barrier_4.png");*/
+    allyImages[1] = CP_Image_Load("Assets/ally_lvl1.png");
+    allyImages[2] = CP_Image_Load("Assets/ally_lvl1.png");
+    allyImages[3] = CP_Image_Load("Assets/ally_lvl1.png");
 }
 
 int get_ally_count(void) {

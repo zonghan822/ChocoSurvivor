@@ -84,6 +84,7 @@ BuffType tempSlot;
 enum SpawnWave currentWave;
 
 static struct Button _gameOverMenuButton;
+static struct Button _victoryMenuButton;
 static bool _isMovingToNextLevel;
 static bool _hasPlayedGameOverMusic,
     _hasPlayedNewWaveMusic;
@@ -92,7 +93,7 @@ static float _levelWidth, _levelHeight;
 static CP_Image _heartImg;
 static CP_Image _playerPortraitImg;
 
-bool isPaused;
+bool isPaused, isWin;
 static struct Button _resumeButton, _pauseBackToMenuButton, _optionsButton;
 
 // ***************** Naming Convention ***************** //
@@ -129,7 +130,7 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
     _currentBossHealthWidth = 0.f;
 
     // Reset values
-    isPaused = false;
+    isPaused = isWin = false;
     _isMovingToNextLevel = false;
     _hasPlayedGameOverMusic = false;
     _hasPlayedNewWaveMusic = false;
@@ -140,7 +141,7 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
     _currentBarrierState = BARRIER_IDLE;
     _obstaclesCount = 0;
     _worldClipsCount = 0;
-    _waveDelay = 10.f;
+    _waveDelay = 1.f;
     _enemySpawnIndex = 0;
     _waveTimer = 0.f;
     _spawnTimer = 0.f;
@@ -170,6 +171,8 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
 
     _gameOverMenuButton = init_button(halfWindowWidth, window_height / 1.25f, 300.f, 75.f,
         BUTTON_TYPE_DEFAULT, "Back to Menu", CP_Color_Create(255, 255, 255, 255), 40.f);
+    _victoryMenuButton = init_button(halfWindowWidth, halfWindowHeight + 75.f, 200.f, 50.f,
+        BUTTON_TYPE_DEFAULT, "Back to Menu", CP_Color_Create(255, 255, 255, 255), 24.0f);
 
     CP_Image levelBg = NULL;
 
@@ -303,18 +306,43 @@ void next_wave_or_level(void) {
             _waveTimer = 0.f; // Reset wave timer to start next wave
         }
         else {
+            isWin = true;
             // TODO: Do a proper transition
             _isMovingToNextLevel = true;
-            switch (_currentLevel) {
-            case GAME_LEVEL_ONE:
-                // TODO: Victory screen
-                // CP_Engine_SetNextGameState(level_two_init, level_two_update, level_two_exit);
-                break;
-            default:
-                return;
-            }
+            //switch (_currentLevel) {
+            //case GAME_LEVEL_ONE:
+            //    // CP_Engine_SetNextGameState(level_two_init, level_two_update, level_two_exit);
+            //    break;
+            //default:
+            //    return;
+            //}
         }
     }
+}
+
+void _render_victory_page(float window_width, float window_height) {
+    if (!isWin) return;
+    // TODO: Victory screen
+    CP_Settings_StrokeWeight(0.f);
+    float mouseX = CP_Input_GetMouseX(),
+        mouseY = CP_Input_GetMouseY();
+
+    // Render a dim background overlay
+    CP_Settings_Fill(CP_Color_Create(0, 0, 0, 210));
+    CP_Graphics_DrawRect(window_width / 2.f, window_height / 2.f, window_width, window_height);
+
+    CP_Settings_Fill(CP_Color_Create(220, 220, 220, 255));
+    CP_Settings_TextSize(85.f);
+    CP_Font_DrawText("YOU SAVE THE CHOCOLATE!!!", window_width / 2.f, window_height / 4.f);
+
+    // Render buttons
+    render_button(_victoryMenuButton);
+    update_button_state(&_victoryMenuButton, mouseX, mouseY);
+
+    if (_victoryMenuButton.state == BUTTON_STATE_CLICKED) {
+        CP_Engine_SetNextGameState(main_menu_init, main_menu_update, main_menu_exit);
+    }
+    CP_Settings_StrokeWeight(3.f);
 }
 
 // Returns true if game over, otherwise false
@@ -344,7 +372,7 @@ bool try_game_over(float window_width, float window_height, CP_Image cursor) {
 
 // Enemy spawning function
 void spawn_enemies(float dt) {
-    if (isPaused) return;
+    if (isPaused || isWin) return;
 
     if (_waveTimer >= _waveDelay) {
         if (_spawnInterval > _spawnTimer)
@@ -377,9 +405,9 @@ void spawn_enemies(float dt) {
                     _spawnInterval = 1.3f;
                     enemySpeed = 110.f;
                     enemyMaxHealth = 215;
-                    enemyDmg = 35;
+                    enemyDmg = 50;
                     _enemyMaxAttackCD = 1.5f;
-                    _roachesMax = 50;
+                    _roachesMax = 1;
                     nextSpawnDelayIndex = 6;
                     nextSpawnDelay = -1.5f;
                     break;
@@ -421,7 +449,7 @@ void spawn_enemies(float dt) {
 
 // Placeables function for player
 void player_placeables(float mouse_x, float mouse_y, float dt) {
-    if (isPaused) return;
+    if (isPaused || isWin) return;
 
     // Update allies
     ally_shoot(dt, _roaches, _roachesMax);
@@ -663,7 +691,7 @@ void render_ui(float window_width, float window_height, float mouse_x, float mou
 
     #pragma region Buffs
     render_buff_slot(&buffSlot, window_width, window_height);
-    render_buff(&activeBuffs, window_width, window_height, isPaused ? 0.f : dt);
+    render_buff(&activeBuffs, window_width, window_height, isPaused || isWin ? 0.f : dt);
     #pragma endregion
     
 }
@@ -681,13 +709,13 @@ void render_new_wave_counter(float window_width, float window_height) {
 void render_entities(float dt, float mouse_x) {
 #pragma region Projectiles
     // Update and render bullets
-    if (!isPaused)
+    if (!isPaused && !isWin)
         update_all_projectiles(dt);
     render_all_projectiles();
 #pragma endregion
 
 #pragma region Tower
-    if (!isPaused)
+    if (!isPaused && !isWin)
         update_flicker(&_tower.flickerState, dt);
     if (_tower.flickerState.isVisible) {
         render_tower(_tower);
@@ -716,7 +744,7 @@ void render_entities(float dt, float mouse_x) {
 
 #pragma region Render_Player
     // Update and render player
-    if (!isPaused) {
+    if (!isPaused && !isWin) {
         CP_Vector mouseVec = CP_Vector_Set(mouse_x, 0.f);
         if (playerInstance.pos.x > mouseVec.x)
             playerInstance.width = playerInstance.width > 0 ? -playerInstance.width : playerInstance.width;
@@ -734,7 +762,7 @@ void render_entities(float dt, float mouse_x) {
 // Check for collision
 // Currently it is just for player
 void check_collision(void) {
-    if (isPaused) return;
+    if (isPaused || isWin) return;
 
     // Player
     // Prevent player from moving into non-movable path
@@ -860,7 +888,7 @@ void check_collision(void) {
 }
 
 void enemy_move_attack(float dt) {
-    if (isPaused) return;
+    if (isPaused || isWin) return;
 
     #pragma region Enemy Attack State
     for (int i = 0; _roaches[i].currentState; i++) {
@@ -993,7 +1021,7 @@ void enemy_move_attack(float dt) {
 }
 
 void buff_update(float dt) {
-    if (isPaused) return;
+    if (isPaused || isWin) return;
     BuffType randomBuff = update_buff_meter(&playerInstance, dt);
     // Apply the buff if it is upgrades buff
     if (randomBuff) {

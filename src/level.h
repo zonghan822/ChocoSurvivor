@@ -16,13 +16,15 @@ enum GameLevel {
 
 extern enum SpawnWave currentWave;
 extern bool enableShooting;
-extern bool isPaused;
+extern bool isPaused, isWin;
 
 CP_Image init_level(enum GameLevel level, float level_width, float level_height, float window_width, float window_height);
 
 bool try_pause(float window_width, float window_height);
 
 void next_wave_or_level(void);
+
+void _render_victory_page(float window_width, float window_height);
 
 bool try_game_over(float window_width, float window_height, CP_Image cursor);
 
