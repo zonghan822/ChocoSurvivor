@@ -180,14 +180,15 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
         bossSpeed = 20.f;
         _boss = init_boss_one(BOSS_WIDTH, bossSpeed, 4500, 60, 1.03f);
 
+        CP_Image towerImg = CP_Image_Load("Assets/tower.png");
+
         // Init Defense Target Properties
         _tower.maxHealth = _tower.health = 3;
-        _tower.height = 350.0;
         _tower.width = 170.0;
-        _tower.hitwidth = 80.0;
+        _tower.height = get_preserved_heightf(CP_Image_GetWidth(towerImg), CP_Image_GetHeight(towerImg), _tower.width);
         _tower.pos = CP_Vector_Set(level_width / 1.05f, level_height / 2.f);
         _tower.flickerState.isVisible = true;
-        _tower.img = CP_Image_Load("Assets/tower.png");
+        _tower.img = towerImg;
         // Init Player Properties
         _respawnVec = CP_Vector_Set(_tower.pos.x / 1.15f, _tower.pos.y);
         playerInstance = init_player(_respawnVec, 350.0f, 105, 22, 4.2f);
@@ -1062,6 +1063,7 @@ void dispose_resources(void) {
         CP_Image_Free(&playerInstance.img);
     CP_Image_Free(&_heartImg);
     CP_Image_Free(&_playerPortraitImg);
+    CP_Image_Free(&_tower.img);
     
     for (int i = 0; i < _roachesMax; i++) {
         struct ChocoRoach roach = _roaches[i];
