@@ -130,7 +130,7 @@ void apply_buff(BuffList* activeBuffs, enum BuffType buff, struct ChocoShooter* 
         player->maxHealth += 20;
         player->health = (int)(healthPercent * (float)player->maxHealth);
         if (isNotApplied) {
-            activeBuffs->buffs[activeBuffs->buffCount - 1].img = CP_Image_Load("Assets/healthup.png");
+            activeBuffs->buffs[activeBuffs->buffCount - 1].img = CP_Image_Load("Assets/hpup.png");
             activeBuffs->buffs[activeBuffs->buffCount - 1].renderText = "Health Up";
         }
         break;
