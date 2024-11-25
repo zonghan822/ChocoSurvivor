@@ -213,9 +213,9 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
 
         // Clips
         // Enemy clips
-        struct Rectangle oweoMissesEnemyClip = { .pos = CP_Vector_Set(885.f, 290.f), .width = 212.f, .height = 332.f };
-        struct Rectangle enemyClip1 = { .pos = CP_Vector_Set(710.f, 450.f), .width = 230.f, .height = 150.f };
-        struct Rectangle enemyClip2 = { .pos = CP_Vector_Set(1045.f, 450.f), .width = 230.f, .height = 150.f };
+        struct Rectangle oweoMissesEnemyClip = { .pos = CP_Vector_Set(890.f, 290.f), .width = 212.f, .height = 332.f };
+        struct Rectangle enemyClip1 = { .pos = CP_Vector_Set(740.f, 450.f), .width = 270.f, .height = 150.f };
+        struct Rectangle enemyClip2 = { .pos = CP_Vector_Set(1045.f, 450.f), .width = 270.f, .height = 150.f };
         struct Rectangle enemyClip3 = { .pos = CP_Vector_Set(1510.f, 390.f), .width = 450.f, .height = 70.f };
         _enemyClips[0] = oweoMissesEnemyClip;
         _enemyClips[1] = enemyClip1;
@@ -227,7 +227,7 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
         struct Rectangle topClip = { .pos = CP_Vector_Set(level_width / 2, 50.f), .width = level_width , .height = 110.f };
         struct Rectangle botClip = { .pos = CP_Vector_Set(level_width / 2, 833.f), .width = level_width, .height = 106.f };
         struct Rectangle oweoClip = { .pos = CP_Vector_Set(915.f, 351.f), .width = 120.f, .height = 60.f }; // Oreo
-        struct Rectangle missesClip = { .pos = CP_Vector_Set(830.f, 190.f), .width = 40.f, .height = 5.f }; // Kisses
+        struct Rectangle missesClip = { .pos = CP_Vector_Set(840.f, 200.f), .width = 40.f, .height = 15.f }; // Kisses
         struct Rectangle columnClip = { .pos = CP_Vector_Set(1520.f, 600.f), .width = 80.f, .height = 360.f };
         _worldClips[1] = topClip;
         _worldClips[2] = botClip;
