@@ -214,9 +214,9 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
         // Clips
         // Enemy clips
         struct Rectangle oweoMissesEnemyClip = { .pos = CP_Vector_Set(890.f, 290.f), .width = 212.f, .height = 332.f };
-        struct Rectangle enemyClip1 = { .pos = CP_Vector_Set(740.f, 450.f), .width = 270.f, .height = 150.f };
-        struct Rectangle enemyClip2 = { .pos = CP_Vector_Set(1045.f, 450.f), .width = 270.f, .height = 150.f };
-        struct Rectangle enemyClip3 = { .pos = CP_Vector_Set(1510.f, 390.f), .width = 450.f, .height = 70.f };
+        struct Rectangle enemyClip1 = { .pos = CP_Vector_Set(892.5f, 450.f), .width = 540.f, .height = 150.f };
+        struct Rectangle enemyClip2 = { .pos = CP_Vector_Set(1510.f, 390.f), .width = 450.f, .height = 70.f };
+        struct Rectangle enemyClip3 = { .pos = CP_Vector_Set(2070.f, 350.f), .width = 400.f, .height = 220.f };
         _enemyClips[0] = oweoMissesEnemyClip;
         _enemyClips[1] = enemyClip1;
         _enemyClips[2] = enemyClip2;
