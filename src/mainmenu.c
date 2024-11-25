@@ -18,10 +18,11 @@ static struct Button _playButton, _optionsButton, _creditsButton, _quitButton;
 static CP_Image _cursor;
 
 // DigiPen logo
-static float _digiPenLogoTimer;
+// Show only once, so it doesn't show again after going back to menu
+static float _digiPenLogoTimer = 0.f;
 static CP_Image _digiPenLogoImg;
-static float _digiPenLogoWidth;
-static int _digiPenLogoAlpha, _digiPenScreenAlpha;
+static float _digiPenLogoWidth = 0.f;
+static int _digiPenLogoAlpha = 255, _digiPenScreenAlpha = 255;
 
 static float _windowWidth, _windowHeight;
 static float _buttonRectX, _buttonRectY, _buttonRectHeight, _buttonRectWidth;
@@ -44,9 +45,6 @@ void main_menu_init(void) {
 	_buttonRectHeight = 85.0f;
 	_buttonRectWidth = 300.0f;
 
-	_digiPenLogoWidth = 0.f;
-	_digiPenLogoTimer = 0.f;
-	_digiPenScreenAlpha = _digiPenLogoAlpha = 255;
 	_digiPenLogoImg = CP_Image_Load("Assets/DigiPen_Singapore_WEB_WHITE.png");
 
 	CP_Color white = CP_Color_Create(255, 255, 255, 255);
@@ -163,6 +161,7 @@ void main_menu_update(void) {
 void main_menu_exit(void) {
 	CP_Image_Free(&_cursor);
 	CP_Image_Free(&_digiPenLogoImg);
+	_digiPenLogoTimer = 4.51f;
 
 	dispose_sounds();
 	dispose_tilemap();
