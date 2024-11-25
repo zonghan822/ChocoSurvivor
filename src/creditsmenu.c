@@ -7,7 +7,14 @@
 static bool _isCreditsActive = false;
 static bool _isInitialized;
 static struct Button _backToMenuButton;
-static struct Rectangle _creditsPanel = { .width = 800, .height = 550 };
+static struct Rectangle _creditsPanel = { .width = 800, .height = 700 };
+
+static enum CreditsPage {
+	PAGE_NULL,
+	CREDITS_PAGE_ONE,
+	CREDITS_PAGE_TWO,
+	CREDITS_PAGE_THREE
+} creditsPage;
 
 static void _init(float window_width, float window_height) {
 	CP_Color white = CP_Color_Create(255, 255, 255, 255);
@@ -16,6 +23,9 @@ static void _init(float window_width, float window_height) {
 
 	_backToMenuButton = init_button(_creditsPanel.pos.x, _creditsPanel.pos.y + _creditsPanel.height / 2.5f,
 		200.f, 50.f, BUTTON_TYPE_DEFAULT, "Back to Menu", white, 24.f);
+
+
+	creditsPage = PAGE_NULL;
 }
 
 bool is_credits_menu_open() {
@@ -30,6 +40,12 @@ void render_credits_menu(float mouse_x, float mouse_y, float window_width, float
 		// Open credits
 		_isCreditsActive = true;
 	}
+	
+	if (CP_Input_MouseTriggered(MOUSE_BUTTON_LEFT)) {
+		if (is_mouse_on_rect(_creditsPanel, mouse_x, mouse_y)) {
+			creditsPage = creditsPage + 1 > 3 ? 1 : creditsPage + 1;
+		}
+	}
 
 	// Semi translucent background
 	CP_Settings_StrokeWeight(0.f);
@@ -41,10 +57,66 @@ void render_credits_menu(float mouse_x, float mouse_y, float window_width, float
 	render_panel(_creditsPanel.width, _creditsPanel.height, _creditsPanel.pos.x, _creditsPanel.pos.y);
 	render_button(_backToMenuButton);
 
-	CP_Settings_TextSize(65.0f);
-	CP_Font_DrawText("CREDITS", _creditsPanel.pos.x, (_creditsPanel.pos.y - _creditsPanel.height / 2.f) * 1.55f);
+	CP_Settings_TextSize(25.0f);
+	CP_Settings_Fill(CP_Color_Create(255, 255, 255, 255));
+	CP_Font_DrawText("All content copyright 2024 DigiPen Institute of Technology Singapore.", _creditsPanel.pos.x, (_creditsPanel.pos.y + _creditsPanel.height / 3.f) - 20.f);
+	CP_Font_DrawText("All Rights Reserved", _creditsPanel.pos.x, _creditsPanel.pos.y + _creditsPanel.height / 3.f);
 
-	CP_Settings_TextSize(30.0f);
+	switch (creditsPage) {
+	case CREDITS_PAGE_ONE: {
+		CP_Settings_TextSize(65.0f);
+		CP_Font_DrawText("CREDITS", _creditsPanel.pos.x, (_creditsPanel.pos.y - _creditsPanel.height / 2.f) * 1.65f);
+
+		CP_Settings_TextSize(45.0f);
+		CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_CENTER, CP_TEXT_ALIGN_V_MIDDLE);
+		CP_Font_DrawText("TEAM CHOCO LATTE", (_creditsPanel.pos.x - _creditsPanel.width / 4.f), (_creditsPanel.pos.y - _creditsPanel.height / 4.f));
+		CP_Font_DrawText("INSTRUCTORS", (_creditsPanel.pos.x + _creditsPanel.width / 4.f), (_creditsPanel.pos.y - _creditsPanel.height / 4.f));
+		CP_Font_DrawText("SPECIAL THANKS", _creditsPanel.pos.x, _creditsPanel.pos.y + 80.f);
+
+		float lineGap = 50.f;
+		CP_Settings_TextSize(40.0f);
+		CP_Font_DrawText("LAW ZONG HAN", (_creditsPanel.pos.x - _creditsPanel.width / 4.f), (_creditsPanel.pos.y - _creditsPanel.height / 4.f) + lineGap);
+		CP_Font_DrawText("DALTON KOH", (_creditsPanel.pos.x - _creditsPanel.width / 4.f), (_creditsPanel.pos.y - _creditsPanel.height / 4.f + (2 * lineGap)));
+		CP_Font_DrawText("FADZLY", (_creditsPanel.pos.x - _creditsPanel.width / 4.f), (_creditsPanel.pos.y - _creditsPanel.height / 4.f + (3 * lineGap)));
+
+		CP_Font_DrawText("CHENG DING XIANG", (_creditsPanel.pos.x + _creditsPanel.width / 4.f), (_creditsPanel.pos.y - _creditsPanel.height / 4.f) + lineGap);
+		CP_Font_DrawText("GERALD WONG", (_creditsPanel.pos.x + _creditsPanel.width / 4.f), (_creditsPanel.pos.y - _creditsPanel.height / 4.f + (2 * lineGap)));
+		CP_Font_DrawText("SOROOR", (_creditsPanel.pos.x + _creditsPanel.width / 4.f), (_creditsPanel.pos.y - _creditsPanel.height / 4.f + (3 * lineGap)));
+
+		CP_Font_DrawText("ANJANA RAJENDRAN", _creditsPanel.pos.x, _creditsPanel.pos.y + 80.f + lineGap);
+		
+		break;
+	}
+	case CREDITS_PAGE_TWO: {
+		CP_Settings_TextSize(45.0f);
+		CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_CENTER, CP_TEXT_ALIGN_V_MIDDLE);
+		CP_Font_DrawText("CREATED AT", _creditsPanel.pos.x, (_creditsPanel.pos.y - _creditsPanel.height/2) + 80.f);
+		CP_Font_DrawText("PRESIDENT", _creditsPanel.pos.x, _creditsPanel.pos.y - 140.f);
+		CP_Font_DrawText("EXECUTIVES", _creditsPanel.pos.x, _creditsPanel.pos.y);
+
+		float lineGap = 50.f;
+		CP_Settings_TextSize(40.0f);
+		CP_Font_DrawText("Digipen Institute of Technology Singapore", _creditsPanel.pos.x, (_creditsPanel.pos.y - _creditsPanel.height/2) + 80.f + lineGap);
+		CP_Font_DrawText("CLAUDE COMAIR", _creditsPanel.pos.x, _creditsPanel.pos.y - 150.f + lineGap);
+
+		lineGap = 40.f;
+		CP_Settings_TextSize(35.0f);
+		CP_Font_DrawText("JASON CHU | MICHELE COMAIR | CHRISTOPHER COMAIR", _creditsPanel.pos.x, _creditsPanel.pos.y + lineGap);
+		CP_Font_DrawText("ALEXANDER COMAIR | MICHAEL GATS | TAN CHEK MING", _creditsPanel.pos.x, _creditsPanel.pos.y + (2 * lineGap));
+		CP_Font_DrawText("PRASANNA GHALI | MANDY WONG | JOHNNY DEEK", _creditsPanel.pos.x, _creditsPanel.pos.y + (3 * lineGap));
+		break;
+	}
+	case CREDITS_PAGE_THREE: {
+		CP_Settings_TextSize(45.0f);
+		CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_CENTER, CP_TEXT_ALIGN_V_MIDDLE);
+		CP_Font_DrawText("MADE WITH:", _creditsPanel.pos.x, (_creditsPanel.pos.y - _creditsPanel.height / 3));
+
+		float lineGap = 50.f;
+		CP_Settings_TextSize(40.0f);
+		CP_Font_DrawText("ASSETS FROM ...", _creditsPanel.pos.x, (_creditsPanel.pos.y - _creditsPanel.height / 3) + lineGap);
+		CP_Font_DrawText("SOUNDS FROM ...", _creditsPanel.pos.x, (_creditsPanel.pos.y - _creditsPanel.height / 3) + (2 * lineGap));
+	}
+	}
 	
 	
 	update_button_state(&_backToMenuButton, mouse_x, mouse_y);
