@@ -33,7 +33,7 @@ static float _previousPlayerSpeed = 0.f;
 void dispose_boss(struct Boss* boss) {
 	if (boss == NULL) return;
 	boss->hitbox.pos = boss->pos = CP_Vector_Set(-500.f, -500.f);
-	CP_Image_Free(boss->img);
+	CP_Image_Free(&boss->img);
 	/*free(boss->move);
 	free(boss->primaryAttack);
 	free(boss->canPrimaryAttack);
@@ -81,7 +81,9 @@ static void _move_to_target(struct Boss* boss, struct Rectangle hitbox, float dt
 
 struct Boss init_boss_one(float width, float speed, int health, int attack_power, float attack_speed) {
 	CP_Image img = CP_Image_Load("Assets/boss_lvl1.png");
-	float preservedHeight = get_preserved_heightf(CP_Image_GetWidth(img), CP_Image_GetHeight(img), width);
+	float imgWidth = ((float)CP_Image_GetWidth(img)),
+		imgHeight = ((float)CP_Image_GetHeight(img));
+	float preservedHeight = get_preserved_heightf(imgWidth, imgHeight, width);
 	_secAtkDelay = _secAtkCooldown = _priAtkDelay = _priAtkCooldown = 0.f;
 	_chargeTo = _meleeOneVec = CP_Vector_Zero();
 	_chargeProgress = 0.f;
@@ -302,7 +304,7 @@ void render_boss_one_sec_atk_telegraph(struct Boss boss, struct ChocoShooter pla
 	rectLeftMid.x -= delta.x < 0 ? -(distancePadding / 2.f) : (distancePadding / 2.f);
 	CP_Graphics_DrawRectAdvanced(rectLeftMid.x, rectLeftMid.y,
 		distance,
-		maxDistance, angle * (180.f / M_PI), 0.f);
+		maxDistance, angle * (180.f / (float)M_PI), 0.f);
 }
 
 int can_boss_one_sec_atk(struct Boss boss, struct ChocoShooter player) {

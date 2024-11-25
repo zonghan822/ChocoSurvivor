@@ -25,8 +25,8 @@ struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth,
     chocoRoach.currentState = ENEMY_STATE_IDLE;
     chocoRoach.hitbox.pos.x = chocoRoach.pos.x + ENEMY_HITBOX_OFFSET_X(chocoRoach.width);
     chocoRoach.hitbox.pos.y = chocoRoach.pos.y + ENEMY_HITBOX_OFFSET_Y(chocoRoach.height);
-    chocoRoach.hitbox.width = 0.8 * chocoRoach.width;
-    chocoRoach.hitbox.height = 0.75 * chocoRoach.height;
+    chocoRoach.hitbox.width = 0.8f * chocoRoach.width;
+    chocoRoach.hitbox.height = 0.75f * chocoRoach.height;
     chocoRoach.healthBarDisplayTime = 0.f;
     chocoRoach.isTakingDamage = false;
     chocoRoach.barrierAttack = MAX_BARRIERS;
@@ -81,7 +81,7 @@ static int _comp(const void* a, const void* b)
         return -1;
     /*if (((struct ChocoRoach*)a)->pos.y == ((struct ChocoRoach*)b)->pos.y)
         return ((struct ChocoRoach*)a)->pos.x - ((struct ChocoRoach*)b)->pos.x;*/
-    return ((struct ChocoRoach*)a)->pos.y - ((struct ChocoRoach*)b)->pos.y;
+    return (int)(((struct ChocoRoach*)a)->pos.y - ((struct ChocoRoach*)b)->pos.y);
 }
 
 void sort_enemies(struct ChocoRoach* roaches, int size) {

@@ -39,10 +39,10 @@ int player_take_damage(struct ChocoShooter* player, int damage) {
     return 0;
 }
 
-struct ChocoShooter init_player(CP_Vector pos, float speed, float maxHealth, int atk, float fireRate) {
+struct ChocoShooter init_player(CP_Vector pos, float speed, int maxHealth, int atk, float fireRate) {
     _isDashing = false;
     _dashProgress = 0.0;
-    _lastDash = 2.1;
+    _lastDash = 2.1f;
     _dashTo = CP_Vector_Zero();
     _walkSoundTimer = WALK_SOUND_INTERVAL;
 
@@ -171,6 +171,6 @@ void move_player(struct ChocoShooter *player, float dt, float level_width, float
     }
 }
 
-void render_player(struct ChocoShooter player, float alpha) {
+void render_player(struct ChocoShooter player, int alpha) {
     CP_Image_Draw(player.img, player.pos.x, player.pos.y, player.width, player.height, alpha);
 }

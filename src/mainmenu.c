@@ -72,7 +72,7 @@ void main_menu_update(void) {
 
 	// Options menu is open
 	if (is_options_menu_open()) {
-		render_options_menu(mouseX, mouseY, _windowWidth, _windowHeight);
+		render_options_menu(mouseX, mouseY, (float)_windowWidth, (float)_windowHeight);
 	}
 	else {
 		// Play
@@ -81,7 +81,7 @@ void main_menu_update(void) {
 
 		// Options
 		if (_optionsButton.state == BUTTON_STATE_CLICKED)
-			render_options_menu(mouseX, mouseY, _windowWidth, _windowHeight);
+			render_options_menu(mouseX, mouseY, (float)_windowWidth, (float)_windowHeight);
 
 		// Maybe Credits?
 
@@ -92,9 +92,11 @@ void main_menu_update(void) {
 
 	CP_Settings_ImageMode(CP_POSITION_CORNER);
 	float cursorWidth = 60.f;
+	float cursorImgWidth = ((float)CP_Image_GetWidth(_cursor)),
+		cursorImgHeight = ((float)CP_Image_GetHeight(_cursor));
 	// 20.f is to correct its draw position with the actual cursor position
 	CP_Image_Draw(_cursor, mouseX - 20.f, mouseY, cursorWidth,
-		get_preserved_heightf(CP_Image_GetWidth(_cursor), CP_Image_GetHeight(_cursor), cursorWidth), 255);
+		get_preserved_heightf(cursorImgWidth, cursorImgHeight, cursorWidth), 255);
 	CP_Settings_ImageMode(CP_POSITION_CENTER);
 }
 

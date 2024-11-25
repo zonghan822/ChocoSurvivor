@@ -152,7 +152,7 @@ static enum SoundGroup _get_sound_group(enum SoundType sound_type) {
 }
 
 static void _play_sound_random(enum SoundType sound_type, float vol, enum SoundGroup sound_group) {
-	srand(time(NULL));
+	srand((unsigned int)time(NULL));
 	int randomNumber = 0;
 	
 	switch (sound_type) {

@@ -86,7 +86,9 @@ void render_cursor(CP_Image cursor) {
     float mouseX = CP_Input_GetMouseX(),
         mouseY = CP_Input_GetMouseY();
     // 20.f is to correct its draw position with the actual cursor position
+    float cursorImgWidth = ((float)CP_Image_GetWidth(cursor)),
+        cursorImgHeight = ((float)CP_Image_GetHeight(cursor));
     CP_Image_Draw(cursor, mouseX - 20.f, mouseY, cursorWidth,
-        get_preserved_heightf(CP_Image_GetWidth(cursor), CP_Image_GetHeight(cursor), cursorWidth), 255);
+        get_preserved_heightf(cursorImgWidth, cursorImgHeight, cursorWidth), 255);
     CP_Settings_ImageMode(CP_POSITION_CENTER);
 }

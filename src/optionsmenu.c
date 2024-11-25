@@ -5,6 +5,7 @@
 #include "audio.h"
 #include "panel.h"
 #include <stdbool.h>
+#include <stdio.h>
 
 static bool _isOptionsActive = false;
 static bool _isInitialized;

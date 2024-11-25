@@ -61,7 +61,7 @@ static int _comp(const void* a, const void* b) {
         return 1;
     if (!(((struct Barrier*)b)->health))
         return -1;
-    return ((struct Barrier*)a)->pos.y - ((struct Barrier*)b)->pos.y;
+    return (int)(((struct Barrier*)a)->pos.y - ((struct Barrier*)b)->pos.y);
 }
 
 void sort_barriers(void) {
@@ -148,8 +148,8 @@ void init_ally(int index, CP_Vector pos, float width, float height) {
         allies[index].pos = pos;
         allies[index].width = width;
         allies[index].height = height;
-        allies[index].attackSpeed = 5.35f + (allyLevel * ALLY_ATTACK_POWER_INCREMENT);
-        allies[index].attackPower = 3; + (allyLevel * ALLY_ATTACK_SPEED_INCREMENT);
+        allies[index].attackSpeed = 5.35f + ((float)allyLevel * ALLY_ATTACK_SPEED_INCREMENT);
+        allies[index].attackPower = 3 + (allyLevel * ALLY_ATTACK_POWER_INCREMENT);
 }
 #pragma warning( pop )
 
@@ -165,8 +165,9 @@ void render_allies() {
             }
             int allyLevel = allyLvl; // PH: Stored here until allies have upgrade images
             CP_Image img = get_ally_image(0);
-            float preservedHeight = get_preserved_heightf(CP_Image_GetWidth(img),
-                CP_Image_GetHeight(img), allies[i].width);
+            float imgWidth = ((float)CP_Image_GetWidth(img)),
+                imgHeight = ((float)CP_Image_GetHeight(img));
+            float preservedHeight = get_preserved_heightf(imgWidth, imgHeight, allies[i].width);
             CP_Image_Draw(img,
                 allies[i].pos.x, allies[i].pos.y,
                 allies[i].width, fabsf(preservedHeight),

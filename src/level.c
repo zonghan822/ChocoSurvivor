@@ -33,7 +33,7 @@ static int _enemySpawnIndex = 0;
 #pragma endregion
 
 #pragma region Enemy Properties
-static enum AttackTarget {
+enum AttackTarget {
     TARGET_NONE,
     TARGET_PLAYER,
     TARGET_TOWER,
@@ -80,7 +80,6 @@ static enum AllyState _currentAllyState = ALLY_IDLE;
 BuffSlot buffSlot;
 BuffType tempSlot;
 #pragma endregion
-
 
 enum SpawnWave currentWave;
 
@@ -188,11 +187,13 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
         _boss = init_boss_one(BOSS_WIDTH, bossSpeed, 4900, 60, 1.03f);
 
         CP_Image towerImg = CP_Image_Load("Assets/tower.png");
+        float towerImgWidth = ((float)CP_Image_GetWidth(towerImg)),
+            towerImgHeight = ((float)CP_Image_GetHeight(towerImg));
 
         // Init Defense Target Properties
         _tower.maxHealth = _tower.health = 3;
         _tower.width = 170.0;
-        _tower.height = get_preserved_heightf(CP_Image_GetWidth(towerImg), CP_Image_GetHeight(towerImg), _tower.width);
+        _tower.height = get_preserved_heightf(towerImgWidth, towerImgHeight, _tower.width);
         _tower.pos = CP_Vector_Set(level_width / 1.04f, level_height / 2.f);
         _tower.flickerState.isVisible = true;
         _tower.img = towerImg;
@@ -213,8 +214,8 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
         // Clips
         // Enemy clips
         struct Rectangle oweoMissesEnemyClip = { .pos = CP_Vector_Set(885.f, 290.f), .width = 212.f, .height = 332.f };
-        struct Rectangle enemyClip1 = { .pos = CP_Vector_Set(650.f, 450.f), .width = 70.f, .height = 150.f };
-        struct Rectangle enemyClip2 = { .pos = CP_Vector_Set(1130.f, 450.f), .width = 70.f, .height = 150.f };
+        struct Rectangle enemyClip1 = { .pos = CP_Vector_Set(710.f, 450.f), .width = 230.f, .height = 150.f };
+        struct Rectangle enemyClip2 = { .pos = CP_Vector_Set(1045.f, 450.f), .width = 230.f, .height = 150.f };
         struct Rectangle enemyClip3 = { .pos = CP_Vector_Set(1510.f, 390.f), .width = 450.f, .height = 70.f };
         _enemyClips[0] = oweoMissesEnemyClip;
         _enemyClips[1] = enemyClip1;
@@ -239,12 +240,12 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
         CP_Image bossImg = CP_Image_Load("Assets/boss_lvl1.png");
         float bossHeight = get_preserved_heightf((float)CP_Image_GetWidth(bossImg), (float)CP_Image_GetHeight(bossImg), BOSS_WIDTH);
         
-        init_grid(&_enemyGrid, level_width, level_height, 0.8 * ENEMY_WIDTH, 0.75 * enemyHeight);
+        init_grid(&_enemyGrid, level_width, level_height, 0.8f * ENEMY_WIDTH, 0.75f * enemyHeight);
         init_grid(&_bossGrid, level_width, level_height, 77.f / 144.f * BOSS_WIDTH, 166.f / 251.f * bossHeight);
         update_grid(&_enemyGrid, _worldClips, _worldClipsCount, _enemyClips, 4);
         update_grid(&_bossGrid, _worldClips, _worldClipsCount, _enemyClips, 4);
 
-        init_grid(&_enemyGridNB, level_width, level_height, 0.8 * ENEMY_WIDTH, 0.75 * enemyHeight);
+        init_grid(&_enemyGridNB, level_width, level_height, 0.8f * ENEMY_WIDTH, 0.75f * enemyHeight);
         init_grid(&_bossGridNB, level_width, level_height, 77.f / 144.f * BOSS_WIDTH, 166.f / 251.f * bossHeight);
         update_grid(&_enemyGridNB, _worldClips, _worldClipsCount, _enemyClips, 4);
         update_grid(&_bossGridNB, _worldClips, _worldClipsCount, _enemyClips, 4);
@@ -297,6 +298,8 @@ bool try_pause(float window_width, float window_height) {
         CP_Settings_StrokeWeight(3.f);
         return true;
     }
+
+    return false;
 }
 
 // Move to next wave or level, if possible
@@ -526,7 +529,9 @@ void player_placeables(float mouse_x, float mouse_y, float dt) {
             }
         }
         CP_Image prevImg = get_ally_image(allyLvl);
-        float preservedHeight = get_preserved_heightf(CP_Image_GetWidth(prevImg), CP_Image_GetHeight(prevImg), ALLY_WIDTH);
+        float prevImgWidth = ((float)CP_Image_GetWidth(prevImg)),
+            prevImgHeight = ((float)CP_Image_GetHeight(prevImg));
+        float preservedHeight = get_preserved_heightf(prevImgWidth, prevImgHeight, ALLY_WIDTH);
         CP_Image_Draw(prevImg, mouse_x, mouse_y, ALLY_WIDTH, preservedHeight, 128);
 
         if (CP_Input_MouseTriggered(MOUSE_BUTTON_LEFT)) {
@@ -578,8 +583,10 @@ void render_health_bars(float dt) {
 
 void render_health_heart(struct Rectangle entity, int health, int maxHealth) {
     // Set position of the first health icon
+    float heartImgWidth = ((float)CP_Image_GetWidth(_heartImg)),
+        heartImgHeight = ((float)CP_Image_GetHeight(_heartImg));
     float health_icon_w = 45.f;
-    float health_icon_h = get_preserved_heightf(CP_Image_GetWidth(_heartImg), CP_Image_GetHeight(_heartImg), health_icon_w);
+    float health_icon_h = get_preserved_heightf(heartImgWidth, heartImgHeight, health_icon_w);
     float health_icon_y = (entity.pos.y) - (entity.height / 2) - (health_icon_h / 2) - 10.f;
     float health_icon_gap = health_icon_w / 2;
     for (int i = 0; i < health; i++) {
@@ -819,7 +826,7 @@ void check_collision(void) {
                     break;
                 }
                 if (playerProjectiles.projectiles[j].type & TRACKING_PROJECTILE) {
-                    struct Circle radarBullet = { .pos = playerProjectiles.projectiles[j].pos, .diameter = 2 * fabs(playerInstance.width) }; // define bullet radar
+                    struct Circle radarBullet = { .pos = playerProjectiles.projectiles[j].pos, .diameter = 2.f * fabsf(playerInstance.width) }; // define bullet radar
                     if (are_circle_rect_intersecting(radarBullet, _roaches[i].hitbox)) {
                         playerProjectiles.projectiles[j].shootDirection = CP_Vector_Normalize(CP_Vector_Subtract(_roaches[i].hitbox.pos, playerProjectiles.projectiles[j].pos));
                     }
@@ -844,7 +851,7 @@ void check_collision(void) {
                 continue;
             }
             if (playerProjectiles.projectiles[j].type & TRACKING_PROJECTILE) {
-                struct Circle radarBullet = { .pos = playerProjectiles.projectiles[j].pos, .diameter = 2 * fabs(playerInstance.width) }; // define bullet radar
+                struct Circle radarBullet = { .pos = playerProjectiles.projectiles[j].pos, .diameter = 2.f * fabsf(playerInstance.width) }; // define bullet radar
                 if (are_circle_rect_intersecting(radarBullet, _boss.hitbox)) {
                     playerProjectiles.projectiles[j].shootDirection = CP_Vector_Normalize(CP_Vector_Subtract(_boss.hitbox.pos, playerProjectiles.projectiles[j].pos));
                 }
@@ -929,7 +936,7 @@ void enemy_move_attack(float dt) {
         if (_roaches[i].barrierAttack < MAX_BARRIERS)
             continue;
 
-        struct Circle radarRoach = { .pos = _roaches[i].pos, .diameter = 5 * fabs(_roaches[i].width) }; // define enemy radar
+        struct Circle radarRoach = { .pos = _roaches[i].pos, .diameter = 5.f * fabsf(_roaches[i].width) }; // define enemy radar
         if (are_circle_rect_intersecting(radarRoach, playerInstance.hitbox)) { // Check enemy near with player
             _roaches[i].currentState = ENEMY_STATE_MOVING_TO_PLAYER;
             continue;

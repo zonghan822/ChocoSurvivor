@@ -101,8 +101,9 @@ static void _render_tutorials() {
                 y = playerInstance.pos.y - 90.f;
 
             float width = 55.f;
-            float height = get_preserved_heightf(CP_Image_GetWidth(_tutImageSpace),
-                CP_Image_GetHeight(_tutImageSpace), width);
+            float imgWidth = (float)CP_Image_GetWidth(_tutImageSpace),
+                imgHeight = (float)CP_Image_GetHeight(_tutImageSpace);
+            float height = get_preserved_heightf(imgWidth, imgHeight, width);
             CP_Settings_TextSize(35.f);
             CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255));
             CP_Font_DrawTextBox("Press         to dash", x - 135.f, y + 5.f, 255.f);
@@ -212,8 +213,8 @@ void level_one_init(void) {
     _tutImageSpace = CP_Image_Load("Assets/GUI/keyboard_space.png");
 
     // Place tutorial placeables
-    _tutBarrierX = 900.f;
-    _tutBarrierY = 652.f;
+    _tutBarrierX = 895.f;
+    _tutBarrierY = 645.f;
     _tutAllyX = 650.f;
     _tutAllyY = 275.f;
     place_barrier(0, _tutBarrierX, _tutBarrierY);

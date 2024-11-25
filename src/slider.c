@@ -43,8 +43,8 @@ void update_slider_by_mouse(struct Slider* slider, float mouse_x, float mouse_y)
         slider->thumb.pos.x = CP_Math_ClampFloat(mouse_x, xLeft, xRight);
 
         // Get normalized value
-        float v = fabs((xLeft - slider->thumb.pos.x) / slider->track.width);
-        slider->value = CP_Math_ClampFloat(v, 0, 1.f);
+        float normalizedValue = fabsf((xLeft - slider->thumb.pos.x) / slider->track.width);
+        slider->value = CP_Math_ClampFloat(normalizedValue, 0, 1.f);
     }
 
     if (CP_Input_MouseReleased(MOUSE_BUTTON_LEFT))
@@ -53,7 +53,6 @@ void update_slider_by_mouse(struct Slider* slider, float mouse_x, float mouse_y)
 
 void render_slider(struct Slider slider) {
     // Comments are added to explain as much as possible
-    // because it can get confusing
 
     // Nine-Patch Rect / 9 Slicing
 
@@ -72,11 +71,12 @@ void render_slider(struct Slider slider) {
     float baseUCoords[4] = { 0.f, 3.f, 9.f, 12.f };  // 0-3, 3-9, 9-12
     float baseVCoords[4] = { 0.f, 3.f, 9.f, 12.f };  // 0-3, 3-9, 9-12
 
-    // Define fixed edge sizes based on UV slicing
+    // Define fixed edge sizes
     const float baseEdgeWidth = 3.f;
     const float baseEdgeHeight = 3.f;
 
     // Base position slices
+    // Edges are like the offset
     float xBasePos[4] = {
         slider.track.pos.x - slider.track.width / 2.f,                           // Left X
         slider.track.pos.x - slider.track.width / 2.f + baseEdgeWidth,           // Center start

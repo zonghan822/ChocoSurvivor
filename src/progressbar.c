@@ -60,11 +60,12 @@ void render_progressbar(struct ProgressBar progressBar) {
     float baseUCoords[4] = { 0.f, 3.f, 9.f, 12.f };  // 0-3, 3-9, 9-12
     float baseVCoords[4] = { 0.f, 3.f, 9.f, 12.f };  // 0-3, 3-9, 9-12
 
-    // Define fixed edge sizes based on UV slicing
+    // Define fixed edge sizes
     const float baseEdgeWidth = 3.f;
     const float baseEdgeHeight = 3.f;
 
     // Base position slices
+    // Edges are like the offset
     float xBasePos[4] = {
         progressBar.track.pos.x - progressBar.track.width / 2.f,                           // Left X
         progressBar.track.pos.x - progressBar.track.width / 2.f + baseEdgeWidth,           // Center start
@@ -182,5 +183,5 @@ void render_progressbar(struct ProgressBar progressBar) {
 }
 
 void dispose_progressbar(struct ProgressBar* progressBar) {
-    CP_Image_Free(tilemap);
+    CP_Image_Free(&tilemap);
 }

@@ -3,6 +3,8 @@
 #include "panel.h"
 #include "gui.h"
 
+// This is outdated function, but it still works
+// Check slider.c or progressbar.c for updated function and comments
 void render_panel(float width, float height, float x, float y) {
     width = resize_by_divisor(width, 4);
     height = resize_by_divisor(height, 4);

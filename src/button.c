@@ -1,6 +1,6 @@
 #include "button.h"
 #include "hittest.h"
-#include "audio.h"'
+#include "audio.h"
 #include "cprocessing.h"
 #include "utils.h"
 #include "gui.h"
@@ -30,6 +30,8 @@ struct Button init_button(float button_x, float button_y, float button_width, fl
     return button;
 }
 
+// This is outdated function, but it still works
+// Check slider.c or progressbar.c for updated function and comments
 void render_button(struct Button button) {
     // Nine-Patch Rect / 9 Slicing
     float uStart = 51.f, vStart;

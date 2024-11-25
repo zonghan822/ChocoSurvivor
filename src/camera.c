@@ -68,8 +68,6 @@ void update_camera(struct ChocoShooter player, float dt) {
 	CP_Matrix offsetMatrix = CP_Matrix_Translate(_centerOffset);
 
 	// Clamp
-	float windowWidth = CP_System_GetWindowWidth(),
-		windowHeight = CP_System_GetWindowHeight();
 	_currentPosition.x = CP_Math_ClampFloat(_currentPosition.x, -(_maxWidth - _centerOffset.x), -_centerOffset.x);
 	_currentPosition.y = CP_Math_ClampFloat(_currentPosition.y, -(_maxHeight - _centerOffset.y), -_centerOffset.y);
 
