@@ -75,8 +75,8 @@ static void _move_to_target(struct Boss* boss, struct Rectangle hitbox, float dt
 	boss->width = (boss->moveDirection.x < 0.f && boss->width > 0.f) || (boss->moveDirection.x > 0.f && boss->width < 0.f) ? -boss->width : boss->width;
 	boss->pos.x += boss->moveDirection.x * boss->speed * dt;
 	boss->pos.y += boss->moveDirection.y * boss->speed * dt;
-	CP_Vector hitboxPos = { boss->pos.x + BOSS_HITBOX_OFFSET_X(boss->width), boss->pos.y};
-	update_rect_hitbox(&boss->hitbox, 0.f, 0.f, hitboxPos);
+	//CP_Vector hitboxPos = { boss->pos.x + BOSS_HITBOX_OFFSET_X(boss->width), boss->pos.y};
+	update_rect_hitbox(&boss->hitbox, boss->width, boss->pos, boss->width * -0.18f, 0.f);
 }
 
 struct Boss init_boss_one(float width, float speed, int health, int attack_power, float attack_speed) {
@@ -149,8 +149,6 @@ void spawn_boss(struct Boss* boss, float x, float y) {
 	CP_Vector vec = CP_Vector_Set(x, y);
 	boss->pos = vec;
 	boss->state = BOSS_STATE_MOVING_TO_TOWER;
-	CP_Vector hitboxPos = { boss->pos.x + BOSS_HITBOX_OFFSET_X(boss->width), boss->pos.y };
-	update_rect_hitbox(&boss->hitbox, 0.f, 0.f, hitboxPos);
 }
 
 int boss_take_damage(struct Boss* boss, int damage) {

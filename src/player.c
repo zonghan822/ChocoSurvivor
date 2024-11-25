@@ -72,7 +72,7 @@ struct ChocoShooter init_player(CP_Vector pos, float speed, int maxHealth, int a
     return player;
 }
 
-void move_player(struct ChocoShooter *player, float dt, float level_width, float level_height) {
+void move_player(struct ChocoShooter* player, float dt, float level_width, float level_height, const struct Rectangle* clip_entities, const int clip_count) {
     if (_walkSoundTimer < WALK_SOUND_INTERVAL)
         _walkSoundTimer += dt;
     CP_Vector moveDirection = CP_Vector_Zero();
@@ -127,11 +127,19 @@ void move_player(struct ChocoShooter *player, float dt, float level_width, float
     }
 
     // Normalize
+    CP_Vector normalizedVec = CP_Vector_Zero();
     if (moveDirection.x != 0 || moveDirection.y != 0)
-        moveDirection = CP_Vector_Normalize(moveDirection);
+        normalizedVec = CP_Vector_Normalize(moveDirection);
 
-    player->pos.x += moveDirection.x * player->speed * dt;
-    player->pos.y += moveDirection.y * player->speed * dt;
+    moveDirection.x = normalizedVec.x * player->speed * dt;
+    moveDirection.y = normalizedVec.y * player->speed * dt;
+
+    // Check for any collisions, then update the movement direction
+    for (int i = 0; i < clip_count; i++)
+        clamp_pos_clip_rel(player->hitbox, &moveDirection, clip_entities[i]);
+
+    player->pos.x += moveDirection.x;
+    player->pos.y += moveDirection.y;
 
     if (_lastDash < DASH_COOLDOWN)
         _lastDash += dt;
@@ -139,13 +147,13 @@ void move_player(struct ChocoShooter *player, float dt, float level_width, float
     // Dash movement with spacebar
     if (CP_Input_KeyDown(KEY_SPACE) && !_isDashing && _lastDash >= DASH_COOLDOWN) {
         _dashTo = player->pos;
-        _isDashing = TRUE;
+        _isDashing = true;
         _dashProgress = 0.0;
         _lastDash = 0.0;
 
-        if (moveDirection.x != 0 || moveDirection.y != 0) {
-            _dashTo.x += moveDirection.x * DASH_DISTANCE;
-            _dashTo.y += moveDirection.y * DASH_DISTANCE;
+        if (normalizedVec.x != 0 || normalizedVec.y != 0) {
+            _dashTo.x += normalizedVec.x * DASH_DISTANCE;
+            _dashTo.y += normalizedVec.y * DASH_DISTANCE;
         }
     }
 
