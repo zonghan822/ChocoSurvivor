@@ -5,7 +5,8 @@
 #include "camera.h"
 #include "astar.h"
 
-#define BOSS_WIDTH 225.f
+#define BOSS_WIDTH 180.f
+#define BOSS_HITBOX_OFFSET_X(bossWidth) (- 143.f/432.f * bossWidth)
 
 enum BossState {
     BOSS_STATE_UNSPAWNED = -1,

@@ -8,7 +8,7 @@
 
 #define MAX_ENEMY_COUNT 100
 #define ENEMY_WIDTH 60.f
-#define ENEMY_HITBOX_OFFSET_X(enemyWidth) (- 1 / 33.f * enemyWidth)
+#define ENEMY_HITBOX_OFFSET_X(enemyWidth) (- 1.f / 33.f * enemyWidth)
 #define ENEMY_HITBOX_OFFSET_Y(enemyHeight) (- 8.f / 77.f * enemyHeight)
 #define ENEMY_HEALTHBAR_DISPLAY_TIME 3.f
 

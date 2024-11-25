@@ -235,13 +235,13 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
         CP_Image bossImg = CP_Image_Load("Assets/boss_lvl1.png");
         float bossHeight = get_preserved_heightf((float)CP_Image_GetWidth(bossImg), (float)CP_Image_GetHeight(bossImg), BOSS_WIDTH);
         
-        init_grid(&_enemyGrid, level_width, level_height, ENEMY_WIDTH, enemyHeight);
-        init_grid(&_bossGrid, level_width, level_height, BOSS_WIDTH / 2.75f, bossHeight / 2.75f);
+        init_grid(&_enemyGrid, level_width, level_height, 0.8 * ENEMY_WIDTH, 0.75 * enemyHeight);
+        init_grid(&_bossGrid, level_width, level_height, 77.f / 144.f * BOSS_WIDTH, 166.f / 251.f * bossHeight);
         update_grid(&_enemyGrid, _worldClips, _worldClipsCount, _enemyClips, 4);
         update_grid(&_bossGrid, _worldClips, _worldClipsCount, _enemyClips, 4);
 
-        init_grid(&_enemyGridNB, level_width, level_height, ENEMY_WIDTH, enemyHeight);
-        init_grid(&_bossGridNB, level_width, level_height, BOSS_WIDTH / 2.75f, bossHeight / 2.75f);
+        init_grid(&_enemyGridNB, level_width, level_height, 0.8 * ENEMY_WIDTH, 0.75 * enemyHeight);
+        init_grid(&_bossGridNB, level_width, level_height, 77.f / 144.f * BOSS_WIDTH, 166.f / 251.f * bossHeight);
         update_grid(&_enemyGridNB, _worldClips, _worldClipsCount, _enemyClips, 4);
         update_grid(&_bossGridNB, _worldClips, _worldClipsCount, _enemyClips, 4);
         break;
@@ -1046,6 +1046,7 @@ void buff_update(float dt) {
 
     if (tempSlot && buffSlot.buffCount < MAX_BUFF_SLOT) {
         assign_buff_to_slot(&buffSlot, tempSlot);
+        tempSlot = NO_BUFF;
     }
 
     if (CP_Input_KeyTriggered(KEY_1) && buffSlot.buffs[0] != NO_BUFF) {

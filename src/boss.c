@@ -3,7 +3,6 @@
 #include "boss.h"
 #include "player.h"
 #include "utils.h"
-#include "cprocessing.h"
 #include "hittest.h"
 #include "astar.h"
 #include "tower.h"
@@ -76,7 +75,8 @@ static void _move_to_target(struct Boss* boss, struct Rectangle hitbox, float dt
 	boss->width = (boss->moveDirection.x < 0.f && boss->width > 0.f) || (boss->moveDirection.x > 0.f && boss->width < 0.f) ? -boss->width : boss->width;
 	boss->pos.x += boss->moveDirection.x * boss->speed * dt;
 	boss->pos.y += boss->moveDirection.y * boss->speed * dt;
-	update_rect_hitbox(&boss->hitbox, 0.f, 0.f, boss->pos);
+	CP_Vector hitboxPos = { boss->pos.x + BOSS_HITBOX_OFFSET_X(boss->width), boss->pos.y};
+	update_rect_hitbox(&boss->hitbox, 0.f, 0.f, hitboxPos);
 }
 
 struct Boss init_boss_one(float width, float speed, int health, int attack_power, float attack_speed) {
@@ -89,14 +89,11 @@ struct Boss init_boss_one(float width, float speed, int health, int attack_power
 		.img = img,
 		.speed = speed,
 		.pos = CP_Vector_Set(-500.f, -500.f),
-		.hitbox.pos = CP_Vector_Set(-500.f, -500.f),
 		.health = health,
 		.maxHealth = health,
 		.width = width,
 		.height = preservedHeight,
 		.state = BOSS_STATE_UNSPAWNED,
-		.hitbox.width = boss.width,
-		.hitbox.height = boss.height,
 		.attackPower = attack_power,
 		.attackSpeed = attack_speed,
 		.primaryAttack = boss_one_pri_atk,
@@ -105,6 +102,10 @@ struct Boss init_boss_one(float width, float speed, int health, int attack_power
 		.canSecondaryAttack = can_boss_one_sec_atk,
 		.move = boss_one_move
 	};
+	boss.hitbox.pos.x = boss.pos.x + BOSS_HITBOX_OFFSET_X(boss.width);
+	boss.hitbox.pos.y = boss.pos.y;
+	boss.hitbox.width = 77.f / 144.f * boss.width;
+	boss.hitbox.height = 166.f / 251.f * boss.height;
 
 	return boss;
 }
@@ -146,7 +147,8 @@ void spawn_boss(struct Boss* boss, float x, float y) {
 	CP_Vector vec = CP_Vector_Set(x, y);
 	boss->pos = vec;
 	boss->state = BOSS_STATE_MOVING_TO_TOWER;
-	update_rect_hitbox(&boss->hitbox, 0.f, 0.f, vec);
+	CP_Vector hitboxPos = { boss->pos.x + BOSS_HITBOX_OFFSET_X(boss->width), boss->pos.y };
+	update_rect_hitbox(&boss->hitbox, 0.f, 0.f, hitboxPos);
 }
 
 int boss_take_damage(struct Boss* boss, int damage) {
