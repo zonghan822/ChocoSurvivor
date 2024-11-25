@@ -57,8 +57,10 @@ void render_credits_menu(float mouse_x, float mouse_y, float window_width, float
 	CP_Settings_TextSize(25.0f);
 	CP_Settings_Fill(CP_Color_Create(255, 255, 255, 255));
 	CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_CENTER, CP_TEXT_ALIGN_V_MIDDLE);
-	CP_Font_DrawText("All content copyright 2024 DigiPen Institute of Technology Singapore.", _creditsPanel.pos.x, (_creditsPanel.pos.y + _creditsPanel.height / 3.f) - 20.f);
+	CP_Font_Set(CP_Font_Load("Assets/Fonts/PixelifySans/PixelifySans-VariableFont_wght.ttf"));
+	CP_Font_DrawText("All content \xC2\xA9 2024 DigiPen Institute of Technology Singapore.", _creditsPanel.pos.x, (_creditsPanel.pos.y + _creditsPanel.height / 3.f) - 20.f);
 	CP_Font_DrawText("All Rights Reserved", _creditsPanel.pos.x, _creditsPanel.pos.y + _creditsPanel.height / 3.f);
+	CP_Font_Set(CP_Font_Load("Assets/Fonts/Tiny5/Tiny5-Regular.ttf"));
 
 	switch (creditsPage) {
 	case CREDITS_PAGE_ONE: {
