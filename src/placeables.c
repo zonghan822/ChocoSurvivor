@@ -54,8 +54,7 @@ CP_Image get_barrier_image(int barrierLevel) {
     return barrierImages[barrierLevel];
 }
 
-static int _comp(const void* a, const void* b)
-{
+static int _comp(const void* a, const void* b) {
     if (!(((struct Barrier*)a)->health) && !(((struct Barrier*)b)->health))
         return -1;
     if (!(((struct Barrier*)a)->health))

@@ -406,9 +406,9 @@ void spawn_enemies(float dt) {
                     _spawnInterval = 1.3f;
                     enemySpeed = 110.f;
                     enemyMaxHealth = 215;
-                    enemyDmg = 50;
+                    enemyDmg = 35;
                     _enemyMaxAttackCD = 1.5f;
-                    _roachesMax = 1;
+                    _roachesMax = 50;
                     nextSpawnDelayIndex = 6;
                     nextSpawnDelay = -1.5f;
                     break;

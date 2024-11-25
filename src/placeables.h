@@ -14,7 +14,7 @@
 #define BARRIER_RECT_HEIGHT 50.f
 
 #define MAX_ALLIES 3
-#define MAX_ALLIES_IMAGES 1
+#define MAX_ALLIES_IMAGES 4
 #define ALLY_WIDTH 100.f
 #define ALLY_HEIGHT 150.f
 
