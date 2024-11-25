@@ -1,3 +1,21 @@
+/******************************************************************************
+* @filename		boss.c
+* @author(s)	Muhammad Nur Fadzly Bin Zulkifli
+* @DP emails	muhammadnurfadzly.b@digipen.edu
+* @course		Software Engineering Project 1
+* @teamname		Choco Latte
+* @gamename		Choco Survivor
+* @brief:       This file defines the logic for handling boss characters in the
+				game, including movement, attacks, health, and damage. It
+				implements functions for the first boss (`boss_one`), such as
+				primary and secondary attacks, movement using A* pathfinding,
+				and state transitions (e.g., moving to the player or tower).
+				Private variables manage attack delays and cooldowns.
+				The file also includes a function to spawn and render the boss,
+				as well as handle damage and attack effects.
+				Unused code for a second boss (`boss_two`) is commented out.
+******************************************************************************/
+
 #pragma
 #include "cprocessing.h"
 #include "boss.h"
@@ -35,21 +53,6 @@ void dispose_boss(struct Boss* boss) {
 	if (boss == NULL) return;
 	boss->hitbox.pos = boss->pos = CP_Vector_Set(-500.f, -500.f);
 	CP_Image_Free(&boss->img);
-	/*free(boss->move);
-	free(boss->primaryAttack);
-	free(boss->canPrimaryAttack);
-	free(boss->canSecondaryAttack);
-	free(boss->secondaryAttack);
-	free(boss->img);
-
-	boss->move = NULL;
-	boss->primaryAttack = NULL;
-	boss->canPrimaryAttack = NULL;
-	boss->canSecondaryAttack = NULL;
-	boss->secondaryAttack = NULL;
-	boss->img = NULL;
-	free(boss);
-	boss = NULL;*/
 }
 
 static void _move_to_target(struct Boss* boss, struct Rectangle hitbox, float dt, PathNode* grid, PathNode* gridNoBarrier, int nodeCount) {
@@ -228,10 +231,8 @@ void render_boss_one_pri_atk_telegraph() {
 }
 
 int can_boss_one_pri_atk(struct Boss boss, struct ChocoShooter player, struct DefenseTarget tower) {
-	// 80 is min range to snapshot the player's pos for the attack,
-	// then add half width (distance from center origin of both entities)
-	// You want to the boss to attack as soon as the edge of its hitbox is as close
-	// to the edge of the player's hitbox (rather than the center origin)
+	// Min range to snapshot the player's pos for the attack,
+	// then add half width (distance from center origin)
 	float minDistance = BOSS_ONE_PRI_ATK_DISTANCE + (fabsf(boss.hitbox.width) / 2.f);
 	struct Rectangle towerHitbox = get_tower_hitbox(tower);
 	return ((CP_Vector_Distance(boss.hitbox.pos, player.hitbox.pos) <= minDistance + (fabsf(player.hitbox.width) / 2.f)
@@ -269,7 +270,6 @@ void boss_one_sec_atk(struct Boss *boss, struct ChocoShooter* player, struct Def
 	boss->pos.y = CP_Math_LerpFloat(boss->pos.y, _chargeTo.y, _chargeProgress);
 
 	// Damage player
-	// [(boss->hitbox.width / 2) + (player->hitbox.width / 2) + 20.f] is the max distance to get hit by
 	struct Rectangle towerHitbox = get_tower_hitbox(*tower);
 	float distanceToPlayer = CP_Vector_Distance(boss->hitbox.pos, player->hitbox.pos),
 		distanceToTower = CP_Vector_Distance(boss->hitbox.pos, towerHitbox.pos);
@@ -289,6 +289,7 @@ void boss_one_sec_atk(struct Boss *boss, struct ChocoShooter* player, struct Def
 	}
 }
 
+// God bless YoshiP
 void render_boss_one_sec_atk_telegraph(struct Boss boss, struct ChocoShooter player) {
 	if (_chargeProgress != 0.f || boss.state != BOSS_STATE_ATTACKING_SECONDARY) return;
 

@@ -1,3 +1,21 @@
+/******************************************************************************
+* @filename		audio.h
+* @author(s)	Muhammad Nur Fadzly Bin Zulkifli
+* @DP emails	muhammadnurfadzly.b@digipen.edu
+* @course		Software Engineering Project 1
+* @teamname		Choco Latte
+* @gamename		Choco Survivor
+* @brief:       This interface has functions for managing audio in the game,
+				including sound effects, music, and UI sounds. It enumerates
+				different sound types and groups them into categories such
+				as player actions, enemies, projectiles, and UI interactions. 
+				
+				Functions are provided for initialising sounds, playing or
+				stopping sounds, adjusting their volume, and disposing of
+				audio resources. Additionally, advanced controls for sound
+				playback, including volume scaling and looping, are included.
+******************************************************************************/
+
 #pragma once
 
 enum SoundType {

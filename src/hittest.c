@@ -1,3 +1,21 @@
+/******************************************************************************
+* @filename		hittest.c
+* @author(s)	Muhammad Nur Fadzly Bin Zulkifli
+* @DP emails	muhammadnurfadzly.b@digipen.edu
+* @course		Software Engineering Project 1
+* @teamname		Choco Latte
+* @gamename		Choco Survivor
+* @brief:       This file contains functions for 2D collision detection.
+				It includes checks for mouse-over events on rectangles and
+				circles, as well as functions to detect intersections between
+				two circles, two rectangles, or a circle and a rectangle.
+				
+				The file provides functionality for updating rectangle
+				hitboxes based on an entity's position and direction, and for
+				comparing two hitboxes to check if they are the same. These
+				functions are essential for handling geometric interactions.
+******************************************************************************/
+
 #include "hittest.h"
 #include <math.h>
 #include <cprocessing.h>
@@ -32,6 +50,7 @@ int are_circles_intersecting(struct Circle a, struct Circle b) {
 	return distance < r1 + r2;
 }
 
+// Updated for more reliability
 int are_rects_intersecting(struct Rectangle a, struct Rectangle b) {
 	// Half sizes
 	float aHalfWidth = fabsf(a.width) / 2.f,

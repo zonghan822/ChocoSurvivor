@@ -1,3 +1,16 @@
+/******************************************************************************
+* @filename		slider.c
+* @author(s)	Muhammad Nur Fadzly Bin Zulkifli
+* @DP emails	muhammadnurfadzly.b@digipen.edu
+* @course		Software Engineering Project 1
+* @teamname		Choco Latte
+* @gamename		Choco Survivor
+* @brief:       This implementation file defines functions for initialising,
+                updating, and rendering a slider UI element, including support
+                for mouse interaction and visual feedback. Nine-patch slicing
+                is used for customisable `Slider` graphics.
+******************************************************************************/
+
 #include "hittest.h"
 #include "cprocessing.h"
 #include "slider.h"
@@ -51,6 +64,9 @@ void update_slider_by_mouse(struct Slider* slider, float mouse_x, float mouse_y)
         slider->state = SLIDER_STATE_NONE;
 }
 
+// Progressbar.c is the most updated version of 9 slicing
+// This version does not take into account that the leftmost
+// edge is still rendered despite value is 0 (thumb is hiding it)
 void render_slider(struct Slider slider) {
     // Comments are added to explain as much as possible
 

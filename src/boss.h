@@ -1,3 +1,19 @@
+/******************************************************************************
+* @filename		boss.h
+* @author(s)	Muhammad Nur Fadzly Bin Zulkifli
+* @DP emails	muhammadnurfadzly.b@digipen.edu
+* @course		Software Engineering Project 1
+* @teamname		Choco Latte
+* @gamename		Choco Survivor
+* @brief:       This header file declares the `Boss` struct and functions
+                for managing a boss character in the game, including movement,
+                attacks, health, and states. It includes specific functions
+                for the first boss (`boss_one`), such as primary and secondary
+                attacks, movement, and damage handling. Unused functions
+                for a scrapped second boss (boss_two) are also present
+                but can be removed for clarity.
+******************************************************************************/
+
 #pragma once
 #include "cprocessing.h"
 #include "utils.h"

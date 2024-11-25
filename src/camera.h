@@ -1,3 +1,13 @@
+/******************************************************************************
+* @filename		camera.h
+* @author(s)	Muhammad Nur Fadzly Bin Zulkifli
+* @DP emails	muhammadnurfadzly.b@digipen.edu
+* @course		Software Engineering Project 1
+* @teamname		Choco Latte
+* @gamename		Choco Survivor
+* @brief:       These functions manage the topdown 2D camera.
+******************************************************************************/
+
 #pragma once
 #include "cprocessing.h"
 

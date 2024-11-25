@@ -1,3 +1,20 @@
+/******************************************************************************
+* @filename		camera.c
+* @author(s)	Muhammad Nur Fadzly Bin Zulkifli
+* @DP emails	muhammadnurfadzly.b@digipen.edu
+* @course		Software Engineering Project 1
+* @teamname		Choco Latte
+* @gamename		Choco Survivor
+* @brief:       This file handles the camera system. It includes functions to
+				initialise the camera (`init_camera`), update its position and 
+				smooth movement based on the player's location (`update_camera`),
+				and apply the camera transformation during rendering
+				(`apply_camera`). 
+				
+				The camera follows the player while clamping its position
+				within the screen boundaries and applying smooth transitions.
+******************************************************************************/
+
 #include "camera.h"
 #include "player.h"
 #include "cprocessing.h"

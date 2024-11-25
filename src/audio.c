@@ -1,3 +1,17 @@
+/******************************************************************************
+* @filename		audio.c
+* @author(s)	Muhammad Nur Fadzly Bin Zulkifli
+* @DP emails	muhammadnurfadzly.b@digipen.edu
+* @course		Software Engineering Project 1
+* @teamname		Choco Latte
+* @gamename		Choco Survivor
+* @brief:       This file manages the game's audio, loading sound effects,
+				music, and UI sounds, and providing functions to play, stop,
+				adjust volume, and dispose. It includes support for random
+				sound variations (e.g., footsteps, player hurt sounds) and
+				advanced playback options like volume scaling and looping.
+******************************************************************************/
+
 #include "audio.h"
 #include "cprocessing.h"
 #include <stdio.h>

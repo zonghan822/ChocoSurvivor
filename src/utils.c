@@ -1,3 +1,20 @@
+/******************************************************************************
+* @filename		utils.c
+* @author(s)	Muhammad Nur Fadzly Bin Zulkifli
+* @DP emails	muhammadnurfadzly.b@digipen.edu
+* @course		Software Engineering Project 1
+* @teamname		Choco Latte
+* @gamename		Choco Survivor
+* @brief:       This file contains utility functions, including functions to
+                resize dimensions while preserving aspect ratio, clamp entity
+                movement within a boundary, and adjust object positions. It
+                also provides a health bar renderer that adjusts based on the
+                entity's health, and a custom cursor renderer that scales and
+                positions a given cursor image. Additionally, it includes a 
+                helper function to round a dimension up to the nearest multiple
+                of a divisor (mainly for Nine-Patch Rect or 9 Slicing).
+******************************************************************************/
+
 #include <stdlib.h>
 #include <math.h>
 #include <stdio.h>
@@ -45,6 +62,7 @@ float resize_by_divisor(float dimension, int divisor) {
     return dimension;
 }
 
+// Made by Law Zong Han
 void render_health_bar(struct Rectangle entity, int health, int maxHealth) {
     // Set position of health bar
     float healthBarW = entity.width;

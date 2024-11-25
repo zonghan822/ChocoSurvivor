@@ -1,3 +1,16 @@
+/******************************************************************************
+* @filename		utils.h
+* @author(s)	Muhammad Nur Fadzly Bin Zulkifli
+* @DP emails	muhammadnurfadzly.b@digipen.edu
+* @course		Software Engineering Project 1
+* @teamname		Choco Latte
+* @gamename		Choco Survivor
+* @brief:       This header declares utility functions and structures for
+				handling 2D movement and rendering. It includes bit-shift-based
+				movement states (e.g., moving up, down, left, right), and defines
+				Rectangle and Circle structures. 
+******************************************************************************/
+
 #pragma once
 #include "cprocessing.h"
 #include <stdbool.h>
@@ -33,6 +46,9 @@ struct Circle {
 // Resize height preserving aspect ratio
 //void resize_by_height_preservef(float* width, float* height, float new_height);
 
+// widthf and heightf implies that there are funcs or variables in `int` type
+// `CP_Image_GetWidth()`, `CP_Image_GetHeight()`,
+// `CP_System_GetWindowWidth()`, `CP_System_GetWindowHeight()`
 float get_preserved_widthf(float width, float height, float new_height);
 
 float get_preserved_heightf(float width, float height, float new_width);

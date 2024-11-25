@@ -71,7 +71,6 @@ struct Ally {
 // Functions for managing allies
 void init_ally_images(void);
 void init_ally(int index, CP_Vector pos, float width, float height);
-void update_allies(float dt, struct ChocoRoach* enemies, int enemyCount);
 CP_Image get_ally_image(int allyLevel);
 int get_ally_count(void);
 void increment_ally_count(void);

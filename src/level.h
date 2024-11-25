@@ -1,3 +1,22 @@
+/******************************************************************************
+* @filename		level.h
+* @author(s)	Muhammad Nur Fadzly Bin Zulkifli, Law Zong Han
+* @DP emails	muhammadnurfadzly.b@digipen.edu, zonghan.law@digipen.edu
+* @course		Software Engineering Project 1
+* @teamname		Choco Latte
+* @gamename		Choco Survivor
+* @brief:       This interface involves enemy waves, player interactions,
+                and level progression. Enums are included for different spawn
+                waves and game levels, as well as function declarations for 
+                managing game states (such as pausing, victory, and game over
+                conditions).
+
+                It also handles rendering game elements, such as health bars,
+                enemies, and user interfaces, as well as updating the player's
+                actions and spawning mechanics. Debugging functions are
+                provided.
+******************************************************************************/
+
 #pragma once
 #include <stdlib.h>
 #include <stdbool.h>

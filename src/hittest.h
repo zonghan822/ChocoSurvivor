@@ -1,3 +1,13 @@
+/******************************************************************************
+* @filename		hittest.h
+* @author(s)	Muhammad Nur Fadzly Bin Zulkifli
+* @DP emails	muhammadnurfadzly.b@digipen.edu
+* @course		Software Engineering Project 1
+* @teamname		Choco Latte
+* @gamename		Choco Survivor
+* @brief:       This header declares functions for 2D collision detection.
+******************************************************************************/
+
 #pragma once
 #include "cprocessing.h"
 #include "utils.h"
