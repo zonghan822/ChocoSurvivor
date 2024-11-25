@@ -1,3 +1,6 @@
+
+
+
 #include "cprocessing.h"
 #include "astar.h"
 #include "utils.h"
@@ -174,8 +177,8 @@ int find_astar_path(PathNode* grid, int nodeCount, int startNodeIndex, int endNo
 	AStarNode endNode = { .nodeIndex = endNodeIndex, .fCost = 0.f, .gCost = 0.f, .hCost = 0.f, .parentNode = NULL };
 
 	// Initialize open and closed list
-	AStarList openList;
-	AStarList closedList;
+	AStarList openList = {0};
+	AStarList closedList = {0};
 	init_list(&openList, 5);
 	init_list(&closedList, 5);
 

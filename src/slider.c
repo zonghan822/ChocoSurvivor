@@ -43,8 +43,8 @@ void update_slider_by_mouse(struct Slider* slider, float mouse_x, float mouse_y)
         slider->thumb.pos.x = CP_Math_ClampFloat(mouse_x, xLeft, xRight);
 
         // Get normalized value
-        float normalizedValue = fabsf((xLeft - slider->thumb.pos.x) / slider->track.width);
-        slider->value = CP_Math_ClampFloat(normalizedValue, 0, 1.f);
+        float v = (float)(fabs((double)((xLeft - slider->thumb.pos.x) / slider->track.width)));
+        slider->value = CP_Math_ClampFloat(v, 0, 1.f);
     }
 
     if (CP_Input_MouseReleased(MOUSE_BUTTON_LEFT))

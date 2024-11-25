@@ -17,7 +17,7 @@ static struct Button _playButton, _optionsButton, _quitButton;
 static CP_Image _cursor;
 static CP_Color _bg;
 
-static int _windowWidth, _windowHeight;
+static float _windowWidth, _windowHeight;
 static float _buttonRectX, _buttonRectY, _buttonRectHeight, _buttonRectWidth;
 
 void main_menu_init(void) {

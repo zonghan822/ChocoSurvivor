@@ -20,15 +20,15 @@ int is_mouse_on_circle(struct Circle circ, float click_x, float click_y) {
 	float dx = click_x - circ.pos.x,
 		dy = click_y - circ.pos.y,
 		distance = (dx * dx) + (dy * dy),
-		radius = circ.diameter / 2.0f;
+		radius = circ.diameter / 2.f;
 
 	return distance <= (radius * radius);
 }
 
 int are_circles_intersecting(struct Circle a, struct Circle b) {
 	float distance = CP_Vector_Distance(a.pos, b.pos),
-		r1 = a.diameter / 2.0f,
-		r2 = b.diameter / 2.0f;
+		r1 = a.diameter / 2.f,
+		r2 = b.diameter / 2.f;
 	return distance < r1 + r2;
 }
 
@@ -68,7 +68,7 @@ int are_circle_rect_intersecting(struct Circle circ, struct Rectangle rect) {
 }
 
 int is_circle_at_boundary(struct Circle circ, float screen_w, float screen_h) {
-	float radius = circ.diameter / 2.0f;
+	float radius = circ.diameter / 2.f;
 	return circ.pos.x + radius <= 0 || circ.pos.y + radius <= 0 || circ.pos.x + radius >= screen_w || circ.pos.y + radius >= screen_h;
 }
 

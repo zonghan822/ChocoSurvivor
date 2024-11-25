@@ -52,7 +52,7 @@ void render_button(struct Button button) {
     float leftWidth, rightWidth, topHeight, bottomHeight;
     leftWidth = rightWidth = topHeight = bottomHeight = 10.0f;
 
-    // Center stretchable area — remaining part after accounting for corners and edges
+    // Center stretchable area ï¿½ remaining part after accounting for corners and edges
     float centerWidth = button.rect.width - (leftWidth + rightWidth),
         centerHeight = button.rect.height - (topHeight + bottomHeight);
 

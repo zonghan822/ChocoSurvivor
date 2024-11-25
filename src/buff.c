@@ -19,8 +19,8 @@ int update_buff_meter(struct ChocoShooter* player, float dt) {
     if (player->expGained == 0) {
         return 0;
     }
-    int expGainedSpeed = player->maxHealth;
-    float expGained = (float)expGainedSpeed * dt;
+    float expGainedSpeed = (float)player->maxHealth;
+    float expGained = expGainedSpeed * dt;
     player->exp += min(player->expGained, expGained);
     player->expGained = max(0, player->expGained - expGained);
 
@@ -41,8 +41,7 @@ int update_buff_meter(struct ChocoShooter* player, float dt) {
             player->exp -= (float)player->playerMaxExp;
         }
         // increase maxExp
-        int newMaxExp = (int)((float)player->playerMaxExp * EXP_INCREASE_MULTIPLIER);
-        player->playerMaxExp = newMaxExp;
+        player->playerMaxExp = (int)((float)player->playerMaxExp * (float)EXP_INCREASE_MULTIPLIER);
 
         enum BuffType randomBuff = CP_Random_RangeInt(ATTACK_UP, REFLECT_DMG);
         return randomBuff;
@@ -328,7 +327,6 @@ void render_buff(BuffList* activeBuffs, float windowWidth, float windowHeight, f
             float destY = 110.f + 20.f; // 110 is info panel y                // windowHeight * 14.f / 15.f;
 
             CP_Vector destPos = { destX, destY };
-            //CP_Vector moveDirection = (CP_Vector_Subtract(destPos, activeBuffs->buffs[i].renderPos));
 
             activeBuffs->buffs[i].renderPos.x = CP_Math_LerpFloat(activeBuffs->buffs[i].renderPos.x, destX, moveProgress);
             activeBuffs->buffs[i].renderPos.y = CP_Math_LerpFloat(activeBuffs->buffs[i].renderPos.y, destY, moveProgress);
