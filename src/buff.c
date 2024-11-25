@@ -312,7 +312,8 @@ void render_buff(BuffList* activeBuffs, float windowWidth, float windowHeight, f
 
             CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255));
             CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_CENTER, CP_TEXT_ALIGN_V_MIDDLE);
-            CP_Settings_TextSize(50.f);
+            float textSize = showCount == 1  ? 50.f : 40.f;
+            CP_Settings_TextSize(textSize);
             CP_Font_DrawText(activeBuffs->buffs[i].renderText, textPosX, textPosY);
             if (activeBuffs->buffs[i].renderTime >= BUFF_SHOW_TIME)
                 activeBuffs->buffs[i].renderStage = MOVING;

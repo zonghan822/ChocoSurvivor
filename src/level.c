@@ -1089,12 +1089,12 @@ void place_ally(int index, float x, float y) {
 #if _DEBUG
 void debug_render_enemy_grid(void) {
     draw_grid(_enemyGrid.nodes, _enemyGrid.nodeCount); // draw enemy grid for debugging
-    draw_grid(_enemyGridNB.nodes, _enemyGrid.nodeCount); // draw enemy grid for debugging
+    //draw_grid(_enemyGridNB.nodes, _enemyGrid.nodeCount); // draw enemy grid for debugging
 }
 
 void debug_render_boss_grid(void) {
      draw_grid(_bossGrid.nodes, _bossGrid.nodeCount); // draw boss grid for debugging
-     draw_grid(_bossGridNB.nodes, _bossGrid.nodeCount); // draw boss grid for debugging
+     // draw_grid(_bossGridNB.nodes, _bossGrid.nodeCount); // draw boss grid for debugging
 }
 
 void debug_render_clips(void) {
