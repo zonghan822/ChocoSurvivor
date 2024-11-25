@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-#define M_PI 3.14159265358979323846f
+#define M_PI 3.1415927f
 
 // ************* Private variables ************* //
 //         _xAtkDelay is for pre-damage          //
@@ -304,7 +304,7 @@ void render_boss_one_sec_atk_telegraph(struct Boss boss, struct ChocoShooter pla
 	rectLeftMid.x -= delta.x < 0 ? -(distancePadding / 2.f) : (distancePadding / 2.f);
 	CP_Graphics_DrawRectAdvanced(rectLeftMid.x, rectLeftMid.y,
 		distance,
-		maxDistance, angle * (180.f / (float)M_PI), 0.f);
+		maxDistance, angle * (180.f / M_PI), 0.f);
 }
 
 int can_boss_one_sec_atk(struct Boss boss, struct ChocoShooter player) {

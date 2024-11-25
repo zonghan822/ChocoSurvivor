@@ -73,15 +73,19 @@ void render_enemies(struct ChocoRoach* roaches, int size) {
 
 static int _comp(const void* a, const void* b)
 {
-    if (!(((struct ChocoRoach*)a)->currentState) && !(((struct ChocoRoach*)b)->currentState))
+    struct ChocoRoach* roachA = (struct ChocoRoach*)a;
+    struct ChocoRoach* roachB = (struct ChocoRoach*)b;
+
+    if (!roachA->currentState && !roachB->currentState)
         return -1;
-    if (!(((struct ChocoRoach*)a)->currentState))
+    if (!roachA->currentState)
         return 1;
-    if (!(((struct ChocoRoach*)b)->currentState))
+    if (!roachB->currentState)
         return -1;
-    /*if (((struct ChocoRoach*)a)->pos.y == ((struct ChocoRoach*)b)->pos.y)
-        return ((struct ChocoRoach*)a)->pos.x - ((struct ChocoRoach*)b)->pos.x;*/
-    return (int)(((struct ChocoRoach*)a)->pos.y - ((struct ChocoRoach*)b)->pos.y);
+    // if (roachA->pos.y == roachB->pos.y)
+    //     return roachA->pos.x - roachB->pos.x;
+
+    return (int)(roachA->pos.y - roachB->pos.y);
 }
 
 void sort_enemies(struct ChocoRoach* roaches, int size) {
