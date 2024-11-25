@@ -21,7 +21,7 @@ static void _init(float window_width, float window_height) {
 
 	float buttonWidth = 125.f;
 	_applyButton = init_button(_optionsPanel.pos.x + _optionsPanel.width / 2.65f, _optionsPanel.pos.y + _optionsPanel.height / 2.35f,
-		buttonWidth, 40.f, BUTTON_TYPE_DEFAULT, "Apply", white, 20.f);
+		buttonWidth, 40.f, BUTTON_TYPE_PRIMARY, "Apply", white, 20.f);
 	_defaultButton = init_button(_applyButton.rect.pos.x - (buttonWidth * 1.25f), _applyButton.rect.pos.y,
 		buttonWidth, 40.f, BUTTON_TYPE_WARNING, "Default", white, 20.f);
 

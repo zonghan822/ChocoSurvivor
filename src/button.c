@@ -40,10 +40,10 @@ void render_button(struct Button button) {
     case BUTTON_TYPE_WARNING:
         vStart = 2.f;
         break;
-    case BUTTON_TYPE_SUCCESS:
+    case BUTTON_TYPE_SECONDARY:
         vStart = 36.f;
         break;
-    case BUTTON_TYPE_DEFAULT:
+    case BUTTON_TYPE_PRIMARY:
     default:
         vStart = 19.f;
         break;
@@ -112,7 +112,7 @@ void update_button_state(struct Button* button, float mouse_x, float mouse_y) {
         if (CP_Input_MouseTriggered(MOUSE_BUTTON_LEFT)) {
             switch (button->type) {
             default:
-            case BUTTON_TYPE_SUCCESS:
+            case BUTTON_TYPE_SECONDARY:
                 play_sound(SOUND_UI_BUTTON_CONFIRM_CLICK);
                 break;
             case BUTTON_TYPE_WARNING:

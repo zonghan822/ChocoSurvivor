@@ -40,24 +40,24 @@ void main_menu_init(void) {
 	_windowWidth = (float)CP_System_GetWindowWidth();
 	_windowHeight = (float)CP_System_GetWindowHeight();
 
-	_buttonRectX = _windowWidth / 2.0f;
-	_buttonRectY = _windowHeight / 2.0f;
-	_buttonRectHeight = 85.0f;
-	_buttonRectWidth = 300.0f;
+	_buttonRectX = _windowWidth / 2.f;
+	_buttonRectY = _windowHeight / 2.f;
+	_buttonRectHeight = 85.f;
+	_buttonRectWidth = 300.f;
 
 	_digiPenLogoImg = CP_Image_Load("Assets/DigiPen_Singapore_WEB_WHITE.png");
 
 	CP_Color white = CP_Color_Create(255, 255, 255, 255);
-	_playButton = init_button(_buttonRectX, _buttonRectY - (_buttonRectHeight * 2.f), _buttonRectWidth, _buttonRectHeight, BUTTON_TYPE_SUCCESS,
+	_playButton = init_button(_buttonRectX, _buttonRectY - (_buttonRectHeight * 1.75f), _buttonRectWidth, _buttonRectHeight, BUTTON_TYPE_SECONDARY,
 		"Play", CP_Color_Create(0, 0, 0, 255), 55.f);
 
-	_optionsButton = init_button(_buttonRectX, _buttonRectY - (_buttonRectHeight * 0.7f), _buttonRectWidth, _buttonRectHeight, BUTTON_TYPE_DEFAULT,
+	_optionsButton = init_button(_buttonRectX, _buttonRectY - (_buttonRectHeight * 0.25f), _buttonRectWidth, _buttonRectHeight, BUTTON_TYPE_PRIMARY,
 		"Options", white, 55.f);
 
-	_creditsButton = init_button(_buttonRectX, _buttonRectY + (_buttonRectHeight * 0.7f), _buttonRectWidth, _buttonRectHeight, BUTTON_TYPE_DEFAULT,
+	_creditsButton = init_button(_buttonRectX, _buttonRectY + (_buttonRectHeight * 1.25f), _buttonRectWidth, _buttonRectHeight, BUTTON_TYPE_PRIMARY,
 		"Credits", white, 55.f);
 
-	_quitButton = init_button(_buttonRectX, _buttonRectY + (_buttonRectHeight * 2.f), _buttonRectWidth, _buttonRectHeight, BUTTON_TYPE_WARNING,
+	_quitButton = init_button(_buttonRectX, _buttonRectY + (_buttonRectHeight * 2.75f), _buttonRectWidth, _buttonRectHeight, BUTTON_TYPE_WARNING,
 		"Quit", white, 55.f);
 }
 
@@ -77,7 +77,7 @@ void main_menu_update(void) {
 			: 22.5f * dt;
 
 		// Lerp alpha to 0
-		// 3.f because it takes 3 seconds (3.f) before forgetting about this code
+		// 4.f because it takes 4 seconds (4.f) before forgetting about this code
 		_digiPenLogoAlpha = CP_Math_LerpInt(startAlpha, endAlpha, _digiPenLogoTimer / 4.f);
 
 		float preservedHeight = get_preserved_heightf(digiPenLogoWidth, digiPenLogoHeight, _digiPenLogoWidth);
@@ -150,9 +150,9 @@ void main_menu_update(void) {
 	CP_Settings_ImageMode(CP_POSITION_CENTER);
 
 	if (_digiPenLogoTimer <= 4.5f) {
-		// - 3.f because the logo takes 3 seconds
-		// 1.5f because 4.5f - 3.f = 1.5f (this is the remainder)
-		_digiPenScreenAlpha = CP_Math_LerpInt(startAlpha, endAlpha, (_digiPenLogoTimer - 3.f) / 1.5f);
+		// - 4.f because the logo takes 4 seconds
+		// 0.5f because 4.5f - 4.f = 0.5f (this is the remainder)
+		_digiPenScreenAlpha = CP_Math_LerpInt(startAlpha, endAlpha, (_digiPenLogoTimer - 4.f) / 0.5f);
 
 		CP_Settings_StrokeWeight(0.f);
 		CP_Settings_Fill(CP_Color_Create(0, 0, 0, _digiPenScreenAlpha));

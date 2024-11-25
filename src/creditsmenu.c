@@ -7,7 +7,7 @@
 static bool _isCreditsActive = false;
 static bool _isInitialized;
 static struct Button _backToMenuButton;
-static struct Rectangle _creditsPanel = { .width = 800, .height = 700 };
+static struct Rectangle _creditsPanel = { .width = 950.f, .height = 700.f };
 static CP_Image _tutImageLmb;
 
 static enum CreditsPage {
@@ -24,7 +24,7 @@ static void _init(float window_width, float window_height) {
 	_creditsPanel.pos.y = window_height / 2.f;
 
 	_backToMenuButton = init_button(_creditsPanel.pos.x, _creditsPanel.pos.y + _creditsPanel.height / 2.5f,
-		200.f, 50.f, BUTTON_TYPE_DEFAULT, "Back to Menu", white, 24.f);
+		200.f, 50.f, BUTTON_TYPE_PRIMARY, "Back to Menu", white, 24.f);
 
 	creditsPage = PAGE_NULL;
 
@@ -82,19 +82,19 @@ void render_credits_menu(float mouse_x, float mouse_y, float window_width, float
 		CP_Font_DrawText("SOROOR", (_creditsPanel.pos.x + _creditsPanel.width / 4.f), (_creditsPanel.pos.y - _creditsPanel.height / 4.f + (3 * lineGap)));
 
 		CP_Font_DrawText("ANJANA RAJENDRAN", _creditsPanel.pos.x, _creditsPanel.pos.y + 80.f + lineGap);
-		
+
 		break;
 	}
 	case CREDITS_PAGE_TWO: {
 		CP_Settings_TextSize(45.0f);
 		CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_CENTER, CP_TEXT_ALIGN_V_MIDDLE);
-		CP_Font_DrawText("CREATED AT", _creditsPanel.pos.x, (_creditsPanel.pos.y - _creditsPanel.height/2) + 80.f);
+		CP_Font_DrawText("CREATED AT", _creditsPanel.pos.x, (_creditsPanel.pos.y - _creditsPanel.height / 2) + 80.f);
 		CP_Font_DrawText("PRESIDENT", _creditsPanel.pos.x, _creditsPanel.pos.y - 140.f);
 		CP_Font_DrawText("EXECUTIVES", _creditsPanel.pos.x, _creditsPanel.pos.y);
 
 		float lineGap = 50.f;
 		CP_Settings_TextSize(40.0f);
-		CP_Font_DrawText("Digipen Institute of Technology Singapore", _creditsPanel.pos.x, (_creditsPanel.pos.y - _creditsPanel.height/2) + 80.f + lineGap);
+		CP_Font_DrawText("DigiPen Institute of Technology Singapore", _creditsPanel.pos.x, (_creditsPanel.pos.y - _creditsPanel.height / 2) + 80.f + lineGap);
 		CP_Font_DrawText("CLAUDE COMAIR", _creditsPanel.pos.x, _creditsPanel.pos.y - 150.f + lineGap);
 
 		lineGap = 40.f;
@@ -111,8 +111,8 @@ void render_credits_menu(float mouse_x, float mouse_y, float window_width, float
 
 		float lineGap = 50.f;
 		CP_Settings_TextSize(40.0f);
-		CP_Font_DrawText("ASSETS FROM ...", _creditsPanel.pos.x, (_creditsPanel.pos.y - _creditsPanel.height / 3) + lineGap);
-		CP_Font_DrawText("SOUNDS FROM ...", _creditsPanel.pos.x, (_creditsPanel.pos.y - _creditsPanel.height / 3) + (2 * lineGap));
+		CP_Font_DrawText("ASSETS FROM Kenney.nl", _creditsPanel.pos.x, (_creditsPanel.pos.y - _creditsPanel.height / 3) + lineGap);
+		CP_Font_DrawText("SOUNDS FROM Kenney.nl", _creditsPanel.pos.x, (_creditsPanel.pos.y - _creditsPanel.height / 3) + (2 * lineGap));
 	}
 	}
 	

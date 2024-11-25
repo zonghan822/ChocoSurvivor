@@ -157,9 +157,9 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
     float halfWindowWidth = window_width / 2.f,
         halfWindowHeight = window_height / 2.f;
     _resumeButton = init_button(halfWindowWidth, halfWindowHeight - 75.f, 200.f, 50.f,
-        BUTTON_TYPE_SUCCESS, "Resume", CP_Color_Create(0, 0, 0, 255), 24.0f);
+        BUTTON_TYPE_SECONDARY, "Resume", CP_Color_Create(0, 0, 0, 255), 24.0f);
     _optionsButton = init_button(halfWindowWidth, halfWindowHeight, 200.f, 50.f,
-        BUTTON_TYPE_DEFAULT, "Options", CP_Color_Create(255, 255, 255, 255), 24.0f);
+        BUTTON_TYPE_PRIMARY, "Options", CP_Color_Create(255, 255, 255, 255), 24.0f);
     _pauseBackToMenuButton = init_button(halfWindowWidth, halfWindowHeight + 75.f, 200.f, 50.f,
         BUTTON_TYPE_WARNING, "Back to Menu", CP_Color_Create(255, 255, 255, 255), 24.0f);
 
@@ -173,9 +173,9 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
         (float)CP_Image_GetHeight(enemyImg), ENEMY_WIDTH);
 
     _gameOverMenuButton = init_button(halfWindowWidth, window_height / 1.25f, 300.f, 75.f,
-        BUTTON_TYPE_DEFAULT, "Back to Menu", CP_Color_Create(255, 255, 255, 255), 40.f);
+        BUTTON_TYPE_PRIMARY, "Back to Menu", CP_Color_Create(255, 255, 255, 255), 40.f);
     _victoryMenuButton = init_button(halfWindowWidth, halfWindowHeight + 75.f, 200.f, 50.f,
-        BUTTON_TYPE_DEFAULT, "Back to Menu", CP_Color_Create(255, 255, 255, 255), 24.0f);
+        BUTTON_TYPE_PRIMARY, "Back to Menu", CP_Color_Create(255, 255, 255, 255), 24.0f);
 
     CP_Image levelBg = NULL;
 
