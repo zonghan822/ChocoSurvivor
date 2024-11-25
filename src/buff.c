@@ -239,7 +239,7 @@ void assign_buff_to_slot(BuffSlot* buffSlot, BuffType buff) {
     }
 }
 
-void render_buff_slot(BuffSlot* buffSlot, float windowWidth, float windowHeight) {
+void render_buff_slot(BuffSlot* buffSlot, float windowWidth, float windowHeight, const CP_Image* inputImgs) {
     float slotX[MAX_BUFF_SLOT] = { windowWidth / 10.f };
     float slotY = windowHeight * 5.5f / 6.5f;
     float slotW = BUFF_ICON_SIDE, slotH = BUFF_ICON_SIDE;
@@ -249,6 +249,11 @@ void render_buff_slot(BuffSlot* buffSlot, float windowWidth, float windowHeight)
 
     for (int i = 0; i < MAX_BUFF_SLOT; i++) {
         slotX[i] = (i * (gap + slotW)) + slotX[0];
+        float slotInputY = slotY / 1.1f,
+            slotInputW = slotW / 1.75f, slotInputH = slotH / 1.75f;
+        CP_Settings_Fill(CP_Color_Create(0, 0, 0, 225));
+        CP_Graphics_DrawRectAdvanced(slotX[i], slotInputY, slotInputW - 10.f, slotInputH - 10.f, 0.f, 6.f);
+        CP_Image_Draw(inputImgs[i], slotX[i], slotInputY, slotInputW, slotInputH, 255);
         switch (buffSlot->buffs[i]) {
         case NO_BUFF:
             CP_Settings_Fill(CP_Color_Create(0, 0, 0, 100));

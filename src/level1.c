@@ -40,16 +40,18 @@ static float _tutAllyX, _tutAllyY;
 static void _render_tutorials() {
     CP_Settings_StrokeWeight(5.f);
     CP_Settings_Fill(CP_Color_Create(0, 0, 0, 100));
+    float square = 50.f,
+        cornerRadius = 5.f;
     // WASD
     {
         if (!_tutHasPressedW) { // W
             float x = playerInstance.pos.x - 20.f,
                 y = playerInstance.pos.y - 140.f;
 
-            CP_Graphics_DrawRect(x, y, 40.f, 40.f);
+            CP_Graphics_DrawRectAdvanced(x, y, square - 14.f, square - 14.f, 0.f, cornerRadius);
             CP_Image_Draw(_tutImageW,
                 x, y,
-                50.f, 50.f,
+                square, square,
                 255);
 
             _tutHasPressedW = CP_Input_KeyTriggered(KEY_W);
@@ -58,10 +60,10 @@ static void _render_tutorials() {
             float x = playerInstance.pos.x - 70.f,
                 y = playerInstance.pos.y - 90.f;
 
-            CP_Graphics_DrawRect(x, y, 40.f, 40.f);
+            CP_Graphics_DrawRectAdvanced(x, y, square - 14.f, square - 14.f, 0.f, cornerRadius);
             CP_Image_Draw(_tutImageA,
                 x, y,
-                50.f, 50.f,
+                square, square,
                 255);
 
             _tutHasPressedA = CP_Input_KeyTriggered(KEY_A);
@@ -70,10 +72,10 @@ static void _render_tutorials() {
             float x = playerInstance.pos.x - 20.f,
                 y = playerInstance.pos.y - 90.f;
 
-            CP_Graphics_DrawRect(x, y, 40.f, 40.f);
+            CP_Graphics_DrawRectAdvanced(x, y, square - 14.f, square - 14.f, 0.f, cornerRadius);
             CP_Image_Draw(_tutImageS,
                 x, y,
-                50.f, 50.f,
+                square, square,
                 255);
 
             _tutHasPressedS = CP_Input_KeyTriggered(KEY_S);
@@ -82,10 +84,10 @@ static void _render_tutorials() {
             float x = playerInstance.pos.x + 30.f,
                 y = playerInstance.pos.y - 90.f;
 
-            CP_Graphics_DrawRect(x, y, 40.f, 40.f);
+            CP_Graphics_DrawRectAdvanced(x, y, square - 14.f, square - 14.f, 0.f, cornerRadius);
             CP_Image_Draw(_tutImageD,
                 x, y,
-                50.f, 50.f,
+                square, square,
                 255);
 
             _tutHasPressedD = CP_Input_KeyTriggered(KEY_D);
@@ -105,7 +107,7 @@ static void _render_tutorials() {
             CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255));
             CP_Font_DrawTextBox("Press         to dash", x - 135.f, y + 5.f, 255.f);
             CP_Settings_Fill(CP_Color_Create(0, 0, 0, 100));
-            CP_Graphics_DrawRect(x - 20.f, y, width - 10.f, height - 25.f);
+            CP_Graphics_DrawRectAdvanced(x - 20.f, y, width - 14.f, height - 31.f, 0.f, cornerRadius + 1.f);
             CP_Image_Draw(_tutImageSpace,
                 x - 20.f, y,
                 width, height,
@@ -125,10 +127,10 @@ static void _render_tutorials() {
             CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255));
             CP_Font_DrawTextBox("Press        to place barricades", x - 135.f, y + 5.f, 225.f);
             CP_Settings_Fill(CP_Color_Create(0, 0, 0, 100));
-            CP_Graphics_DrawRect(x, y, 40.f, 40.f);
+            CP_Graphics_DrawRectAdvanced(x, y, square - 14.f, square - 14.f, 0.f, cornerRadius);
             CP_Image_Draw(_tutImageB,
                 x, y,
-                50.f, 50.f,
+                square, square,
                 255);
 
             _tutHasPressedB = CP_Input_KeyTriggered(KEY_B);
@@ -141,10 +143,10 @@ static void _render_tutorials() {
             CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255));
             CP_Font_DrawTextBox("Press        to place sentries", x - 135.f, y + 5.f, 225.f);
             CP_Settings_Fill(CP_Color_Create(0, 0, 0, 100));
-            CP_Graphics_DrawRect(x, y, 40.f, 40.f);
+            CP_Graphics_DrawRectAdvanced(x, y, square - 14.f, square - 14.f, 0.f, cornerRadius);
             CP_Image_Draw(_tutImageV,
                 x, y,
-                50.f, 50.f,
+                square, square,
                 255);
 
             _tutHasPressedV = CP_Input_KeyTriggered(KEY_V);
@@ -156,7 +158,6 @@ static void _render_tutorials() {
 static bool _tutCanCancelPlaceablesRmb;
 
 static void _render_mouse_tutorials() {
-    CP_Settings_StrokeWeight(5.f);
     CP_Settings_Fill(CP_Color_Create(0, 0, 0, 100));
 
     if (_tutCanCancelPlaceablesRmb && (CP_Input_MouseTriggered(MOUSE_BUTTON_RIGHT) || CP_Input_MouseTriggered(MOUSE_BUTTON_LEFT))) {
@@ -175,7 +176,7 @@ static void _render_mouse_tutorials() {
             CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255));
             CP_Font_DrawTextBox("Press        to cancel", x - 135.f, y + 5.f, 225.f);
             CP_Settings_Fill(CP_Color_Create(0, 0, 0, 100));
-            CP_Graphics_DrawRect(x, y, 40.f, 40.f);
+            CP_Graphics_DrawRectAdvanced(x, y, 32.f, 36.f, 0.f, 5.f);
             CP_Image_Draw(_tutImageRmb,
                 x, y,
                 50.f, 50.f,
@@ -185,7 +186,6 @@ static void _render_mouse_tutorials() {
         }
         // LMB?
     }
-    CP_Settings_StrokeWeight(3.f);
 }
 
 void level_one_init(void) {

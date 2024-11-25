@@ -2,6 +2,7 @@
 #include <time.h>
 #include <stdlib.h>
 #include <math.h>
+#include <stdbool.h>
 
 #include "cprocessing.h"
 #include "hittest.h"
@@ -90,8 +91,8 @@ static bool _hasPlayedGameOverMusic,
     _hasPlayedNewWaveMusic;
 static enum GameLevel _currentLevel;
 static float _levelWidth, _levelHeight;
-static CP_Image _heartImg;
-static CP_Image _playerPortraitImg;
+static CP_Image _heartImg, _playerPortraitImg;
+static CP_Image _slotInputImgs[3];
 
 bool isPaused, isWin;
 static struct Button _resumeButton, _pauseBackToMenuButton, _optionsButton;
@@ -127,6 +128,9 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
     _levelHeight = level_height;
     _heartImg = CP_Image_Load("Assets/heart.png");
     _playerPortraitImg = CP_Image_Load("Assets/player_portrait.png");
+    _slotInputImgs[0] = CP_Image_Load("Assets/GUI/keyboard_1.png");
+    _slotInputImgs[1] = CP_Image_Load("Assets/GUI/keyboard_2.png");
+    _slotInputImgs[2] = CP_Image_Load("Assets/GUI/keyboard_3.png");
     _currentBossHealthWidth = 0.f;
 
     // Reset values
@@ -692,7 +696,7 @@ void render_ui(float window_width, float window_height, float mouse_x, float mou
 
 
     #pragma region Buffs
-    render_buff_slot(&buffSlot, window_width, window_height);
+    render_buff_slot(&buffSlot, window_width, window_height, _slotInputImgs);
     render_buff(&activeBuffs, window_width, window_height, isPaused || isWin ? 0.f : dt);
     #pragma endregion
     
@@ -1109,6 +1113,11 @@ void dispose_resources(void) {
     CP_Image_Free(&_heartImg);
     CP_Image_Free(&_playerPortraitImg);
     CP_Image_Free(&_tower.img);
+
+    for (int i = 0; i < 3; i++) {
+        if (_slotInputImgs[i] != NULL)
+            CP_Image_Free(&_slotInputImgs[i]);
+    }
     
     for (int i = 0; i < _roachesMax; i++) {
         struct ChocoRoach roach = _roaches[i];
