@@ -30,8 +30,8 @@ void main_menu_init(void) {
 	CP_Settings_RectMode(CP_POSITION_CENTER);
 	CP_Font_Set(CP_Font_Load("Assets/Fonts/Tiny5/Tiny5-Regular.ttf"));
 
-	_windowWidth = CP_System_GetWindowWidth();
-	_windowHeight = CP_System_GetWindowHeight();
+	_windowWidth = (float)CP_System_GetWindowWidth();
+	_windowHeight = (float)CP_System_GetWindowHeight();
 
 	_bg = CP_Color_Create(128, 128, 128, 255);
 
