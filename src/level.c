@@ -826,7 +826,7 @@ void check_collision(void) {
                     break;
                 }
                 if (playerProjectiles.projectiles[j].type & TRACKING_PROJECTILE) {
-                    struct Circle radarBullet = { .pos = playerProjectiles.projectiles[j].pos, .diameter = 2.f * fabsf(playerInstance.width) }; // define bullet radar
+                    struct Circle radarBullet = { .pos = playerProjectiles.projectiles[j].pos, .diameter = 2.f * (float)(fabs((double)playerInstance.width)) }; // define bullet radar
                     if (are_circle_rect_intersecting(radarBullet, _roaches[i].hitbox)) {
                         playerProjectiles.projectiles[j].shootDirection = CP_Vector_Normalize(CP_Vector_Subtract(_roaches[i].hitbox.pos, playerProjectiles.projectiles[j].pos));
                     }
@@ -851,7 +851,7 @@ void check_collision(void) {
                 continue;
             }
             if (playerProjectiles.projectiles[j].type & TRACKING_PROJECTILE) {
-                struct Circle radarBullet = { .pos = playerProjectiles.projectiles[j].pos, .diameter = 2.f * fabsf(playerInstance.width) }; // define bullet radar
+                struct Circle radarBullet = { .pos = playerProjectiles.projectiles[j].pos, .diameter = 2.f * (float)(fabs((double)playerInstance.width)) }; // define bullet radar
                 if (are_circle_rect_intersecting(radarBullet, _boss.hitbox)) {
                     playerProjectiles.projectiles[j].shootDirection = CP_Vector_Normalize(CP_Vector_Subtract(_boss.hitbox.pos, playerProjectiles.projectiles[j].pos));
                 }
@@ -936,7 +936,7 @@ void enemy_move_attack(float dt) {
         if (_roaches[i].barrierAttack < MAX_BARRIERS)
             continue;
 
-        struct Circle radarRoach = { .pos = _roaches[i].pos, .diameter = 5.f * fabsf(_roaches[i].width) }; // define enemy radar
+        struct Circle radarRoach = { .pos = _roaches[i].pos, .diameter = 5.f * (float)(fabs((double)_roaches[i].width)) }; // define enemy radar
         if (are_circle_rect_intersecting(radarRoach, playerInstance.hitbox)) { // Check enemy near with player
             _roaches[i].currentState = ENEMY_STATE_MOVING_TO_PLAYER;
             continue;
