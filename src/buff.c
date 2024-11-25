@@ -16,15 +16,15 @@ BuffList activeBuffs;
 
 // Sidenote: EXP would refer to buff meter
 int update_buff_meter(struct ChocoShooter* player, float dt) {
+    // if no exp to update return and do nothing
     if (player->expGained == 0) {
         return 0;
     }
-    float expGainedSpeed = (float)player->maxHealth;
+
+    float expGainedSpeed = 100.f;
     float expGained = expGainedSpeed * dt;
     player->exp += min(player->expGained, expGained);
     player->expGained = max(0, player->expGained - expGained);
-
-    // printf("Current Exp: %.2f / %d\n", player->exp, player->playerMaxExp);
 
     // Full or exceeded EXP
     if (player->exp >= (float)player->playerMaxExp) {
@@ -33,8 +33,7 @@ int update_buff_meter(struct ChocoShooter* player, float dt) {
             play_sound_advanced(SOUND_MUSIC_LEVEL_UP, 1.f, 0);
             _hasPlayedLevelUpMusic = true;
         }
-        // Do nothing if EXP == playerMaxExp
-        // But do return the buff
+        
         // Wrap around only if exceeding
         if (player->exp > (float)player->playerMaxExp) {
             // Wrap around
@@ -43,14 +42,16 @@ int update_buff_meter(struct ChocoShooter* player, float dt) {
         // increase maxExp
         player->playerMaxExp = (int)((float)player->playerMaxExp * (float)EXP_INCREASE_MULTIPLIER);
 
+        // Generate random buff
         enum BuffType randomBuff = CP_Random_RangeInt(ATTACK_UP, REFLECT_DMG);
-        return randomBuff;
+        return randomBuff; // Return the buff if EXP == playerMaxExp
     }
     else if (_hasPlayedLevelUpMusic)
         _hasPlayedLevelUpMusic = false;
 
     return 0; // Return 0 if no buff is granted
 }
+
 
 void apply_buff(BuffList* activeBuffs, enum BuffType buff, struct ChocoShooter* player, struct Barrier* barrier, struct Ally* allies) {
     if (buff == NO_BUFF) 

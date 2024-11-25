@@ -239,18 +239,17 @@ void level_one_update(void) {
     if (try_game_over(_windowWidth, _windowHeight, _cursor))
         return; // Game over, so don't do anything else
 
+    // Function to TRY to proceed to next wave or level
+    // Function is slightly hardcoded
+    next_wave_or_level();
+
     if (!isPaused && !isWin)
         move_player(&playerInstance, dt, LEVEL_WIDTH, LEVEL_HEIGHT);
     update_camera(playerInstance, dt);
-
-    // Function to TRY to proceed to next wave or level
-    // Function is slightly hardcoded
    
     // Render background
     CP_Graphics_ClearBackground(CP_Color_Create(170, 170, 170, 255));
     CP_Image_Draw(_levelBg, (LEVEL_WIDTH / 2.f), (LEVEL_HEIGHT / 2.f), LEVEL_WIDTH, LEVEL_HEIGHT, 255);
-
-    next_wave_or_level();
 
     enableShooting = !isPaused && !isWin;
 
@@ -265,7 +264,7 @@ void level_one_update(void) {
     **********************************/
 #if _DEBUG
      //debug_render_enemy_grid();
-     //debug_render_boss_grid();
+     // debug_render_boss_grid();
      //debug_render_clips();
 #endif
 

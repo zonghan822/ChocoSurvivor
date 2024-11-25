@@ -33,10 +33,10 @@ int are_circles_intersecting(struct Circle a, struct Circle b) {
 }
 
 int are_rects_intersecting(struct Rectangle a, struct Rectangle b) {
-	a.pos.x -= (a.width / 2);
-	a.pos.y -= (a.height / 2);
-	b.pos.x -= (b.width / 2);
-	b.pos.y -= (b.height / 2);
+	a.pos.x -= (fabsf(a.width) / 2.f);
+	a.pos.y -= (a.height / 2.f);
+	b.pos.x -= (fabsf(b.width) / 2.f);
+	b.pos.y -= (b.height / 2.f);
 
 	float aRx = a.pos.x + a.width, // rx = Right x
 		aBy = a.pos.y + a.height, // by = Bottom y

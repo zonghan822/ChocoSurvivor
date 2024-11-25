@@ -243,12 +243,12 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
         init_grid(&_enemyGrid, level_width, level_height, 0.8f * ENEMY_WIDTH, 0.75f * enemyHeight);
         init_grid(&_bossGrid, level_width, level_height, 77.f / 144.f * BOSS_WIDTH, 166.f / 251.f * bossHeight);
         update_grid(&_enemyGrid, _worldClips, _worldClipsCount, _enemyClips, 4);
-        update_grid(&_bossGrid, _worldClips, _worldClipsCount, _enemyClips, 4);
+        update_grid(&_bossGrid, _worldClips, _worldClipsCount, _enemyClips, 2);
 
         init_grid(&_enemyGridNB, level_width, level_height, 0.8f * ENEMY_WIDTH, 0.75f * enemyHeight);
         init_grid(&_bossGridNB, level_width, level_height, 77.f / 144.f * BOSS_WIDTH, 166.f / 251.f * bossHeight);
         update_grid(&_enemyGridNB, _worldClips, _worldClipsCount, _enemyClips, 4);
-        update_grid(&_bossGridNB, _worldClips, _worldClipsCount, _enemyClips, 4);
+        update_grid(&_bossGridNB, _worldClips, _worldClipsCount, _enemyClips, 2);
         break;
     case GAME_LEVEL_TWO:
         break;
@@ -468,7 +468,7 @@ void player_placeables(float mouse_x, float mouse_y, float dt) {
     }
     _worldClipsCount = _obstaclesCount + get_barrier_count();
     update_grid(&_enemyGrid, _worldClips, _worldClipsCount, _enemyClips, 4);
-    update_grid(&_bossGrid, _worldClips, _worldClipsCount, _enemyClips, 4);
+    update_grid(&_bossGrid, _worldClips, _worldClipsCount, _enemyClips, 2);
 
     // Right click to cancel any previews
     if (CP_Input_MouseTriggered(MOUSE_BUTTON_RIGHT)) {
@@ -788,7 +788,8 @@ void check_collision(void) {
     // Prevent player from moving into non-movable path
     for (int i = 0; i < _worldClipsCount; i++) {
         struct Rectangle worldClip = _worldClips[i];
-        if (are_rects_intersecting(playerInstance.hitbox, worldClip))
+        struct Rectangle playerRect = {playerInstance.pos, fabsf(playerInstance.width), fabsf(playerInstance.height)};
+        if (are_rects_intersecting(playerRect, worldClip))
             clamp_pos_clip_rel(&playerInstance.pos, playerInstance.hitbox, worldClip);
     }
 
@@ -1086,7 +1087,7 @@ void place_barrier(int index, float x, float y) {
 
     _worldClips[_worldClipsCount++] = barriers[index].hitbox;
     update_grid(&_enemyGrid, _worldClips, _worldClipsCount, _enemyClips, 4);
-    update_grid(&_bossGrid, _worldClips, _worldClipsCount, _enemyClips, 4);
+    update_grid(&_bossGrid, _worldClips, _worldClipsCount, _enemyClips, 2);
 }
 
 void place_ally(int index, float x, float y) {
