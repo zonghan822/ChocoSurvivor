@@ -10,10 +10,11 @@
 #include "progressbar.h"
 #include "gui.h"
 #include "optionsmenu.h"
+#include "creditsmenu.h"
 
 #include <stdio.h>
 
-static struct Button _playButton, _optionsButton, _quitButton;
+static struct Button _playButton, _optionsButton, _creditsButton, _quitButton;
 static CP_Image _cursor;
 static CP_Color _bg;
 
@@ -44,8 +45,11 @@ void main_menu_init(void) {
 	_playButton = init_button(_buttonRectX, _buttonRectY - (_buttonRectHeight * 2.f), _buttonRectWidth, _buttonRectHeight, BUTTON_TYPE_SUCCESS,
 		"Play", CP_Color_Create(0, 0, 0, 255), 55.f);
 
-	_optionsButton = init_button(_buttonRectX, _buttonRectY, _buttonRectWidth, _buttonRectHeight, BUTTON_TYPE_DEFAULT,
+	_optionsButton = init_button(_buttonRectX, _buttonRectY - (_buttonRectHeight * 0.7f), _buttonRectWidth, _buttonRectHeight, BUTTON_TYPE_DEFAULT,
 		"Options", white, 55.f);
+
+	_creditsButton = init_button(_buttonRectX, _buttonRectY + (_buttonRectHeight * 0.7f), _buttonRectWidth, _buttonRectHeight, BUTTON_TYPE_DEFAULT,
+		"Credits", white, 55.f);
 
 	_quitButton = init_button(_buttonRectX, _buttonRectY + (_buttonRectHeight * 2.f), _buttonRectWidth, _buttonRectHeight, BUTTON_TYPE_WARNING,
 		"Quit", white, 55.f);
@@ -63,16 +67,21 @@ void main_menu_update(void) {
 
 	render_button(_playButton);
 	render_button(_optionsButton);
+	render_button(_creditsButton);
 	render_button(_quitButton);
-	if (!is_options_menu_open()) {
+	if (!is_options_menu_open() && !is_credits_menu_open()) {
 		update_button_state(&_playButton, mouseX, mouseY);
 		update_button_state(&_optionsButton, mouseX, mouseY);
+		update_button_state(&_creditsButton, mouseX, mouseY);
 		update_button_state(&_quitButton, mouseX, mouseY);
 	}
 
 	// Options menu is open
 	if (is_options_menu_open()) {
 		render_options_menu(mouseX, mouseY, (float)_windowWidth, (float)_windowHeight);
+	}
+	else if (is_credits_menu_open()) {
+		render_credits_menu(mouseX, mouseY, (float)_windowWidth, (float)_windowHeight);
 	}
 	else {
 		// Play
@@ -83,7 +92,9 @@ void main_menu_update(void) {
 		if (_optionsButton.state == BUTTON_STATE_CLICKED)
 			render_options_menu(mouseX, mouseY, (float)_windowWidth, (float)_windowHeight);
 
-		// Maybe Credits?
+		// Credits
+		if (_creditsButton.state == BUTTON_STATE_CLICKED)
+			render_credits_menu(mouseX, mouseY, (float)_windowWidth, (float)_windowHeight);
 
 		// Quit
 		if (_quitButton.state == BUTTON_STATE_CLICKED)

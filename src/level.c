@@ -280,19 +280,24 @@ bool try_pause(float window_width, float window_height) {
         render_button(_pauseBackToMenuButton);
         render_button(_optionsButton);
 
-        update_button_state(&_resumeButton, mouseX, mouseY);
-        update_button_state(&_pauseBackToMenuButton, mouseX, mouseY);
-        update_button_state(&_optionsButton, mouseX, mouseY);
+        if (!is_options_menu_open()) {
+            update_button_state(&_resumeButton, mouseX, mouseY);
+            update_button_state(&_pauseBackToMenuButton, mouseX, mouseY);
+            update_button_state(&_optionsButton, mouseX, mouseY);
+        }
 
         // Check for button clicks and handle actions
-        if (_resumeButton.state == BUTTON_STATE_CLICKED) {
-            isPaused = false;
-            return false;
+        if (!is_options_menu_open()) {
+            if (_resumeButton.state == BUTTON_STATE_CLICKED) {
+                isPaused = false;
+                return false;
+            }
+            if (_pauseBackToMenuButton.state == BUTTON_STATE_CLICKED) {
+                CP_Engine_SetNextGameState(main_menu_init, main_menu_update, main_menu_exit);
+                return false;
+            }
         }
-        if (_pauseBackToMenuButton.state == BUTTON_STATE_CLICKED) {
-            CP_Engine_SetNextGameState(main_menu_init, main_menu_update, main_menu_exit);
-            return false;
-        }
+
         if (_optionsButton.state == BUTTON_STATE_CLICKED || is_options_menu_open())
             render_options_menu(mouseX, mouseY, window_width, window_height);
         CP_Settings_StrokeWeight(3.f);

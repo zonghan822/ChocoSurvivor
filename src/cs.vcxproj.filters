@@ -76,6 +76,9 @@
     <ClCompile Include="buff.c">
       <Filter>Source Files\Player</Filter>
     </ClCompile>
+    <ClCompile Include="creditsmenu.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="boss.h">
@@ -146,6 +149,9 @@
     </ClInclude>
     <ClInclude Include="buff.h">
       <Filter>Header Files\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="creditsmenu.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
