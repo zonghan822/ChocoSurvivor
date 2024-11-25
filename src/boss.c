@@ -6,6 +6,7 @@
 #include "cprocessing.h"
 #include "hittest.h"
 #include "astar.h"
+#include "tower.h"
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -108,6 +109,7 @@ struct Boss init_boss_one(float width, float speed, int health, int attack_power
 	return boss;
 }
 
+/*
 struct Boss init_boss_two(float width, float speed, int health, int attack_power, float attack_speed) {
 	CP_Image img = CP_Image_Load("Assets/boss_lvl2.png");
 	float preservedHeight = get_preserved_heightf(CP_Image_GetWidth(img), CP_Image_GetHeight(img), width);
@@ -134,6 +136,7 @@ struct Boss init_boss_two(float width, float speed, int health, int attack_power
 
 	return boss;
 }
+*/
 
 void render_boss(struct Boss boss) {
 	CP_Image_Draw(boss.img, boss.pos.x, boss.pos.y, boss.width, boss.height, 255);
@@ -161,17 +164,24 @@ int boss_take_damage(struct Boss* boss, int damage) {
 }
 
 #pragma region Boss 1
-void boss_one_pri_atk(struct Boss *boss, struct ChocoShooter* player, float dt) {
+void boss_one_pri_atk(struct Boss *boss, struct ChocoShooter* player, struct DefenseTarget* tower, float dt) {
 	// _priAtkCooldown in this func is used
 	// for the boss recovering from attack (back to idle animation)
 	boss->state = BOSS_STATE_ATTACKING_PRIMARY;
 	const float attackingDelay = 2.7f,
-		postAttackDelay = 1.5f;
+		postAttackDelay = 1.8f;
 
+	struct Rectangle towerHitbox = get_tower_hitbox(*tower);
 	if (_meleeOneVec.x == 0 && _meleeOneVec.y == 0) {
 		printf("Boss is performing melee attack\n");
-		// Melee on the player pos
-		_meleeOneVec = player->pos;
+		float minDistance = BOSS_ONE_PRI_ATK_DISTANCE + (boss->hitbox.width / 2.f);
+
+		// Melee on the tower pos
+		if (CP_Vector_Distance(boss->hitbox.pos, towerHitbox.pos) <= minDistance + (towerHitbox.width / 2.f))
+			_meleeOneVec = towerHitbox.pos;
+		// Melee on player pos
+		else if (CP_Vector_Distance(boss->hitbox.pos, player->pos) <= minDistance + (player->hitbox.width / 2.f))
+			_meleeOneVec = player->pos;
 	}
 
 	// Add delay (attacking animation)
@@ -180,11 +190,14 @@ void boss_one_pri_atk(struct Boss *boss, struct ChocoShooter* player, float dt) 
 		return;
 	}
 
-	// Damage player if conditions meet
-	// In this case, it's the distance 80 (not 125)
-	if (CP_Vector_Distance(_meleeOneVec, player->hitbox.pos) <= BOSS_ONE_PRI_ATK_DISTANCE)
-		player_take_damage(player, boss->attackPower);
-	printf("Boss has performed melee attack\n");
+	// Damage player entities if conditions meet
+	if (_priAtkCooldown == 0.f) {
+		if (CP_Vector_Distance(_meleeOneVec, player->hitbox.pos) <= BOSS_ONE_PRI_ATK_DISTANCE)
+			player_take_damage(player, boss->attackPower);
+		if (CP_Vector_Distance(_meleeOneVec, towerHitbox.pos) <= BOSS_ONE_PRI_ATK_DISTANCE)
+			tower_take_damage(tower, 1);
+		printf("Boss has performed melee attack\n");
+	}
 
 	// Post attack animation
 	if (_priAtkCooldown < postAttackDelay)
@@ -201,29 +214,33 @@ void boss_one_pri_atk(struct Boss *boss, struct ChocoShooter* player, float dt) 
 
 
 void render_boss_one_pri_atk_telegraph() {
-	if (_priAtkDelay == 0.f && _priAtkCooldown != 0.f) return;
+	if (_priAtkDelay == 0.f || _priAtkCooldown != 0.f) return;
 
 	CP_Settings_Fill(CP_Color_Create(255, 0, 0, 75));
 	CP_Graphics_DrawCircle(_meleeOneVec.x, _meleeOneVec.y, BOSS_ONE_PRI_ATK_DISTANCE * 2.5f);
 }
 
-int can_boss_one_pri_atk(struct Boss boss, struct ChocoShooter player) {
-	// 75 is min range to snapshot the player's pos for the attack,
+int can_boss_one_pri_atk(struct Boss boss, struct ChocoShooter player, struct DefenseTarget tower) {
+	// 80 is min range to snapshot the player's pos for the attack,
 	// then add half width (distance from center origin of both entities)
 	// You want to the boss to attack as soon as the edge of its hitbox is as close
 	// to the edge of the player's hitbox (rather than the center origin)
-	float minDistance = 75 + (boss.hitbox.width / 2) + (player.hitbox.width / 2);
-	return (CP_Vector_Distance(boss.hitbox.pos, player.hitbox.pos) <= minDistance
-		|| boss.state == BOSS_STATE_ATTACKING_PRIMARY);
+	float minDistance = BOSS_ONE_PRI_ATK_DISTANCE + (boss.hitbox.width / 2.f);
+	struct Rectangle towerHitbox = get_tower_hitbox(tower);
+	return (CP_Vector_Distance(boss.hitbox.pos, player.hitbox.pos) <= minDistance + (player.hitbox.width / 2.f)
+		|| (CP_Vector_Distance(boss.hitbox.pos, towerHitbox.pos) <= minDistance + (towerHitbox.width / 2.f) 
+		|| boss.state == BOSS_STATE_ATTACKING_PRIMARY));
 }
 
-void boss_one_sec_atk(struct Boss *boss, struct ChocoShooter* player, float dt) {
+// Attack only the player
+// But if the tower is within the area, damage it too
+void boss_one_sec_atk(struct Boss *boss, struct ChocoShooter* player, struct DefenseTarget* tower, float dt) {
 	boss->state = BOSS_STATE_ATTACKING_SECONDARY;
 	const float attackingDelay = 3.5f;
 	printf("Boss is performing charge attack\n");
 
 	const float distancePadding = 20.f * 2.f;
-	const float maxDistance = (boss->hitbox.width / 2) + (player->hitbox.width / 2) + distancePadding;
+	const float maxDistance = (boss->hitbox.width / 2) + distancePadding;
 
 	// Set its charge to pos to player's
 	if (_chargeTo.x == 0 && _chargeTo.y == 0) {
@@ -239,8 +256,6 @@ void boss_one_sec_atk(struct Boss *boss, struct ChocoShooter* player, float dt) 
 		return;
 	}
 
-	printf("Charge attack\n");
-
 	// Lerp
 	// Use speed instead
 	_chargeProgress += (boss->speed * dt) / 15.f;
@@ -249,8 +264,11 @@ void boss_one_sec_atk(struct Boss *boss, struct ChocoShooter* player, float dt) 
 
 	// Damage player
 	// [(boss->hitbox.width / 2) + (player->hitbox.width / 2) + 20.f] is the max distance to get hit by
-	if (CP_Vector_Distance(boss->pos, player->pos) <= maxDistance)
+	struct Rectangle towerHitbox = get_tower_hitbox(*tower);
+	if (CP_Vector_Distance(boss->pos, player->pos) <= maxDistance + (player->hitbox.width / 2.f))
 		player_take_damage(player, boss->attackPower);
+	if (CP_Vector_Distance(boss->pos, towerHitbox.pos) <= maxDistance + (towerHitbox.width / 2.f))
+		tower_take_damage(tower, 1);
 
 	// Done charging to pos
 	// Reset values
@@ -309,6 +327,7 @@ void boss_one_move(struct Boss* boss, struct ChocoShooter player, struct Rectang
 #pragma endregion
 
 #pragma region Boss 2
+/*
 void boss_two_pri_atk(struct Boss* boss, struct ChocoShooter* player, float dt) {
 	// _priAtkCooldown in this func is used
 	// for the boss recovering from attack (back to idle animation)
@@ -406,4 +425,5 @@ void boss_two_move(struct Boss* boss, struct ChocoShooter player, struct Rectang
 
 	_move_to_target(boss, hitbox, dt, grid, gridNoBarrier, nodeCount);
 }
+*/
 #pragma endregion

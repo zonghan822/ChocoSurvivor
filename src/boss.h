@@ -28,9 +28,9 @@ struct Boss {
     int health, maxHealth;
     CP_Vector moveDirection;
     void (*move)(struct Boss* boss, struct ChocoShooter player, struct Rectangle hitbox, float dt, PathNode* grid, PathNode* gridNoBarrier, int nodeCount);
-    void (*primaryAttack)(struct Boss*, struct ChocoShooter*, float);
-    int (*canPrimaryAttack)(struct Boss, struct ChocoShooter);
-    void (*secondaryAttack)(struct Boss*, struct ChocoShooter*, float);
+    void (*primaryAttack)(struct Boss*, struct ChocoShooter*, struct DefenseTarget*, float);
+    int (*canPrimaryAttack)(struct Boss, struct ChocoShooter, struct DefenseTarget);
+    void (*secondaryAttack)(struct Boss*, struct ChocoShooter*, struct DefenseTarget*, float);
     int (*canSecondaryAttack)(struct Boss, struct ChocoShooter);
     struct Rectangle hitbox;
     float attackSpeed;
@@ -39,22 +39,24 @@ struct Boss {
 };
 
 struct Boss init_boss_one(float width, float speed, int health, int attack_power, float attack_speed);
-struct Boss init_boss_two(float width, float speed, int health, int attack_power, float attack_speed);
+//struct Boss init_boss_two(float width, float speed, int health, int attack_power, float attack_speed);
 void render_boss(struct Boss);
 int boss_take_damage(struct Boss* boss, int damage);
 void spawn_boss(struct Boss* boss, float x, float y);
 void dispose_boss(struct Boss* boss);
 
-void boss_one_pri_atk(struct Boss*, struct ChocoShooter*, float dt);
+void boss_one_pri_atk(struct Boss*, struct ChocoShooter*, struct DefenseTarget* tower, float dt);
 void render_boss_one_pri_atk_telegraph(void);
-int can_boss_one_pri_atk(struct Boss, struct ChocoShooter);
-void boss_one_sec_atk(struct Boss*, struct ChocoShooter*, float dt);
+int can_boss_one_pri_atk(struct Boss, struct ChocoShooter, struct DefenseTarget);
+void boss_one_sec_atk(struct Boss*, struct ChocoShooter*, struct DefenseTarget* tower, float dt);
 void render_boss_one_sec_atk_telegraph(struct Boss boss, struct ChocoShooter player);
 int can_boss_one_sec_atk(struct Boss, struct ChocoShooter);
 void boss_one_move(struct Boss* boss, struct ChocoShooter player, struct Rectangle hitbox, float dt, PathNode* grid, PathNode* gridNoBarrier, int nodeCount);
 
-void boss_two_pri_atk(struct Boss*, struct ChocoShooter*, float dt);
-int can_boss_two_pri_atk(struct Boss, struct ChocoShooter);
+/*
+void boss_two_pri_atk(struct Boss*, struct ChocoShooter*, struct DefenseTarget*, float dt);
+int can_boss_two_pri_atk(struct Boss, struct ChocoShooter, struct DefenseTarget*);
 void boss_two_sec_atk(struct Boss*, struct ChocoShooter*, float dt);
 int can_boss_two_sec_atk(struct Boss, struct ChocoShooter);
 void boss_two_move(struct Boss* boss, struct ChocoShooter player, struct Rectangle hitbox, float dt, PathNode* grid, PathNode* gridNoBarrier, int nodeCount);
+*/

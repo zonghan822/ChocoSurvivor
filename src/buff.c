@@ -64,7 +64,7 @@ void apply_buff(BuffList* activeBuffs, enum BuffType buff, struct ChocoShooter* 
                 activeBuffs->buffs[i].level++;
             }
             else if (buff == REFLECT_DMG) {
-                activeBuffs->buffs[i].timeLeft += (BUFF_TIME / 3.5f);
+                activeBuffs->buffs[i].timeLeft += (BUFF_TIME / 5.5f);
             }
             else if (buff != HEAL) {
                 activeBuffs->buffs[i].timeLeft += BUFF_TIME;

@@ -126,7 +126,7 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
     _levelWidth = level_width;
     _levelHeight = level_height;
     _heartImg = CP_Image_Load("Assets/heart.png");
-    _playerPortraitImg = CP_Image_Load("Assets/player_portrait.png");\
+    _playerPortraitImg = CP_Image_Load("Assets/player_portrait.png");
     _currentBossHealthWidth = 0.f;
 
     // Reset values
@@ -181,7 +181,7 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
     case GAME_LEVEL_ONE:
         levelBg = CP_Image_Load("Assets/Levels/level1.png");
         bossSpeed = 20.f;
-        _boss = init_boss_one(BOSS_WIDTH, bossSpeed, 4500, 60, 1.03f);
+        _boss = init_boss_one(BOSS_WIDTH, bossSpeed, 4900, 60, 1.03f);
 
         CP_Image towerImg = CP_Image_Load("Assets/tower.png");
 
@@ -189,12 +189,12 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
         _tower.maxHealth = _tower.health = 3;
         _tower.width = 170.0;
         _tower.height = get_preserved_heightf(CP_Image_GetWidth(towerImg), CP_Image_GetHeight(towerImg), _tower.width);
-        _tower.pos = CP_Vector_Set(level_width / 1.05f, level_height / 2.f);
+        _tower.pos = CP_Vector_Set(level_width / 1.04f, level_height / 2.f);
         _tower.flickerState.isVisible = true;
         _tower.img = towerImg;
         // Init Player Properties
-        _respawnVec = CP_Vector_Set(_tower.pos.x / 1.15f, _tower.pos.y);
-        playerInstance = init_player(_respawnVec, 350.0f, 105, 22, 4.2f);
+        _respawnVec = CP_Vector_Set(_tower.pos.x / 1.1f, _tower.pos.y + (_tower.height / 5.5f));
+        playerInstance = init_player(_respawnVec, 350.0f, 105, 20, 4.2f);
         playerInstance.playerMaxExp = 20; // Reset exp
         playerInstance.playerLevel = 1; // Reset level
 
@@ -208,10 +208,10 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
 
         // Clips
         // Enemy clips
-        struct Rectangle oweoMissesEnemyClip = { .pos = CP_Vector_Set(730.f, 290.f), .width = 212.f, .height = 332.f };
-        struct Rectangle enemyClip1 = { .pos = CP_Vector_Set(545.f, 450.f), .width = 40.f, .height = 150.f };
-        struct Rectangle enemyClip2 = { .pos = CP_Vector_Set(895.f, 450.f), .width = 40.f, .height = 150.f };
-        struct Rectangle enemyClip3 = { .pos = CP_Vector_Set(1200.f, 390.f), .width = 150.f, .height = 70.f };
+        struct Rectangle oweoMissesEnemyClip = { .pos = CP_Vector_Set(885.f, 290.f), .width = 212.f, .height = 332.f };
+        struct Rectangle enemyClip1 = { .pos = CP_Vector_Set(650.f, 450.f), .width = 70.f, .height = 150.f };
+        struct Rectangle enemyClip2 = { .pos = CP_Vector_Set(1130.f, 450.f), .width = 70.f, .height = 150.f };
+        struct Rectangle enemyClip3 = { .pos = CP_Vector_Set(1510.f, 390.f), .width = 450.f, .height = 70.f };
         _enemyClips[0] = oweoMissesEnemyClip;
         _enemyClips[1] = enemyClip1;
         _enemyClips[2] = enemyClip2;
@@ -221,9 +221,9 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
         _worldClips[0] = get_tower_hitbox(_tower);
         struct Rectangle topClip = { .pos = CP_Vector_Set(level_width / 2, 50.f), .width = level_width , .height = 110.f };
         struct Rectangle botClip = { .pos = CP_Vector_Set(level_width / 2, 833.f), .width = level_width, .height = 106.f };
-        struct Rectangle oweoClip = { .pos = CP_Vector_Set(750.f, 351.f), .width = 140.f, .height = 60.f }; // Oreo
-        struct Rectangle missesClip = { .pos = CP_Vector_Set(680.f, 203.5f), .width = 40.f, .height = 15.f }; // Kisses
-        struct Rectangle columnClip = { .pos = CP_Vector_Set(1200.f, 600.f), .width = 80.f, .height = 360.f };
+        struct Rectangle oweoClip = { .pos = CP_Vector_Set(915.f, 351.f), .width = 120.f, .height = 60.f }; // Oreo
+        struct Rectangle missesClip = { .pos = CP_Vector_Set(830.f, 190.f), .width = 40.f, .height = 5.f }; // Kisses
+        struct Rectangle columnClip = { .pos = CP_Vector_Set(1520.f, 600.f), .width = 80.f, .height = 360.f };
         _worldClips[1] = topClip;
         _worldClips[2] = botClip;
         _worldClips[3] = oweoClip;
@@ -236,12 +236,12 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
         float bossHeight = get_preserved_heightf((float)CP_Image_GetWidth(bossImg), (float)CP_Image_GetHeight(bossImg), BOSS_WIDTH);
         
         init_grid(&_enemyGrid, level_width, level_height, ENEMY_WIDTH, enemyHeight);
-        init_grid(&_bossGrid, level_width, level_height, BOSS_WIDTH, bossHeight);
+        init_grid(&_bossGrid, level_width, level_height, BOSS_WIDTH / 2.75f, bossHeight / 2.75f);
         update_grid(&_enemyGrid, _worldClips, _worldClipsCount, _enemyClips, 4);
         update_grid(&_bossGrid, _worldClips, _worldClipsCount, _enemyClips, 4);
 
         init_grid(&_enemyGridNB, level_width, level_height, ENEMY_WIDTH, enemyHeight);
-        init_grid(&_bossGridNB, level_width, level_height, BOSS_WIDTH, bossHeight);
+        init_grid(&_bossGridNB, level_width, level_height, BOSS_WIDTH / 2.75f, bossHeight / 2.75f);
         update_grid(&_enemyGridNB, _worldClips, _worldClipsCount, _enemyClips, 4);
         update_grid(&_bossGridNB, _worldClips, _worldClipsCount, _enemyClips, 4);
         break;
@@ -303,6 +303,7 @@ void next_wave_or_level(void) {
         if (currentWave < WAVE_3) {
             _hasPlayedNewWaveMusic = false;
             _deadEnemies = 0; // Reset
+            _roachesMax = 0;
             currentWave++;
             _waveTimer = 0.f; // Reset wave timer to start next wave
         }
@@ -334,7 +335,7 @@ void _render_victory_page(float window_width, float window_height) {
 
     CP_Settings_Fill(CP_Color_Create(220, 220, 220, 255));
     CP_Settings_TextSize(85.f);
-    CP_Font_DrawText("YOU SAVE THE CHOCOLATE!!!", window_width / 2.f, window_height / 4.f);
+    CP_Font_DrawText("YOU SAVED THE CHOCOLATE!!!", window_width / 2.f, window_height / 4.f);
 
     // Render buttons
     render_button(_victoryMenuButton);
@@ -597,7 +598,7 @@ void render_ui(float window_width, float window_height, float mouse_x, float mou
         CP_Settings_Fill(CP_Color_Create(255, 127, 127, 255));
         sprintf_s(currentWaveStr, sizeof(currentWaveStr), "BOSS WAVE");
     }
-    else if ((_deadEnemies - _roachesMax)) {
+    else if (_waveTimer >= (_waveDelay - 1.f)) {
         CP_Settings_Fill(CP_Color_Create(220, 220, 220, 255));
         sprintf_s(currentWaveStr, sizeof(currentWaveStr), "Wave: %d", currentWave);
     }
@@ -629,7 +630,7 @@ void render_ui(float window_width, float window_height, float mouse_x, float mou
     CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_CENTER, CP_TEXT_ALIGN_V_MIDDLE);
 
     // Render remaining enemies
-    if ((_roachesMax - _deadEnemies)) {
+    if (_waveTimer >= (_waveDelay - 1.f) && _roachesMax != 0) {
         CP_Settings_Fill(CP_Color_Create(200, 200, 200, 255));
         CP_Settings_TextSize(25.f);
         char remainingStr[16];
@@ -1017,10 +1018,10 @@ void enemy_move_attack(float dt) {
         break;
     }
 
-    if (_boss.canPrimaryAttack(_boss, playerInstance))
-        _boss.primaryAttack(&_boss, &playerInstance, dt);
+    if (_boss.canPrimaryAttack(_boss, playerInstance, _tower))
+        _boss.primaryAttack(&_boss, &playerInstance, &_tower, dt);
     else if (_boss.canSecondaryAttack(_boss, playerInstance))
-        _boss.secondaryAttack(&_boss, &playerInstance, dt);
+        _boss.secondaryAttack(&_boss, &playerInstance, &_tower, dt);
     #pragma endregion
 }
 
@@ -1081,11 +1082,23 @@ void place_ally(int index, float x, float y) {
 }
 
 #if _DEBUG
-void debug_render_grid(void) {
+void debug_render_enemy_grid(void) {
     draw_grid(_enemyGrid.nodes, _enemyGrid.nodeCount); // draw enemy grid for debugging
-    // draw_grid(_bossGrid.nodes, _bossGrid.nodeCount); // draw boss grid for debugging
     draw_grid(_enemyGridNB.nodes, _enemyGrid.nodeCount); // draw enemy grid for debugging
-    // draw_grid(_bossGridNB.nodes, _bossGrid.nodeCount); // draw boss grid for debugging
+}
+
+void debug_render_boss_grid(void) {
+     draw_grid(_bossGrid.nodes, _bossGrid.nodeCount); // draw boss grid for debugging
+     draw_grid(_bossGridNB.nodes, _bossGrid.nodeCount); // draw boss grid for debugging
+}
+
+void debug_render_clips(void) {
+    CP_Settings_Fill(CP_Color_Create(0, 0, 0, 125));
+    for (int i = 0; i < _worldClipsCount; i++)
+        CP_Graphics_DrawRect(_worldClips[i].pos.x, _worldClips[i].pos.y, _worldClips[i].width, _worldClips[i].height);
+
+    for (int x = 0; x < 4; x++)
+        CP_Graphics_DrawRect(_enemyClips[x].pos.x, _enemyClips[x].pos.y, _enemyClips[x].width, _enemyClips[x].height);
 }
 #endif
 

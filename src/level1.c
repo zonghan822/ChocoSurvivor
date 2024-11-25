@@ -18,7 +18,7 @@
 #include "player.h"
 #include "placeables.h"
 
-#define LEVEL_WIDTH 2000.f
+#define LEVEL_WIDTH 2500.f
 #define LEVEL_HEIGHT 900.f
 
 static CP_Image _cursor, _levelBg;
@@ -212,10 +212,10 @@ void level_one_init(void) {
     _tutImageSpace = CP_Image_Load("Assets/GUI/keyboard_space.png");
 
     // Place tutorial placeables
-    _tutBarrierX = 726.f;
+    _tutBarrierX = 900.f;
     _tutBarrierY = 652.f;
-    _tutAllyX = 1518.f;
-    _tutAllyY = 250.f;
+    _tutAllyX = 650.f;
+    _tutAllyY = 275.f;
     place_barrier(0, _tutBarrierX, _tutBarrierY);
     place_ally(0, _tutAllyX, _tutAllyY);
 
@@ -263,7 +263,9 @@ void level_one_update(void) {
                  Rendering
     **********************************/
 #if _DEBUG
-     // debug_render_grid();
+     //debug_render_enemy_grid();
+     //debug_render_boss_grid();
+     //debug_render_clips();
 #endif
 
     render_barriers();

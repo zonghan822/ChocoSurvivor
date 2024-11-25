@@ -28,10 +28,10 @@ int player_take_damage(struct ChocoShooter* player, int damage) {
 
     flicker(&(player->flickerState), 1);
     player->health = CP_Math_ClampInt(player->health - damage, 0, player->maxHealth);
+    play_sound(SOUND_PLAYER_HURT);
 
     if (player->health > 0) {
         printf("Player took %d damage, health is now %d\n", damage, player->health);
-        play_sound(SOUND_PLAYER_HURT);
         return 1;
     }
 
