@@ -46,8 +46,10 @@ void spawn_boss(struct Boss* boss, float x, float y);
 void dispose_boss(struct Boss* boss);
 
 void boss_one_pri_atk(struct Boss*, struct ChocoShooter*, float dt);
+void render_boss_one_pri_atk_telegraph(void);
 int can_boss_one_pri_atk(struct Boss, struct ChocoShooter);
 void boss_one_sec_atk(struct Boss*, struct ChocoShooter*, float dt);
+void render_boss_one_sec_atk_telegraph(struct Boss boss, struct ChocoShooter player);
 int can_boss_one_sec_atk(struct Boss, struct ChocoShooter);
 void boss_one_move(struct Boss* boss, struct ChocoShooter player, struct Rectangle hitbox, float dt, PathNode* grid, PathNode* gridNoBarrier, int nodeCount);
 

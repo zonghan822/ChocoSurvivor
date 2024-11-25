@@ -141,7 +141,7 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
     _currentBarrierState = BARRIER_IDLE;
     _obstaclesCount = 0;
     _worldClipsCount = 0;
-    _waveDelay = 1.f;
+    _waveDelay = 10.f;
     _enemySpawnIndex = 0;
     _waveTimer = 0.f;
     _spawnTimer = 0.f;
@@ -739,6 +739,8 @@ void render_entities(float dt, float mouse_x) {
     // Update and render boss
     if (_boss.state != BOSS_STATE_UNSPAWNED) {
         _draw_shadows(_boss.pos.x, _boss.pos.y, _boss.width, _boss.height);
+        render_boss_one_sec_atk_telegraph(_boss, playerInstance);
+        render_boss_one_pri_atk_telegraph();
         render_boss(_boss);
     }
 #pragma endregion
@@ -764,6 +766,10 @@ void render_entities(float dt, float mouse_x) {
 // Currently it is just for player
 void check_collision(void) {
     if (isPaused || isWin) return;
+
+    if (!playerInstance.health)
+        if (tower_revive_player(&_tower, &playerInstance))
+            playerInstance.pos = _respawnVec;
 
     // Player
     // Prevent player from moving into non-movable path
@@ -967,10 +973,7 @@ void enemy_move_attack(float dt) {
                                 }
                                 break;
                             }
-                            if (!player_take_damage(&playerInstance, _roaches[i].dmg)) { // Returns 0 if player dies from damage
-                                if (tower_revive_player(&_tower, &playerInstance)) // Returns 1 if tower is still alive after reviving
-                                    playerInstance.pos = _respawnVec;
-                            }
+                            player_take_damage(&playerInstance, _roaches[i].dmg);
                             break;
                 
                         case TARGET_TOWER:
