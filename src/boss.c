@@ -24,7 +24,8 @@ static float _secAtkDelay = 0.f, _secAtkCooldown = 0.f;
 // Boss one attack private variables
 static float _chargeProgress;
 static CP_Vector _meleeOneVec, _chargeTo;
-static const float BOSS_ONE_PRI_ATK_DISTANCE = 80.f;
+static const float BOSS_ONE_PRI_ATK_DISTANCE = 150.f;
+static const float BOSS_ONE_SEC_ATK_DISTANCE_PADDING = 275.f;
 
 // Boss two attack private variables
 static CP_Vector _meleeTwoVec;
@@ -176,13 +177,13 @@ void boss_one_pri_atk(struct Boss *boss, struct ChocoShooter* player, struct Def
 	struct Rectangle towerHitbox = get_tower_hitbox(*tower);
 	if (_meleeOneVec.x == 0 && _meleeOneVec.y == 0) {
 		printf("Boss is performing melee attack\n");
-		float minDistance = BOSS_ONE_PRI_ATK_DISTANCE + (boss->hitbox.width / 2.f);
+		float minDistance = BOSS_ONE_PRI_ATK_DISTANCE + (fabsf(boss->hitbox.width) / 2.f);
 
 		// Melee on the tower pos
 		if (CP_Vector_Distance(boss->hitbox.pos, towerHitbox.pos) <= minDistance + (towerHitbox.width / 2.f))
 			_meleeOneVec = towerHitbox.pos;
 		// Melee on player pos
-		else if (CP_Vector_Distance(boss->hitbox.pos, player->pos) <= minDistance + (player->hitbox.width / 2.f))
+		else if (CP_Vector_Distance(boss->hitbox.pos, player->hitbox.pos) <= minDistance + (fabsf(player->hitbox.width) / 2.f))
 			_meleeOneVec = player->pos;
 	}
 
@@ -194,9 +195,12 @@ void boss_one_pri_atk(struct Boss *boss, struct ChocoShooter* player, struct Def
 
 	// Damage player entities if conditions meet
 	if (_priAtkCooldown == 0.f) {
-		if (CP_Vector_Distance(_meleeOneVec, player->hitbox.pos) <= BOSS_ONE_PRI_ATK_DISTANCE)
+		float distanceToPlayer = CP_Vector_Distance(_meleeOneVec, player->hitbox.pos),
+			distanceToTower = CP_Vector_Distance(_meleeOneVec, towerHitbox.pos);
+
+		if (distanceToPlayer <= BOSS_ONE_PRI_ATK_DISTANCE)
 			player_take_damage(player, boss->attackPower);
-		if (CP_Vector_Distance(_meleeOneVec, towerHitbox.pos) <= BOSS_ONE_PRI_ATK_DISTANCE)
+		if (distanceToTower <= BOSS_ONE_PRI_ATK_DISTANCE)
 			tower_take_damage(tower, 1);
 		printf("Boss has performed melee attack\n");
 	}
@@ -219,7 +223,8 @@ void render_boss_one_pri_atk_telegraph() {
 	if (_priAtkDelay == 0.f || _priAtkCooldown != 0.f) return;
 
 	CP_Settings_Fill(CP_Color_Create(255, 0, 0, 75));
-	CP_Graphics_DrawCircle(_meleeOneVec.x, _meleeOneVec.y, BOSS_ONE_PRI_ATK_DISTANCE * 2.5f);
+
+	CP_Graphics_DrawCircle(_meleeOneVec.x, _meleeOneVec.y, BOSS_ONE_PRI_ATK_DISTANCE * 1.85f);
 }
 
 int can_boss_one_pri_atk(struct Boss boss, struct ChocoShooter player, struct DefenseTarget tower) {
@@ -227,11 +232,11 @@ int can_boss_one_pri_atk(struct Boss boss, struct ChocoShooter player, struct De
 	// then add half width (distance from center origin of both entities)
 	// You want to the boss to attack as soon as the edge of its hitbox is as close
 	// to the edge of the player's hitbox (rather than the center origin)
-	float minDistance = BOSS_ONE_PRI_ATK_DISTANCE + (boss.hitbox.width / 2.f);
+	float minDistance = BOSS_ONE_PRI_ATK_DISTANCE + (fabsf(boss.hitbox.width) / 2.f);
 	struct Rectangle towerHitbox = get_tower_hitbox(tower);
-	return (CP_Vector_Distance(boss.hitbox.pos, player.hitbox.pos) <= minDistance + (player.hitbox.width / 2.f)
+	return ((CP_Vector_Distance(boss.hitbox.pos, player.hitbox.pos) <= minDistance + (fabsf(player.hitbox.width) / 2.f)
 		|| (CP_Vector_Distance(boss.hitbox.pos, towerHitbox.pos) <= minDistance + (towerHitbox.width / 2.f) 
-		|| boss.state == BOSS_STATE_ATTACKING_PRIMARY));
+		|| boss.state == BOSS_STATE_ATTACKING_PRIMARY)) && boss.state != BOSS_STATE_ATTACKING_SECONDARY);
 }
 
 // Attack only the player
@@ -241,12 +246,11 @@ void boss_one_sec_atk(struct Boss *boss, struct ChocoShooter* player, struct Def
 	const float attackingDelay = 3.5f;
 	printf("Boss is performing charge attack\n");
 
-	const float distancePadding = 20.f * 2.f;
-	const float maxDistance = (boss->hitbox.width / 2) + distancePadding;
+	const float maxDistance = (fabsf(boss->hitbox.width) / 2) + BOSS_ONE_SEC_ATK_DISTANCE_PADDING;
 
 	// Set its charge to pos to player's
 	if (_chargeTo.x == 0 && _chargeTo.y == 0) {
-		_chargeTo = player->pos;
+		_chargeTo = player->hitbox.pos;
 
 		if (_chargeTo.x < boss->pos.x && boss->width > 0) // Flip
 			boss->width = -boss->width;
@@ -267,9 +271,11 @@ void boss_one_sec_atk(struct Boss *boss, struct ChocoShooter* player, struct Def
 	// Damage player
 	// [(boss->hitbox.width / 2) + (player->hitbox.width / 2) + 20.f] is the max distance to get hit by
 	struct Rectangle towerHitbox = get_tower_hitbox(*tower);
-	if (CP_Vector_Distance(boss->pos, player->pos) <= maxDistance + (player->hitbox.width / 2.f))
+	float distanceToPlayer = CP_Vector_Distance(boss->hitbox.pos, player->hitbox.pos),
+		distanceToTower = CP_Vector_Distance(boss->hitbox.pos, towerHitbox.pos);
+	if (distanceToPlayer <= distanceToPlayer + (BOSS_ONE_SEC_ATK_DISTANCE_PADDING / 2.f))
 		player_take_damage(player, boss->attackPower);
-	if (CP_Vector_Distance(boss->pos, towerHitbox.pos) <= maxDistance + (towerHitbox.width / 2.f))
+	if (distanceToTower <= distanceToTower + (BOSS_ONE_SEC_ATK_DISTANCE_PADDING / 2.f))
 		tower_take_damage(tower, 1);
 
 	// Done charging to pos
@@ -285,31 +291,30 @@ void boss_one_sec_atk(struct Boss *boss, struct ChocoShooter* player, struct Def
 
 void render_boss_one_sec_atk_telegraph(struct Boss boss, struct ChocoShooter player) {
 	if (_chargeProgress != 0.f || boss.state != BOSS_STATE_ATTACKING_SECONDARY) return;
-	const float distancePadding = 60.f * 2.f;
-	const float maxDistance = (boss.hitbox.width / 2) + (player.hitbox.width / 2) + distancePadding;
+
 	CP_Settings_Fill(CP_Color_Create(255, 0, 0, 75));
 
-	CP_Vector delta = CP_Vector_Subtract(_chargeTo, boss.hitbox.pos);
+	// Angle and distance
 	float angle = atan2f(_chargeTo.y - boss.hitbox.pos.y, _chargeTo.x - boss.hitbox.pos.x);
-	float distance = CP_Vector_Distance(boss.hitbox.pos, _chargeTo) + (distancePadding / 2.f)
-		+ (boss.hitbox.width / 2) + (player.hitbox.width / 2);
+	float distance = CP_Vector_Distance(boss.hitbox.pos, _chargeTo) + (BOSS_ONE_SEC_ATK_DISTANCE_PADDING / 2.f);
 
-	// To correctly render the rect from the middle point at its leftmost side.
-	CP_Vector rectLeftMid = CP_Vector_Set(boss.pos.x + cosf(angle) * (distance / 2.f),
-		boss.pos.y + sinf(angle) * (distance / 2.f));
-	
-	// So it starts from behind the boss
-	rectLeftMid.x -= delta.x < 0 ? -(distancePadding / 2.f) : (distancePadding / 2.f);
+	// To correctly render the rect from the middle point at its leftmost side
+	// Updated to take into account for hitbox offset
+	CP_Vector rectLeftMid = CP_Vector_Set(
+		boss.hitbox.pos.x + cosf(angle) * (distance / 2.f),
+		boss.hitbox.pos.y + sinf(angle) * (distance / 2.f));
+
 	CP_Graphics_DrawRectAdvanced(rectLeftMid.x, rectLeftMid.y,
 		distance,
-		maxDistance, angle * (180.f / M_PI), 0.f);
+		(fabsf(boss.hitbox.width) / 2.f) + (fabsf(player.hitbox.width) / 2.f) + (BOSS_ONE_SEC_ATK_DISTANCE_PADDING / 2.f),
+		angle * (180.f / M_PI), 0.f);
 }
 
 int can_boss_one_sec_atk(struct Boss boss, struct ChocoShooter player) {
-	// 250 is for charging distance
-	float minDistance = 250 + (boss.hitbox.width / 2) + (player.hitbox.width / 2);
-	return (CP_Vector_Distance(boss.hitbox.pos, player.hitbox.pos) <= minDistance && _secAtkCooldown >= 15.f) ||
-		boss.state == BOSS_STATE_ATTACKING_SECONDARY;
+	// Min chargin g distance
+	float minDistance = BOSS_ONE_SEC_ATK_DISTANCE_PADDING + (fabsf(boss.hitbox.width) / 2.f) + (fabsf(player.hitbox.width) / 2.f);
+	return ((CP_Vector_Distance(boss.hitbox.pos, player.hitbox.pos) <= minDistance && _secAtkCooldown >= 15.f) ||
+		boss.state == BOSS_STATE_ATTACKING_SECONDARY) && boss.state != BOSS_STATE_ATTACKING_PRIMARY;
 }
 
 void boss_one_move(struct Boss* boss, struct ChocoShooter player, struct Rectangle hitbox, float dt, PathNode* grid, PathNode* gridNoBarrier, int nodeCount) {
