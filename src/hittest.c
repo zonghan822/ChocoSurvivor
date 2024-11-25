@@ -33,18 +33,26 @@ int are_circles_intersecting(struct Circle a, struct Circle b) {
 }
 
 int are_rects_intersecting(struct Rectangle a, struct Rectangle b) {
-	a.pos.x -= (fabsf(a.width) / 2.f);
-	a.pos.y -= (a.height / 2.f);
-	b.pos.x -= (fabsf(b.width) / 2.f);
-	b.pos.y -= (b.height / 2.f);
+	// Half sizes
+	float aHalfWidth = fabsf(a.width) / 2.f,
+		aHalfHeight = a.height / 2.f,
+		bHalfWidth = fabsf(b.width) / 2.f,
+		bHalfHeight = b.height / 2.f;
 
-	float aRx = a.pos.x + a.width, // rx = Right x
-		aBy = a.pos.y + a.height, // by = Bottom y
-		bRx = b.pos.x + b.width,
-		bBy = b.pos.y + b.height;
+	// Rectangle sides
+	// a
+	// b
+	float aLeft = a.pos.x - aHalfWidth,
+		aRight = a.pos.x + aHalfWidth,
+		aTop = a.pos.y - aHalfHeight,
+		aBottom = a.pos.y + aHalfHeight;
+	float bLeft = b.pos.x - bHalfWidth,
+		bRight = b.pos.x + bHalfWidth,
+		bTop = b.pos.y - bHalfHeight,
+		bBottom = b.pos.y + bHalfHeight;
 
-	// If all true, they are intersecting
-	return a.pos.x < bRx && aRx > b.pos.x && a.pos.y < bBy && aBy > b.pos.y;
+	// Check for overlap
+	return aLeft < bRight && aRight > bLeft && aTop < bBottom && aBottom > bTop;
 }
 
 int are_circle_rect_intersecting(struct Circle circ, struct Rectangle rect) {
@@ -79,10 +87,15 @@ int is_rect_at_boundary(struct Rectangle rect, float screen_w, float screen_h) {
 	return rect.pos.x <= 0 || rect.pos.y <= 0 || rect.pos.x + rect.width >= screen_w || rect.pos.y + rect.height >= screen_h;
 }
 
-void update_rect_hitbox(struct Rectangle* rect, float resized_width, float resized_height, CP_Vector pos) {
-	rect->height = resized_height == 0.0f ? rect->height : resized_height;
-	rect->width = resized_width == 0.0f ? rect->width : resized_width;
-	rect->pos = pos;
+void update_rect_hitbox(struct Rectangle* rect, float entity_width, CP_Vector base_pos, float offset_x, float offset_y) {
+	// Direction (if width is negative, then it's flipped)
+	int direction = (entity_width >= 0.f) ? 1 : -1;
+
+	rect->pos.x = base_pos.x + (offset_x * direction);
+	rect->pos.y = base_pos.y + offset_y;
+
+	// Mirror the hitbox's width if the entity is facing left
+	rect->width = (direction == -1) ? -fabsf(rect->width) : fabsf(rect->width);
 }
 
 bool is_same_hitbox(struct Rectangle lhs, struct Rectangle rhs) {

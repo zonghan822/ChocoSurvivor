@@ -44,6 +44,8 @@ void render_entities(float dt, float mouse_x);
 
 void enemy_move_attack(float dt);
 
+const struct Rectangle* get_world_clips(const int* num);
+
 void check_collision(void);
 
 void place_barrier(int index, float x, float y);

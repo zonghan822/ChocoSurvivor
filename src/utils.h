@@ -37,7 +37,7 @@ float get_preserved_widthf(float width, float height, float new_height);
 
 float get_preserved_heightf(float width, float height, float new_width);
 
-void clamp_pos_clip_rel(CP_Vector* vec, struct Rectangle entity_hitbox, struct Rectangle clip);
+void clamp_pos_clip_rel(struct Rectangle entity_hitbox, CP_Vector* movement, struct Rectangle clip_hitbox);
 
 float resize_by_divisor(float dimension, int divisor);
 

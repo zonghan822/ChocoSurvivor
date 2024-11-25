@@ -17,6 +17,6 @@ int is_rect_at_boundary(struct Rectangle rect, float screen_w, float screen_h);
 #pragma endregion
 
 #pragma region Hitbox
-void update_rect_hitbox(struct Rectangle* rect, float resized_width, float resized_height, CP_Vector pos);
+void update_rect_hitbox(struct Rectangle* rect, float entity_width, CP_Vector base_pos, float offset_x, float offset_y);
 bool is_same_hitbox(struct Rectangle lhs, struct Rectangle rhs);
 #pragma endregion

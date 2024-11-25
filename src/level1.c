@@ -243,8 +243,11 @@ void level_one_update(void) {
     // Function is slightly hardcoded
     next_wave_or_level();
 
-    if (!isPaused && !isWin)
-        move_player(&playerInstance, dt, LEVEL_WIDTH, LEVEL_HEIGHT);
+    if (!isPaused && !isWin) {
+        int worldClipsCount = 0;
+        const struct Rectangle* worldClips = get_world_clips(&worldClipsCount);
+        move_player(&playerInstance, dt, LEVEL_WIDTH, LEVEL_HEIGHT, worldClips, worldClipsCount);
+    }
     update_camera(playerInstance, dt);
    
     // Render background
@@ -264,7 +267,7 @@ void level_one_update(void) {
     **********************************/
 #if _DEBUG
      //debug_render_enemy_grid();
-     // debug_render_boss_grid();
+     //debug_render_boss_grid();
      //debug_render_clips();
 #endif
 

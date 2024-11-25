@@ -224,8 +224,8 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
 
         // Global/World Clips (for all)
         _worldClips[0] = get_tower_hitbox(_tower);
-        struct Rectangle topClip = { .pos = CP_Vector_Set(level_width / 2, 50.f), .width = level_width , .height = 110.f };
-        struct Rectangle botClip = { .pos = CP_Vector_Set(level_width / 2, 833.f), .width = level_width, .height = 106.f };
+        struct Rectangle topClip = { .pos = CP_Vector_Set(level_width / 2, 40.f), .width = level_width , .height = 75.f };
+        struct Rectangle botClip = { .pos = CP_Vector_Set(level_width / 2, level_height - 35.f), .width = level_width, .height = 75.f };
         struct Rectangle oweoClip = { .pos = CP_Vector_Set(915.f, 351.f), .width = 120.f, .height = 60.f }; // Oreo
         struct Rectangle missesClip = { .pos = CP_Vector_Set(840.f, 200.f), .width = 40.f, .height = 15.f }; // Kisses
         struct Rectangle columnClip = { .pos = CP_Vector_Set(1520.f, 600.f), .width = 80.f, .height = 360.f };
@@ -767,13 +767,19 @@ void render_entities(float dt, float mouse_x) {
             playerInstance.width = playerInstance.width < 0 ? -playerInstance.width : playerInstance.width;
         update_flicker(&playerInstance.flickerState, dt);
     }
-    CP_Vector hitboxPos = { playerInstance.pos.x + PLAYER_HITBOX_OFFSET_X(playerInstance.width), playerInstance.pos.y + PLAYER_HITBOX_OFFSET_Y(playerInstance.height) };
-    update_rect_hitbox(&playerInstance.hitbox, 0.0f, 0.0f, hitboxPos); // Update hitbox of player
+    //CP_Vector hitboxPos = { playerInstance.pos.x + PLAYER_HITBOX_OFFSET_X(playerInstance.width), playerInstance.pos.y + PLAYER_HITBOX_OFFSET_Y(playerInstance.height) };
+    update_rect_hitbox(&playerInstance.hitbox, playerInstance.width, playerInstance.pos,
+        fabsf(playerInstance.width) / 4.8f, fabsf(playerInstance.height) / 22.2f); // Update hitbox of player
     if (playerInstance.flickerState.isVisible)
         render_player(playerInstance, 255);
 #pragma endregion
 }
 #pragma endregion
+
+const struct Rectangle* get_world_clips(int* num) {
+    *num = _worldClipsCount;
+    return _worldClips;
+}
 
 // Check for collision
 // Currently it is just for player
@@ -783,15 +789,6 @@ void check_collision(void) {
     if (!playerInstance.health)
         if (tower_revive_player(&_tower, &playerInstance))
             playerInstance.pos = _respawnVec;
-
-    // Player
-    // Prevent player from moving into non-movable path
-    for (int i = 0; i < _worldClipsCount; i++) {
-        struct Rectangle worldClip = _worldClips[i];
-        struct Rectangle playerRect = {playerInstance.pos, fabsf(playerInstance.width), fabsf(playerInstance.height)};
-        if (are_rects_intersecting(playerRect, worldClip))
-            clamp_pos_clip_rel(&playerInstance.pos, playerInstance.hitbox, worldClip);
-    }
 
     // Player Projectiles
     for (int j = 0; j < playerProjectiles.activeCount; j++) {
@@ -947,6 +944,8 @@ void enemy_move_attack(float dt) {
     }
     #pragma endregion
 
+    // AABB
+    CP_Graphics_DrawRect(_boss.hitbox.pos.x, _boss.hitbox.pos.y, _boss.hitbox.width, _boss.hitbox.height);
     bool isBarrierDestroyed = false;
     for (int i = 0; i < _roachesMax; i++) {
         if (_roaches[i].currentState) { // if enemy is alive
@@ -1009,8 +1008,8 @@ void enemy_move_attack(float dt) {
                     _roaches[i].moveDirection = CP_Vector_Zero();
                     break;
             }
-            CP_Vector hitboxPos = { _roaches[i].pos.x + ENEMY_HITBOX_OFFSET_X(_roaches[i].width), _roaches[i].pos.y + ENEMY_HITBOX_OFFSET_Y(_roaches[i].height) };
-            update_rect_hitbox(&_roaches[i].hitbox, 0.0f, 0.0f, hitboxPos); // Update hitbox of enemy
+            //CP_Vector hitboxPos = { _roaches[i].pos.x + ENEMY_HITBOX_OFFSET_X(_roaches[i].width), _roaches[i].pos.y + ENEMY_HITBOX_OFFSET_Y(_roaches[i].height) };
+            update_rect_hitbox(&_roaches[i].hitbox, _roaches[i].width, _roaches[i].pos, -3.f, 5.f); // Update hitbox of enemy
             #pragma endregion
         }
         // can use else statement here for dying animation...

@@ -64,9 +64,6 @@ void apply_buff(BuffList* activeBuffs, enum BuffType buff, struct ChocoShooter* 
             if (buff >= ATTACK_UP && buff <= BARRIER_LVL_UP) {
                 activeBuffs->buffs[i].level++;
             }
-            else if (buff == REFLECT_DMG) {
-                activeBuffs->buffs[i].timeLeft += (BUFF_TIME / 5.5f);
-            }
             else if (buff != HEAL) {
                 activeBuffs->buffs[i].timeLeft += BUFF_TIME;
             }
@@ -194,6 +191,7 @@ void apply_buff(BuffList* activeBuffs, enum BuffType buff, struct ChocoShooter* 
         if (isNotApplied) {
             activeBuffs->buffs[activeBuffs->buffCount - 1].img = CP_Image_Load("Assets/reflectdmg.png");
             activeBuffs->buffs[activeBuffs->buffCount - 1].renderText = "Reflect Damage";
+            activeBuffs->buffs[activeBuffs->buffCount - 1].renderTime /= 3.25f;
         }
         break;
     }

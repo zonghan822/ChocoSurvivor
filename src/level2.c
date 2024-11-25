@@ -58,7 +58,7 @@ void level_two_update(void) {
     if (try_game_over(_windowWidth, _windowHeight, _cursor))
         return; // Game over, so don't do anything else
 
-    move_player(&playerInstance, dt, LEVEL_WIDTH, LEVEL_HEIGHT);
+    // move_player(&playerInstance, dt, LEVEL_WIDTH, LEVEL_HEIGHT);
 
     // Function to TRY to proceed to next wave or level
     // Function is slightly hardcoded
