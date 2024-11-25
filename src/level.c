@@ -949,8 +949,6 @@ void enemy_move_attack(float dt) {
     }
     #pragma endregion
 
-    // AABB
-    CP_Graphics_DrawRect(_boss.hitbox.pos.x, _boss.hitbox.pos.y, _boss.hitbox.width, _boss.hitbox.height);
     bool isBarrierDestroyed = false;
     for (int i = 0; i < _roachesMax; i++) {
         if (_roaches[i].currentState) { // if enemy is alive

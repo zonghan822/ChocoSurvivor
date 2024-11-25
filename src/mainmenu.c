@@ -16,7 +16,12 @@
 
 static struct Button _playButton, _optionsButton, _creditsButton, _quitButton;
 static CP_Image _cursor;
-static CP_Color _bg;
+
+// DigiPen logo
+static float _digiPenLogoTimer;
+static CP_Image _digiPenLogoImg;
+static float _digiPenLogoWidth;
+static int _digiPenLogoAlpha, _digiPenScreenAlpha;
 
 static float _windowWidth, _windowHeight;
 static float _buttonRectX, _buttonRectY, _buttonRectHeight, _buttonRectWidth;
@@ -34,12 +39,15 @@ void main_menu_init(void) {
 	_windowWidth = (float)CP_System_GetWindowWidth();
 	_windowHeight = (float)CP_System_GetWindowHeight();
 
-	_bg = CP_Color_Create(128, 128, 128, 255);
-
 	_buttonRectX = _windowWidth / 2.0f;
 	_buttonRectY = _windowHeight / 2.0f;
 	_buttonRectHeight = 85.0f;
 	_buttonRectWidth = 300.0f;
+
+	_digiPenLogoWidth = 0.f;
+	_digiPenLogoTimer = 0.f;
+	_digiPenScreenAlpha = _digiPenLogoAlpha = 255;
+	_digiPenLogoImg = CP_Image_Load("Assets/DigiPen_Singapore_WEB_WHITE.png");
 
 	CP_Color white = CP_Color_Create(255, 255, 255, 255);
 	_playButton = init_button(_buttonRectX, _buttonRectY - (_buttonRectHeight * 2.f), _buttonRectWidth, _buttonRectHeight, BUTTON_TYPE_SUCCESS,
@@ -56,7 +64,35 @@ void main_menu_init(void) {
 }
 
 void main_menu_update(void) {
-	CP_Graphics_ClearBackground(_bg);
+	float dt = CP_System_GetDt();
+
+	const int startAlpha = 255;
+	const int endAlpha = 0;
+
+	if (_digiPenLogoTimer <= 3.f) {
+		CP_Graphics_ClearBackground(CP_Color_Create(0, 0, 0, 255));
+		float digiPenLogoWidth = (float)CP_Image_GetWidth(_digiPenLogoImg);
+		float digiPenLogoHeight = (float)CP_Image_GetHeight(_digiPenLogoImg);
+
+		_digiPenLogoWidth += (_digiPenLogoWidth == 0.f)
+			? digiPenLogoWidth / 2.f
+			: 22.5f * dt;
+
+		// Lerp alpha to 0
+		// 3.f because it takes 3 seconds (3.f) before forgetting about this code
+		_digiPenLogoAlpha = CP_Math_LerpInt(startAlpha, endAlpha, _digiPenLogoTimer / 3.f);
+
+		float preservedHeight = get_preserved_heightf(digiPenLogoWidth, digiPenLogoHeight, _digiPenLogoWidth);
+		CP_Image_Draw(_digiPenLogoImg,
+			_windowWidth / 2.f, _windowHeight / 2.f,
+			_digiPenLogoWidth, preservedHeight,
+			_digiPenLogoAlpha);
+
+		_digiPenLogoTimer += dt;
+		return;
+	}
+
+	CP_Graphics_ClearBackground(CP_Color_Create(128, 128, 128, 255));
 
 	CP_Settings_TextSize(125.0f);
 	CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255));
@@ -109,10 +145,24 @@ void main_menu_update(void) {
 	CP_Image_Draw(_cursor, mouseX - 20.f, mouseY, cursorWidth,
 		get_preserved_heightf(cursorImgWidth, cursorImgHeight, cursorWidth), 255);
 	CP_Settings_ImageMode(CP_POSITION_CENTER);
+
+	if (_digiPenLogoTimer <= 4.5f) {
+		// - 3.f because the logo takes 3 seconds
+		// 1.5f because 4.5f - 3.f = 1.5f (this is the remainder)
+		_digiPenScreenAlpha = CP_Math_LerpInt(startAlpha, endAlpha, (_digiPenLogoTimer - 3.f) / 1.5f);
+
+		CP_Settings_StrokeWeight(0.f);
+		CP_Settings_Fill(CP_Color_Create(0, 0, 0, _digiPenScreenAlpha));
+		CP_Graphics_DrawRect(_windowWidth / 2.f, _windowHeight / 2.f, _windowWidth, _windowHeight);
+
+		_digiPenLogoTimer += dt;
+		CP_Settings_StrokeWeight(3.f);
+	}
 }
 
 void main_menu_exit(void) {
 	CP_Image_Free(&_cursor);
+	CP_Image_Free(&_digiPenLogoImg);
 
 	dispose_sounds();
 	dispose_tilemap();
