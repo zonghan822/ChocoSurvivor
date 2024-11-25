@@ -87,9 +87,11 @@ void main_menu_update(void) {
 			_digiPenLogoAlpha);
 
 		CP_Settings_TextSize(30.0f);
+		CP_Font_Set(CP_Font_Load("Assets/Fonts/PixelifySans/PixelifySans-VariableFont_wght.ttf"));
 		CP_Settings_Fill(CP_Color_Create(255, 255, 255, _digiPenLogoAlpha));
-		CP_Font_DrawText("All content copyright 2024 DigiPen Institute of Technology Singapore. All Rights Reserved", 
+		CP_Font_DrawText("All content \xC2\xA9 2024 DigiPen Institute of Technology Singapore. All Rights Reserved", 
 			_windowWidth / 2.f, _windowHeight - 25.f);
+		CP_Font_Set(CP_Font_Load("Assets/Fonts/Tiny5/Tiny5-Regular.ttf"));
 
 		_digiPenLogoTimer += dt;
 		return;
