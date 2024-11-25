@@ -67,7 +67,7 @@ void main_menu_update(void) {
 	const int startAlpha = 255;
 	const int endAlpha = 0;
 
-	if (_digiPenLogoTimer <= 3.f) {
+	if (_digiPenLogoTimer <= 4.f) {
 		CP_Graphics_ClearBackground(CP_Color_Create(0, 0, 0, 255));
 		float digiPenLogoWidth = (float)CP_Image_GetWidth(_digiPenLogoImg);
 		float digiPenLogoHeight = (float)CP_Image_GetHeight(_digiPenLogoImg);
@@ -78,13 +78,18 @@ void main_menu_update(void) {
 
 		// Lerp alpha to 0
 		// 3.f because it takes 3 seconds (3.f) before forgetting about this code
-		_digiPenLogoAlpha = CP_Math_LerpInt(startAlpha, endAlpha, _digiPenLogoTimer / 3.f);
+		_digiPenLogoAlpha = CP_Math_LerpInt(startAlpha, endAlpha, _digiPenLogoTimer / 4.f);
 
 		float preservedHeight = get_preserved_heightf(digiPenLogoWidth, digiPenLogoHeight, _digiPenLogoWidth);
 		CP_Image_Draw(_digiPenLogoImg,
 			_windowWidth / 2.f, _windowHeight / 2.f,
 			_digiPenLogoWidth, preservedHeight,
 			_digiPenLogoAlpha);
+
+		CP_Settings_TextSize(30.0f);
+		CP_Settings_Fill(CP_Color_Create(255, 255, 255, _digiPenLogoAlpha));
+		CP_Font_DrawText("All content copyright 2024 DigiPen Institute of Technology Singapore. All Rights Reserved", 
+			_windowWidth / 2.f, _windowHeight - 25.f);
 
 		_digiPenLogoTimer += dt;
 		return;
