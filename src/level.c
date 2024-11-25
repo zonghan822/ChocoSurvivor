@@ -96,6 +96,17 @@ static CP_Image _slotInputImgs[3];
 bool isPaused, isWin;
 static struct Button _resumeButton, _pauseBackToMenuButton, _optionsButton;
 
+CP_Image roachFrames[ROACH_FRAMES];
+const char* framePaths[ROACH_FRAMES] = {
+    "Assets/walking animation/frame1.png",
+    "Assets/walking animation/frame2.png",
+    "Assets/walking animation/frame3.png",
+    "Assets/walking animation/frame4.png",
+    "Assets/walking animation/frame5.png",
+    "Assets/walking animation/frame6.png"
+};
+
+
 // ***************** Naming Convention ***************** //
 //  No prefix           if level-related                 //
 //  player_xyz          if player-related                //
@@ -168,9 +179,23 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
     _spawnMaxY = level_height * 4 / 5;
     _spawnWidth = 300.f;
 
-    CP_Image enemyImg = CP_Image_Load("Assets/choco_roach.png");
-    float enemyHeight = get_preserved_heightf((float)CP_Image_GetWidth(enemyImg),
-        (float)CP_Image_GetHeight(enemyImg), ENEMY_WIDTH);
+    for (int i = 0; i < ROACH_FRAMES; i++) {
+        FILE* file = fopen(framePaths[i], "r");
+        if (file) {
+            fclose(file);
+            roachFrames[i] = CP_Image_Load(framePaths[i]);
+            if (!roachFrames[i]) {
+                fprintf(stderr, "Error: Could not load frame %d from %s. Assigning NULL.\n", i, framePaths[i]);
+            }
+        }
+        else {
+            fprintf(stderr, "Error: Frame %d not found (%s). Assigning NULL.\n", i, framePaths[i]);
+            roachFrames[i] = NULL;
+        }
+    }
+
+    float enemyHeight = get_preserved_heightf((float)CP_Image_GetWidth(roachFrames),
+        (float)CP_Image_GetHeight(roachFrames), ENEMY_WIDTH);
 
     _gameOverMenuButton = init_button(halfWindowWidth, window_height / 1.25f, 300.f, 75.f,
         BUTTON_TYPE_PRIMARY, "Back to Menu", CP_Color_Create(255, 255, 255, 255), 40.f);
@@ -445,7 +470,7 @@ void spawn_enemies(float dt) {
             #pragma endregion
             }
             if (_enemySpawnIndex < _roachesMax) {
-                _roaches[_enemySpawnIndex++] = init_enemy(_spawnMinY, _spawnMaxY, _spawnWidth, enemySpeed, enemyMaxHealth, enemyDmg);
+                _roaches[_enemySpawnIndex++] = init_enemy(_spawnMinY, _spawnMaxY, _spawnWidth, enemySpeed, enemyMaxHealth, enemyDmg, roachFrames, 0.1f);
                 _spawnTimer = 0.f;
                 printf("Enemy spawned. Spawn count: %d | Remaining: %d\n", _enemySpawnIndex, _enemySpawnIndex - _deadEnemies);
 
@@ -749,7 +774,7 @@ void render_entities(float dt, float mouse_x) {
         struct ChocoRoach roach = _roaches[i];
         _draw_shadows(roach.pos.x, roach.pos.y, roach.width, roach.height);
     }
-    render_enemies(_roaches, _roachesMax); // Draw enemies instances
+    render_enemies(_roaches, _roachesMax, dt); // Draw enemies instances
 #pragma endregion
 
 #pragma region Boss
@@ -1040,6 +1065,21 @@ void enemy_move_attack(float dt) {
     #pragma endregion
 }
 
+void load_enemy_frames(void) {
+    for (int i = 0; i < ROACH_FRAMES; i++) {
+        FILE* file = fopen(framePaths[i], "r");
+        if (file) {
+            fclose(file);
+            roachFrames[i] = CP_Image_Load(framePaths[i]);
+        }
+        else {
+            fprintf(stderr, "Error: Frame %d not found (%s). Assigning NULL.\n", i, framePaths[i]);
+            roachFrames[i] = NULL;
+        }
+    }
+}
+
+
 void buff_update(float dt) {
     if (isPaused || isWin) return;
     BuffType randomBuff = update_buff_meter(&playerInstance, dt);
@@ -1123,21 +1163,20 @@ void dispose_resources(void) {
         CP_Image_Free(&playerInstance.img);
     CP_Image_Free(&_heartImg);
     CP_Image_Free(&_playerPortraitImg);
-    CP_Image_Free(&_tower.img);
 
-    for (int i = 0; i < 3; i++) {
-        if (_slotInputImgs[i] != NULL)
-            CP_Image_Free(&_slotInputImgs[i]);
-    }
-    
     for (int i = 0; i < _roachesMax; i++) {
-        struct ChocoRoach roach = _roaches[i];
-        if (roach.img != NULL)
-            CP_Image_Free(&roach.img);
+        struct ChocoRoach* roach = &_roaches[i];
+        for (int j = 0; j < ROACH_FRAMES; j++) {
+            if (roach->roachFrames[j] != NULL) {
+                CP_Image_Free(&roach->roachFrames[j]);
+            }
+        }
     }
     memset(_roaches, 0, sizeof(_roaches));
+
     if (_boss.img != NULL)
         CP_Image_Free(&_boss.img);
+
     free(_enemyGrid.nodes);
     free(_enemyGridNB.nodes);
     free(_bossGrid.nodes);

@@ -8,14 +8,32 @@
 #include "placeables.h"
 
 
-struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth, float speed, int maxHealth, int dmg) {
-    srand((unsigned int)time(NULL));
-    struct ChocoRoach chocoRoach = {0};
-    chocoRoach.img = CP_Image_Load("Assets/choco_roach.png");
+struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth, float speed, int maxHealth, int dmg, CP_Image frames[ROACH_FRAMES], float frameTime) {
+    struct ChocoRoach chocoRoach;
+
+    // Assign animation frames with better error handling
+    for (int i = 0; i < ROACH_FRAMES; i++) {
+        if (frames[i] == NULL) {
+            fprintf(stderr, "Error: Frame %d is NULL. Assigning fallback image.\n", i);
+            chocoRoach.roachFrames[i] = CP_Image_Load("Assets/default_frame.png"); // Fallback image
+            if (chocoRoach.roachFrames[i] == NULL) {
+                fprintf(stderr, "Error: Fallback image not found. Assigning NULL to frame %d.\n", i);
+            }
+        }
+        else {
+            chocoRoach.roachFrames[i] = frames[i];
+        }
+    }
+
+    // Set up enemy properties
     chocoRoach.width = ENEMY_WIDTH;
-    chocoRoach.height = get_preserved_heightf((float)CP_Image_GetWidth(chocoRoach.img), (float)CP_Image_GetHeight(chocoRoach.img), chocoRoach.width);
+    chocoRoach.height = get_preserved_heightf(
+        (float)CP_Image_GetWidth(chocoRoach.roachFrames[0]),
+        (float)CP_Image_GetHeight(chocoRoach.roachFrames[0]),
+        chocoRoach.width
+    );
     chocoRoach.pos.x = CP_Random_RangeFloat(-chocoRoach.width - spawnWidth, -chocoRoach.width);
-    chocoRoach.pos.y = CP_Random_RangeFloat(spawnMinY, spawnMaxY); // Generate random y pos for enemies
+    chocoRoach.pos.y = CP_Random_RangeFloat(spawnMinY, spawnMaxY);
     chocoRoach.speed = speed;
     chocoRoach.health = maxHealth;
     chocoRoach.maxHealth = maxHealth;
@@ -30,8 +48,15 @@ struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth,
     chocoRoach.healthBarDisplayTime = 0.f;
     chocoRoach.isTakingDamage = false;
     chocoRoach.barrierAttack = MAX_BARRIERS;
+
+    // Initialize animation properties
+    chocoRoach.currentFrame = 0;
+    chocoRoach.frameTime = frameTime; // Use the provided frame time
+    chocoRoach.timeAccumulator = 0.0f;
+
     return chocoRoach;
 }
+
 
 void enemy_move_to_target(struct ChocoRoach* roach, struct Rectangle hitbox, float dt, PathNode* grid, PathNode* gridNoBarrier, int nodeCount) {
     int pathArray[50];
@@ -59,17 +84,34 @@ void enemy_move_to_target(struct ChocoRoach* roach, struct Rectangle hitbox, flo
     roach->pos.y += roach->moveDirection.y * roach->speed * dt;
 }
 
-void render_enemies(struct ChocoRoach* roaches, int size) {
+void render_enemies(struct ChocoRoach* roaches, int size, float deltaTime) {
     for (int i = 0; i < size; i++) {
         if (roaches[i].currentState != ENEMY_STATE_DIED) {
-            CP_Image_Draw(roaches[i].img,
+            // Update animation frame
+            roaches[i].timeAccumulator += deltaTime;
+            if (roaches[i].timeAccumulator >= roaches[i].frameTime) {
+                roaches[i].timeAccumulator -= roaches[i].frameTime;
+                roaches[i].currentFrame = (roaches[i].currentFrame + 1) % ROACH_FRAMES; // Cycle through frames
+            }
+
+            // Check for valid frame and dimensions
+            if (!roaches[i].roachFrames[roaches[i].currentFrame]) {
+                fprintf(stderr, "Error: Enemy %d frame %d is NULL. Skipping draw.\n", i, roaches[i].currentFrame);
+                continue;
+            }
+            if (roaches[i].width <= 0 || roaches[i].height <= 0) {
+                fprintf(stderr, "Error: Invalid dimensions for Enemy %d. Skipping draw.\n", i);
+                continue;
+            }
+
+            // Draw current frame
+            CP_Image_Draw(roaches[i].roachFrames[roaches[i].currentFrame],
                 roaches[i].pos.x, roaches[i].pos.y,
-                roaches[i].width, roaches[i].height,
-                255);
-            //printf("enemy %d pos: ( %lf, %lf )\n", i, roaches[i].pos.x, roaches[i].pos.y);
-        }   
+                roaches[i].width, roaches[i].height, 255);
+        }
     }
 }
+
 
 static int _comp(const void* a, const void* b)
 {
