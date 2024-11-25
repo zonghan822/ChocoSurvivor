@@ -767,7 +767,8 @@ void render_entities(float dt, float mouse_x) {
             playerInstance.width = playerInstance.width < 0 ? -playerInstance.width : playerInstance.width;
         update_flicker(&playerInstance.flickerState, dt);
     }
-    update_rect_hitbox(&playerInstance.hitbox, 0.0f, 0.0f, playerInstance.pos); // Update hitbox of player
+    CP_Vector hitboxPos = { playerInstance.pos.x + PLAYER_HITBOX_OFFSET_X(playerInstance.width), playerInstance.pos.y + PLAYER_HITBOX_OFFSET_Y(playerInstance.height) };
+    update_rect_hitbox(&playerInstance.hitbox, 0.0f, 0.0f, hitboxPos); // Update hitbox of player
     if (playerInstance.flickerState.isVisible)
         render_player(playerInstance, 255);
 #pragma endregion

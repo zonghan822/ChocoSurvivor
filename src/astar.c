@@ -1,5 +1,13 @@
-
-
+/******************************************************************************
+*@filename		astar.c
+*@author(s)		Law Zong Han
+*@DP emails		zonghan.law@digipen.edu
+*@course		Software Engineering Project 1
+*@teamname		Choco Latte
+*@gamename		Choco Survivor
+*@brief:
+* This file contains astar pathfinding algorithm for enemy and boss movement.
+******************************************************************************/
 
 #include "cprocessing.h"
 #include "astar.h"
@@ -45,6 +53,7 @@ void init_grid(Grid* grid, float levelWidth, float levelHeight, float nodeWidth,
 	}
 }
 
+// To check if the node is not obstruct by any clips
 static bool is_valid_node(PathNode node, float nodeWidth, float nodeHeight, struct Rectangle* worldClips, int clipsSize) {
 	struct Rectangle currentRect = { node.pos, .width = nodeWidth, .height = nodeHeight };
 	for (int clipIndex = 0; clipIndex < clipsSize; clipIndex++) {
@@ -79,6 +88,7 @@ void update_grid(Grid* grid, struct Rectangle* worldClips, int clipsSize, struct
 
 			if (is_valid_node(grid->nodes[nodeIndex], grid->nodeWidth, grid->nodeHeight, tempArray, size)) {
 
+				// Get index for neighbour node
 				int connectionStartIndexI = max(0, i - 1);
 				int connectionStartIndexJ = max(0, j - 1);
 				int connectionEndIndexI = min(i + 1, grid->nodeCountX - 1);
@@ -88,7 +98,9 @@ void update_grid(Grid* grid, struct Rectangle* worldClips, int clipsSize, struct
 				for (int cI = connectionStartIndexI; cI <= connectionEndIndexI; cI++) {
 					for (int cJ = connectionStartIndexJ; cJ <= connectionEndIndexJ; cJ++) {
 						int neighbourIndex = cI + cJ * grid->nodeCountX;
-						if (nodeIndex == neighbourIndex) continue;
+						if (nodeIndex == neighbourIndex) continue; // Skip if the node is itself
+
+						// Assign to the node connection if no obstruction
 						if (is_valid_node(grid->nodes[neighbourIndex], grid->nodeWidth, grid->nodeHeight, tempArray, size)) {
 							grid->nodes[nodeIndex].connections[connectionIndex] = neighbourIndex;
 							grid->nodes[nodeIndex].connectionCount++;
@@ -104,6 +116,7 @@ void update_grid(Grid* grid, struct Rectangle* worldClips, int clipsSize, struct
 	free(tempArray);
 }
 
+// For debug purpose, draw grid layout on the screen
 void draw_grid(PathNode* grid, int nodeCount) {
 	CP_Settings_Fill(CP_Color_Create(255, 255, 255, 255));
 	for (int i = 0; i < nodeCount; i++) {
@@ -128,6 +141,8 @@ int get_nearest_node_index(PathNode* grid, int nodeCount, CP_Vector position) {
 	return closestNodeIndex;
 }
 
+
+// To initialise and allocate memory for astar list
 static void init_list(AStarList* nodeList, int size) {
 	nodeList->list = (AStarNode*)malloc(size * sizeof(AStarNode));
 	if (nodeList->list == NULL) {
@@ -138,6 +153,7 @@ static void init_list(AStarList* nodeList, int size) {
 	nodeList->size = size;
 }
 
+// To allocate memory for node and append to list
 static void append_list(AStarList* nodeList, AStarNode node) {
 	if (nodeList->nodeCount == nodeList->size) {
 		nodeList->size++;
@@ -151,6 +167,7 @@ static void append_list(AStarList* nodeList, AStarNode node) {
 	nodeList->list[nodeList->nodeCount++] = node;
 }
 
+// To remove node and sort the list
 static void pop_list(AStarList* nodeList, AStarNode node) {
 	for (int i = 0; i < nodeList->nodeCount; i++) {
 		if (nodeList->list[i].nodeIndex == node.nodeIndex) {
@@ -163,6 +180,7 @@ static void pop_list(AStarList* nodeList, AStarNode node) {
 	}
 }
 
+// To reverse an integer array
 static void reverse_array(int* array, int arrayCount) {
 	for (int i = 0, j = arrayCount - 1; i < j; ++i, --j) {
 		int tmp = array[i];

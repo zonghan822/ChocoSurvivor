@@ -1,5 +1,4 @@
 #include "cprocessing.h"
-#include <stdio.h>
 #include "player.h"
 #include "utils.h"
 #include "camera.h"
@@ -7,6 +6,8 @@
 #include "level1.h"
 #include "placeables.h"
 #include "audio.h"
+
+#include <stdio.h>
 
 static const float DASH_COOLDOWN = 1.f,
     DASH_DISTANCE = 150.f, DASH_SPEED = 20.f;
@@ -48,7 +49,6 @@ struct ChocoShooter init_player(CP_Vector pos, float speed, int maxHealth, int a
 
     struct ChocoShooter player = {
         .pos = pos,
-        .hitbox.pos = pos,
         .speed = speed,
         .health = maxHealth,
         .maxHealth = maxHealth,
@@ -64,8 +64,10 @@ struct ChocoShooter init_player(CP_Vector pos, float speed, int maxHealth, int a
         .isReflectingDmg = false
     };
     player.height = get_preserved_heightf((float)CP_Image_GetWidth(player.img), (float)CP_Image_GetHeight(player.img), player.width);
-    player.hitbox.width = player.width / 1.55f;
-    player.hitbox.height = player.height / 1.75f;
+    player.hitbox.pos.x = player.pos.x + PLAYER_HITBOX_OFFSET_X(player.width);
+    player.hitbox.pos.y = player.pos.y + PLAYER_HITBOX_OFFSET_Y(player.height);
+    player.hitbox.width = 17.f / 31.f * player.width;
+    player.hitbox.height = 233.f / 253.f * player.height;
 
     return player;
 }

@@ -6,8 +6,8 @@
 #include "buff.h"
 #include "projectile.h"
 
-#define PLAYER_HITBOX_OFFSET_X(playerWidth) (- 1 / 33.f * playerWidth)
-#define PLAYER_HITBOX_OFFSET_Y(playerHeight) (- 8.f / 77.f * playerHeight)
+#define PLAYER_HITBOX_OFFSET_X(playerWidth) ( 27.f / 62.f * playerWidth)
+#define PLAYER_HITBOX_OFFSET_Y(playerHeight) ( 16.f / 253.f * playerHeight)
 
 // to bring over to next level (map)
 extern struct ChocoShooter playerInstance;
