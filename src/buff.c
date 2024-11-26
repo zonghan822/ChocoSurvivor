@@ -1,3 +1,15 @@
+/******************************************************************************
+*@filename		buff.c
+*@author(s)		Law Zong Han
+*@DP emails		zonghan.law@digipen.edu
+*@course		Software Engineering Project 1
+*@teamname		Choco Latte
+*@gamename		Choco Survivor
+*@brief:
+This file is a header file for astar pathfinding algorithm for enemy and boss
+movement.
+******************************************************************************/
+
 #include "cprocessing.h"
 #include <stdio.h>
 #include <string.h>
@@ -51,7 +63,6 @@ int update_buff_meter(struct ChocoShooter* player, float dt) {
 
     return 0; // Return 0 if no buff is granted
 }
-
 
 void apply_buff(BuffList* activeBuffs, enum BuffType buff, struct ChocoShooter* player, struct Barrier* barrier, struct Ally* allies) {
     if (buff == NO_BUFF) 

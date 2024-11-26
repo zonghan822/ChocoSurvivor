@@ -1,3 +1,15 @@
+/******************************************************************************
+*@filename		enemy.h
+*@author(s)		Law Zong Han
+*@DP emails		zonghan.law@digipen.edu
+*@course		Software Engineering Project 1
+*@teamname		Choco Latte
+*@gamename		Choco Survivor
+*@brief:
+This file is a header file for astar pathfinding algorithm for enemy and boss
+movement.
+******************************************************************************/
+
 #pragma once
 #include <stdbool.h>
 #include "cprocessing.h"
@@ -12,8 +24,6 @@
 #define ENEMY_HITBOX_OFFSET_Y(enemyHeight) (- 8.f / 77.f * enemyHeight)
 #define ENEMY_HEALTHBAR_DISPLAY_TIME 3.f
 #define ROACH_FRAMES 6
-
-static CP_Image roachFrames[ROACH_FRAMES];
 
 enum EnemyState {
 	ENEMY_STATE_DIED = 0,
@@ -46,8 +56,7 @@ struct ChocoRoach {
 };
 
 // Takes in single enemy
-struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth, float speed, int maxHealth, int dmg, CP_Image frames[ROACH_FRAMES], float frameTime);
-
+struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth, float speed, int maxHealth, int dmg, float frameTime);
 void enemy_move_to_target(struct ChocoRoach* roach, struct Rectangle hitbox, float dt, PathNode* grid, PathNode* gridNoBarrier, int nodeCount);
 int enemy_take_damage(struct ChocoRoach* roach, int dmg);
 

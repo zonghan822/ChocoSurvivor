@@ -96,17 +96,6 @@ static CP_Image _slotInputImgs[3];
 bool isPaused, isWin;
 static struct Button _resumeButton, _pauseBackToMenuButton, _optionsButton;
 
-CP_Image roachFrames[ROACH_FRAMES];
-const char* framePaths[ROACH_FRAMES] = {
-    "Assets/walking animation/frame1.png",
-    "Assets/walking animation/frame2.png",
-    "Assets/walking animation/frame3.png",
-    "Assets/walking animation/frame4.png",
-    "Assets/walking animation/frame5.png",
-    "Assets/walking animation/frame6.png"
-};
-
-
 // ***************** Naming Convention ***************** //
 //  No prefix           if level-related                 //
 //  player_xyz          if player-related                //
@@ -179,23 +168,10 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
     _spawnMaxY = level_height * 4 / 5;
     _spawnWidth = 300.f;
 
-    for (int i = 0; i < ROACH_FRAMES; i++) {
-        FILE* file = fopen(framePaths[i], "r");
-        if (file) {
-            fclose(file);
-            roachFrames[i] = CP_Image_Load(framePaths[i]);
-            if (!roachFrames[i]) {
-                fprintf(stderr, "Error: Could not load frame %d from %s. Assigning NULL.\n", i, framePaths[i]);
-            }
-        }
-        else {
-            fprintf(stderr, "Error: Frame %d not found (%s). Assigning NULL.\n", i, framePaths[i]);
-            roachFrames[i] = NULL;
-        }
-    }
+    CP_Image enemyImg = CP_Image_Load("Assets/walking animation/frame1.png");
 
-    float enemyHeight = get_preserved_heightf((float)CP_Image_GetWidth(roachFrames),
-        (float)CP_Image_GetHeight(roachFrames), ENEMY_WIDTH);
+    float enemyHeight = get_preserved_heightf((float)CP_Image_GetWidth(enemyImg),
+        (float)CP_Image_GetHeight(enemyImg), ENEMY_WIDTH);
 
     _gameOverMenuButton = init_button(halfWindowWidth, window_height / 1.25f, 300.f, 75.f,
         BUTTON_TYPE_PRIMARY, "Back to Menu", CP_Color_Create(255, 255, 255, 255), 40.f);
@@ -274,6 +250,7 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
         init_grid(&_bossGridNB, level_width, level_height, 77.f / 144.f * BOSS_WIDTH, 166.f / 251.f * bossHeight);
         update_grid(&_enemyGridNB, _worldClips, _worldClipsCount, _enemyClips, 4);
         update_grid(&_bossGridNB, _worldClips, _worldClipsCount, _enemyClips, 2);
+
         break;
     case GAME_LEVEL_TWO:
         break;
@@ -470,7 +447,7 @@ void spawn_enemies(float dt) {
             #pragma endregion
             }
             if (_enemySpawnIndex < _roachesMax) {
-                _roaches[_enemySpawnIndex++] = init_enemy(_spawnMinY, _spawnMaxY, _spawnWidth, enemySpeed, enemyMaxHealth, enemyDmg, roachFrames, 0.1f);
+                _roaches[_enemySpawnIndex++] = init_enemy(_spawnMinY, _spawnMaxY, _spawnWidth, enemySpeed, enemyMaxHealth, enemyDmg, 0.1f);
                 _spawnTimer = 0.f;
                 printf("Enemy spawned. Spawn count: %d | Remaining: %d\n", _enemySpawnIndex, _enemySpawnIndex - _deadEnemies);
 
@@ -1063,20 +1040,6 @@ void enemy_move_attack(float dt) {
     else if (_boss.canSecondaryAttack(_boss, playerInstance))
         _boss.secondaryAttack(&_boss, &playerInstance, &_tower, dt);
     #pragma endregion
-}
-
-void load_enemy_frames(void) {
-    for (int i = 0; i < ROACH_FRAMES; i++) {
-        FILE* file = fopen(framePaths[i], "r");
-        if (file) {
-            fclose(file);
-            roachFrames[i] = CP_Image_Load(framePaths[i]);
-        }
-        else {
-            fprintf(stderr, "Error: Frame %d not found (%s). Assigning NULL.\n", i, framePaths[i]);
-            roachFrames[i] = NULL;
-        }
-    }
 }
 
 

@@ -1,3 +1,14 @@
+/******************************************************************************
+*@filename		projectile.h
+*@author(s)		Law Zong Han
+*@DP emails		zonghan.law@digipen.edu
+*@course		Software Engineering Project 1
+*@teamname		Choco Latte
+*@gamename		Choco Survivor
+*@brief:
+This file is a header file for 
+******************************************************************************/
+
 #pragma once
 
 #include "cprocessing.h"
