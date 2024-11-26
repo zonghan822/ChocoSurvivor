@@ -1,3 +1,15 @@
+/******************************************************************************
+*@filename		enemy.h
+*@author(s)		Law Zong Han
+*@DP emails		zonghan.law@digipen.edu
+*@course		Software Engineering Project 1
+*@teamname		Choco Latte
+*@gamename		Choco Survivor
+*@brief:
+This file is a header file for astar pathfinding algorithm for enemy and boss
+movement.
+******************************************************************************/
+
 #pragma once
 #include <stdbool.h>
 #include "cprocessing.h"

@@ -1,3 +1,15 @@
+/******************************************************************************
+*@filename		creditsmenu.c
+*@author(s)		Law Zong Han
+*@DP emails		zonghan.law@digipen.edu
+*@course		Software Engineering Project 1
+*@teamname		Choco Latte
+*@gamename		Choco Survivor
+*@brief:
+This file is a header file for astar pathfinding algorithm for enemy and boss
+movement.
+******************************************************************************/
+
 #include "cprocessing.h"
 #include "mainmenu.h"
 #include "button.h"
@@ -139,6 +151,7 @@ void render_credits_menu(float mouse_x, float mouse_y, float window_width, float
 	if (_backToMenuButton.state == BUTTON_STATE_CLICKED || CP_Input_KeyTriggered(KEY_ESCAPE)) {
 		_isInitialized = false;
 		_isCreditsActive = false;
+		CP_Image_Free(&_tutImageLmb);
 	}
 	CP_Settings_StrokeWeight(3.f);
 }

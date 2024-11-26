@@ -1,3 +1,15 @@
+/******************************************************************************
+*@filename		enemy.c
+*@author(s)		Law Zong Han
+*@DP emails		zonghan.law@digipen.edu
+*@course		Software Engineering Project 1
+*@teamname		Choco Latte
+*@gamename		Choco Survivor
+*@brief:
+This file is a header file for astar pathfinding algorithm for enemy and boss
+movement.
+******************************************************************************/
+
 #include <math.h>
 #include <time.h>
 #include <stdio.h>
@@ -59,7 +71,7 @@ struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth,
 
 
 void enemy_move_to_target(struct ChocoRoach* roach, struct Rectangle hitbox, float dt, PathNode* grid, PathNode* gridNoBarrier, int nodeCount) {
-    int pathArray[50];
+    int pathArray[100];
     int pathNodeCount = 0;
     int startNodeIndex = get_nearest_node_index(grid, nodeCount, roach->pos);
     int endNodeIndex = get_nearest_node_index(grid, nodeCount, hitbox.pos);
