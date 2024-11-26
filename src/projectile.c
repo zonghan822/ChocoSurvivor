@@ -1,3 +1,14 @@
+/******************************************************************************
+*@filename		projectile.c
+*@author(s)		Law Zong Han
+*@DP emails		zonghan.law@digipen.edu
+*@course		Software Engineering Project 1
+*@teamname		Choco Latte
+*@gamename		Choco Survivor
+*@brief:
+This file is a file for .
+******************************************************************************/
+
 #include "projectile.h"
 #include "player.h"
 #include "placeables.h"
@@ -17,6 +28,7 @@ ProjectilePool allyProjectiles[MAX_ALLIES];
 static float _allyProjectileSpeed = 750.f, _allyProjectileDiameter = 11.f;
 static float _allyLastShotTime[MAX_ALLIES] = { 0 };
 
+
 static bool _add_projectile(ProjectilePool* pool, struct Projectile projectile) {
     if (pool->activeCount < MAX_PLAYER_PROJECTILES) {
         pool->projectiles[pool->activeCount++] = projectile;
@@ -24,6 +36,7 @@ static bool _add_projectile(ProjectilePool* pool, struct Projectile projectile) 
     }
     return false;
 }
+
 struct Projectile init_projectile(enum ProjectileType projectileType, float projectileSpeed, float diameter, int dmg, CP_Vector direction) {
     struct Projectile projectile = {
         .isActive = true,
@@ -124,6 +137,7 @@ void remove_projectile(ProjectilePool* pool, int index) {
         pool->projectiles[index].isActive = false;
     struct Projectile temp = pool->projectiles[index];
 
+    // Throw the not active projectile to the back of the last active projectile
     for (int i = index; i < pool->activeCount; i++)
         pool->projectiles[i] = pool->projectiles[i + 1];
 

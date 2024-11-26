@@ -7,7 +7,8 @@
 *@gamename		Choco Survivor
 *@brief:
 This file is a header file for astar pathfinding algorithm for enemy and boss 
-movement.
+movement. It contains functions to create grid for the map layout to integrate
+with the astar pathfinding implementation.
 ******************************************************************************/
 
 #pragma once
