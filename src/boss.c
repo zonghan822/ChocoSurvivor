@@ -202,7 +202,10 @@ void boss_one_pri_atk(struct Boss *boss, struct ChocoShooter* player, struct Def
 			distanceToTower = CP_Vector_Distance(_meleeOneVec, towerHitbox.pos);
 
 		if (distanceToPlayer <= BOSS_ONE_PRI_ATK_DISTANCE)
-			player_take_damage(player, boss->attackPower);
+			if (playerInstance.isReflectingDmg)
+				boss_take_damage(boss, boss->attackPower);
+			else
+				player_take_damage(player, boss->attackPower);
 		if (distanceToTower <= BOSS_ONE_PRI_ATK_DISTANCE)
 			tower_take_damage(tower, 1);
 		printf("Boss has performed melee attack\n");
@@ -275,7 +278,10 @@ void boss_one_sec_atk(struct Boss *boss, struct ChocoShooter* player, struct Def
 		distanceToTower = CP_Vector_Distance(boss->hitbox.pos, towerHitbox.pos);
 	printf("%f, %f\n", distanceToPlayer, (fabsf(boss->hitbox.width) / 2.f) + (fabsf(player->hitbox.width) / 2.f));
 	if (distanceToPlayer <= BOSS_ONE_SEC_ATK_DISTANCE + (fabsf(boss->hitbox.width) / 2.f) + (fabsf(player->hitbox.width) / 2.f))
-		player_take_damage(player, boss->attackPower);
+		if (playerInstance.isReflectingDmg) 
+			boss_take_damage(boss, boss->attackPower);
+		else 
+			player_take_damage(player, boss->attackPower);
 	if (distanceToTower <= BOSS_ONE_SEC_ATK_DISTANCE + (fabsf(boss->hitbox.width) / 2.f) + (towerHitbox.width / 2.f))
 		tower_take_damage(tower, 1);
 

@@ -200,6 +200,7 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
         _tower.pos = CP_Vector_Set(level_width / 1.04f, level_height / 2.f);
         _tower.flickerState.isVisible = true;
         _tower.img = towerImg;
+
         // Init Player Properties
         _respawnVec = CP_Vector_Set(_tower.pos.x / 1.1f, _tower.pos.y + (_tower.height / 5.5f));
         playerInstance = init_player(_respawnVec, 350.0f, 105, 20, 4.2f);
@@ -243,12 +244,12 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
         CP_Image bossImg = CP_Image_Load("Assets/boss_lvl1.png");
         float bossHeight = get_preserved_heightf((float)CP_Image_GetWidth(bossImg), (float)CP_Image_GetHeight(bossImg), BOSS_WIDTH);
         
-        init_grid(&_enemyGrid, level_width, level_height, 0.8f * ENEMY_WIDTH, 0.75f * enemyHeight);
+        init_grid(&_enemyGrid, level_width, level_height, (0.8f * ENEMY_WIDTH) + 5.f, (0.75f * enemyHeight)+ 5.f);
         init_grid(&_bossGrid, level_width, level_height, 77.f / 144.f * BOSS_WIDTH, 166.f / 251.f * bossHeight);
         update_grid(&_enemyGrid, _worldClips, _worldClipsCount, _enemyClips, 4);
         update_grid(&_bossGrid, _worldClips, _worldClipsCount, _enemyClips, 2);
 
-        init_grid(&_enemyGridNB, level_width, level_height, 0.8f * ENEMY_WIDTH, 0.75f * enemyHeight);
+        init_grid(&_enemyGridNB, level_width, level_height, (0.8f * ENEMY_WIDTH) + 5.f, (0.75f * enemyHeight) + 5.f);
         init_grid(&_bossGridNB, level_width, level_height, 77.f / 144.f * BOSS_WIDTH, 166.f / 251.f * bossHeight);
         update_grid(&_enemyGridNB, _worldClips, _worldClipsCount, _enemyClips, 4);
         update_grid(&_bossGridNB, _worldClips, _worldClipsCount, _enemyClips, 2);
@@ -1062,6 +1063,7 @@ void enemy_move_attack(float dt) {
 void buff_update(float dt) {
     if (isPaused || isWin) return;
     BuffType randomBuff = update_buff_meter(&playerInstance, dt);
+    randomBuff = randomBuff ? randomBuff : debug_assign_buff(); // for debugging
     // Apply the buff if it is upgrades buff
     if (randomBuff) {
         if (randomBuff >= ATTACK_UP && randomBuff <= BARRIER_LVL_UP) {
