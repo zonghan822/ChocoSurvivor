@@ -266,7 +266,7 @@ void level_one_update(void) {
                  Rendering
     **********************************/
 #if _DEBUG
-     //debug_render_enemy_grid();
+     debug_render_enemy_grid();
      //debug_render_boss_grid();
      //debug_render_clips();
 #endif
