@@ -148,7 +148,8 @@ void render_credits_menu(float mouse_x, float mouse_y, float window_width, float
 	}
 
 	// Save
-	if (_backToMenuButton.state == BUTTON_STATE_CLICKED || CP_Input_KeyTriggered(KEY_ESCAPE)) {
+	if ((!is_mouse_on_rect(_creditsPanel, mouse_x, mouse_y) && CP_Input_MouseTriggered(MOUSE_BUTTON_LEFT))
+		|| _backToMenuButton.state == BUTTON_STATE_CLICKED || CP_Input_KeyTriggered(KEY_ESCAPE)) {
 		_isInitialized = false;
 		_isCreditsActive = false;
 		CP_Image_Free(&_tutImageLmb);
