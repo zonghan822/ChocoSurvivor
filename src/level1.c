@@ -29,15 +29,17 @@ static float _windowWidth, _windowHeight;
 static CP_Image _tutImageW, _tutImageA, _tutImageS, _tutImageD;
 static CP_Image _tutImageSpace;
 static CP_Image _tutImageV, _tutImageB;
-static CP_Image _tutImageRmb;
+static CP_Image _tutImageRmb, _tutImageLmb;
 static bool _tutHasPressedW, _tutHasPressedA, _tutHasPressedS, _tutHasPressedD; // WASD
 static bool _tutHasPressedSpace; // Space
 static bool _tutHasPressedV, _tutHasPressedB; // Ally and Barrier, respectively
-static bool _tutHasPressedRmb;
+static bool _tutHasPressedRmb, _tutHasHoldLmb;
 static float _tutBarrierX, _tutBarrierY;
 static float _tutAllyX, _tutAllyY;
+static bool _hasPressedF11, _hasPressedF12;
+static float _tutLmbHoldTime;
 
-static void _render_tutorials() {
+static void _render_tutorials(float dt) {
     CP_Settings_StrokeWeight(5.f);
     CP_Settings_Fill(CP_Color_Create(0, 0, 0, 100));
     float square = 50.f,
@@ -118,6 +120,35 @@ static void _render_tutorials() {
         }
     }
 
+    // Hold Mouse Button
+    {
+        if (_tutHasPressedW && _tutHasPressedA && _tutHasPressedS && _tutHasPressedD && _tutHasPressedSpace && !_tutHasHoldLmb) {
+            float x = playerInstance.pos.x - 20.f,
+                y = playerInstance.pos.y - 90.f;
+
+            float width = 55.f;
+            float imgWidth = (float)CP_Image_GetWidth(_tutImageLmb),
+                imgHeight = (float)CP_Image_GetHeight(_tutImageLmb);
+            float height = get_preserved_heightf(imgWidth, imgHeight, width);
+            CP_Settings_TextSize(35.f);
+            CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255));
+            CP_Font_DrawTextBox("Hold      to shoot", x - 135.f, y + 5.f, 255.f);
+            CP_Settings_Fill(CP_Color_Create(0, 0, 0, 100));
+            CP_Graphics_DrawRectAdvanced(x - 35.f, y, 32.f, 36.f, 0.f, 5.f);
+            CP_Image_Draw(_tutImageLmb,
+                x - 35.f, y,
+                50.f, 50.f,
+                255);
+            if (CP_Input_MouseDown(MOUSE_BUTTON_LEFT)) {
+                _tutLmbHoldTime += dt;
+            }
+            _tutHasHoldLmb = _tutLmbHoldTime >= 2.f;
+            if (CP_Input_MouseReleased(MOUSE_BUTTON_LEFT)) {
+                _tutLmbHoldTime = 0;
+            }
+        }
+    }
+
     // Placeables
     {
         if (!_tutHasPressedB) { // B
@@ -185,8 +216,21 @@ static void _render_mouse_tutorials() {
 
             _tutCanCancelPlaceablesRmb = true;
         }
-        // LMB?
     }
+}
+
+static void _debug_render_grid() {
+    if (CP_Input_KeyTriggered(KEY_F11)) {
+        _hasPressedF11 = !_hasPressedF11;
+        _hasPressedF12 = false;
+    }
+    if (CP_Input_KeyTriggered(KEY_F12)) {
+        _hasPressedF12 = !_hasPressedF12;
+        _hasPressedF11 = false;
+    }
+    if (_hasPressedF11) debug_render_enemy_grid();
+    if (_hasPressedF12) debug_render_boss_grid();
+     //debug_render_clips();
 }
 
 void level_one_init(void) {
@@ -200,8 +244,9 @@ void level_one_init(void) {
     _levelBg = init_level(GAME_LEVEL_ONE, LEVEL_WIDTH, LEVEL_HEIGHT, _windowWidth, _windowHeight);
     _tutHasPressedW = _tutHasPressedA = _tutHasPressedS =
         _tutHasPressedD = _tutHasPressedV = _tutHasPressedB =
-        _tutHasPressedRmb = _tutCanCancelPlaceablesRmb = 
-        _tutHasPressedSpace = false;
+        _tutHasPressedRmb = _tutHasHoldLmb =
+        _tutCanCancelPlaceablesRmb = _tutHasPressedSpace = 
+        _hasPressedF11 = _hasPressedF12 = false;
     
     _tutImageW = CP_Image_Load("Assets/GUI/keyboard_w.png");
     _tutImageA = CP_Image_Load("Assets/GUI/keyboard_a.png");
@@ -210,6 +255,7 @@ void level_one_init(void) {
     _tutImageV = CP_Image_Load("Assets/GUI/keyboard_v.png");
     _tutImageB = CP_Image_Load("Assets/GUI/keyboard_b.png");
     _tutImageRmb = CP_Image_Load("Assets/GUI/mouse_right.png");
+    _tutImageLmb = CP_Image_Load("Assets/GUI/mouse_left.png");
     _tutImageSpace = CP_Image_Load("Assets/GUI/keyboard_space.png");
 
     // Place tutorial placeables
@@ -217,6 +263,7 @@ void level_one_init(void) {
     _tutBarrierY = 645.f;
     _tutAllyX = 650.f;
     _tutAllyY = 275.f;
+    _tutLmbHoldTime = 0.f;
     place_barrier(0, _tutBarrierX, _tutBarrierY);
     place_ally(0, _tutAllyX, _tutAllyY);
 
@@ -233,8 +280,10 @@ void level_one_update(void) {
     }*/
 
     float dt = CP_System_GetDt();
-    float mouseX = CP_Input_GetMouseWorldX(),
-        mouseY = CP_Input_GetMouseWorldY();
+    float mouseWorldX = CP_Input_GetMouseWorldX(),
+        mouseWorldY = CP_Input_GetMouseWorldY();
+    float mouseX = CP_Input_GetMouseX(),
+        mouseY = CP_Input_GetMouseY();
 
     if (try_game_over(_windowWidth, _windowHeight, _cursor))
         return; // Game over, so don't do anything else
@@ -260,33 +309,30 @@ void level_one_update(void) {
     spawn_enemies(dt);
 
     // Player placeables
-    player_placeables(mouseX, mouseY, dt);
+    player_placeables(mouseWorldX, mouseWorldY, dt);
 
     /*********************************
-                 Rendering
+           Rendering with camera
     **********************************/
-#if _DEBUG
-     debug_render_enemy_grid();
-     //debug_render_boss_grid();
-     //debug_render_clips();
-#endif
-
+    _debug_render_grid();
     render_barriers();
     render_allies();
-    render_entities(dt, mouseX);
+    render_entities(dt, mouseWorldX);
     render_health_bars(dt);
-    _render_tutorials();
+    _render_tutorials(dt);
 
     /*********************************
          Movement and Attack Logic
     **********************************/
     if (!isPaused && !isWin)
-        player_shoot(dt, enableShooting, mouseX, mouseY);
+        player_shoot(dt, enableShooting, mouseWorldX, mouseWorldY);
     check_collision(); // For player
     enemy_move_attack(dt);
     buff_update(dt);
 
-    // Render any UI here
+    /*********************************
+         Rendering without camera
+    **********************************/
     CP_Settings_ResetMatrix();
     render_new_wave_counter(_windowWidth, _windowHeight);
     render_ui(_windowWidth, _windowHeight, mouseX, mouseY, dt);

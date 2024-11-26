@@ -55,11 +55,15 @@ enum SoundType {
 
 #pragma region Music
 	// Music
+	// Jingles
 	SOUND_MUSIC_GAME_OVER,
 	SOUND_MUSIC_LEVEL_UP,
 	SOUND_MUSIC_NEW_WAVE_START,
 	SOUND_MUSIC_NEW_MAP_LEVEL,
-	// MUSIC_SOMETHING
+	// Loopable Music
+	SOUND_MUSIC_NORMAL_WAVE,
+	SOUND_MUSIC_BOSS_WAVE,
+	SOUND_MUSIC_MAIN_MENU,
 #pragma endregion
 
 #pragma region UI

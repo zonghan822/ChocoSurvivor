@@ -378,3 +378,18 @@ void render_buff(BuffList* activeBuffs, float windowWidth, float windowHeight, f
         }
     }
 }
+
+// for debugging - assign buff with F1-F10
+int debug_assign_buff(void) {
+    if (CP_Input_KeyTriggered(KEY_F1)) return ATTACK_UP;
+    if (CP_Input_KeyTriggered(KEY_F2)) return ATTACK_SPEED_UP;
+    if (CP_Input_KeyTriggered(KEY_F3)) return HEALTH_UP;
+    if (CP_Input_KeyTriggered(KEY_F4)) return ALLY_LVL_UP;
+    if (CP_Input_KeyTriggered(KEY_F5)) return BARRIER_LVL_UP;
+    if (CP_Input_KeyTriggered(KEY_F6)) return HEAL;
+    if (CP_Input_KeyTriggered(KEY_F7)) return SMART_PISTOL;
+    if (CP_Input_KeyTriggered(KEY_F8)) return FROZING_SHOTS;
+    if (CP_Input_KeyTriggered(KEY_F9)) return MULTI_SHOTS;
+    if (CP_Input_KeyTriggered(KEY_F10)) return REFLECT_DMG;
+    return 0;
+}
