@@ -54,7 +54,7 @@ struct ChocoShooter init_player(CP_Vector pos, float speed, int maxHealth, int a
         .maxHealth = maxHealth,
         .img = CP_Image_Load("Assets/choco_shooter.png"),
         .movement = STOPPED,
-        .width = 100.f,
+        .width = 120.f,
         .attackSpeed = fireRate,
         .attackPower = atk,
         .flickerState.isVisible = TRUE,
@@ -72,13 +72,7 @@ struct ChocoShooter init_player(CP_Vector pos, float speed, int maxHealth, int a
     player.chocoFrames[4] = CP_Image_Load("Assets/walking animation/choco_F5.png");
     player.chocoFrames[5] = CP_Image_Load("Assets/walking animation/choco_F6.png");
 
-    for (int i = 0; i < CHOCOSHOOTER_FRAMES; i++) {
-        if (player.chocoFrames[i] == NULL) {
-            printf("Warning: Frame %d is NULL. Assigning fallback image.\n", i);
-            player.chocoFrames[i] = player.chocoFrames[1]; // Replace with your fallback image
-        }
-    }
-
+ 
 
     float maxHeight = 0.0f;
     for (int i = 0; i < CHOCOSHOOTER_FRAMES; i++) {
@@ -93,7 +87,7 @@ struct ChocoShooter init_player(CP_Vector pos, float speed, int maxHealth, int a
             }
         }
     }
-    player.height = maxHeight; // Ensure uniform height for all frames
+    player.height = maxHeight*1.1; // Ensure uniform height for all frames
 
   
     player.hitbox.pos.x = player.pos.x + PLAYER_HITBOX_OFFSET_X(player.width);
@@ -227,18 +221,18 @@ void render_player(struct ChocoShooter* player, int alpha, float deltaTime) {
             player->lastPausedFrame = player->currentFrame; // Save the current frame as the last paused frame
         }
     }
-
+    
     // Render based on movement state
     if (player->movement == STOPPED) {
         // Render the last paused frame
         CP_Image_Draw(player->chocoFrames[player->lastPausedFrame],
             player->pos.x, player->pos.y,
-            player->width, player->height, alpha);
+            player->width, player->height, 255);
     }
     else {
         // Render the current animation frame
         CP_Image_Draw(player->chocoFrames[player->currentFrame],
             player->pos.x, player->pos.y,
-            player->width, player->height, alpha);
+            player->width, player->height, 255);
     }
 }

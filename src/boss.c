@@ -108,6 +108,15 @@ struct Boss init_boss_one(float width, float speed, int health, int attack_power
 		.canSecondaryAttack = can_boss_one_sec_atk,
 		.move = boss_one_move
 	};
+	boss.bossFrames[0] = CP_Image_Load("Assets/walking animation/boss_F1.png");
+	boss.bossFrames[1] = CP_Image_Load("Assets/walking animation/boss_F2.png");
+	boss.bossFrames[2] = CP_Image_Load("Assets/walking animation/boss_F3.png");
+	boss.bossFrames[3] = CP_Image_Load("Assets/walking animation/boss_F4.png");
+	boss.bossFrames[4] = CP_Image_Load("Assets/walking animation/boss_F5.png");
+	boss.bossFrames[5] = CP_Image_Load("Assets/walking animation/boss_F6.png");
+	boss.bossFrames[6] = CP_Image_Load("Assets/walking animation/boss_F7.png");
+	boss.bossFrames[7] = CP_Image_Load("Assets/walking animation/boss_F8.png");
+
 	boss.hitbox.pos.x = boss.pos.x + BOSS_HITBOX_OFFSET_X(boss.width);
 	boss.hitbox.pos.y = boss.pos.y;
 	boss.hitbox.width = 77.f / 144.f * boss.width;

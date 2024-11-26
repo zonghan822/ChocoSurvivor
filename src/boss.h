@@ -23,6 +23,7 @@
 
 #define BOSS_WIDTH 180.f
 #define BOSS_HITBOX_OFFSET_X(bossWidth) (- 143.f/432.f * bossWidth)
+#define BOSS_FRAMES 6
 
 enum BossState {
     BOSS_STATE_UNSPAWNED = -1,
@@ -41,6 +42,7 @@ struct Boss {
     float width, height;
     float speed;
     CP_Image img;
+    CP_Image bossFrames[BOSS_FRAMES];
     enum BossState state;
     int health, maxHealth;
     CP_Vector moveDirection;
@@ -53,6 +55,11 @@ struct Boss {
     float attackSpeed;
     int attackPower;
     bool isTakingDamage;
+
+    int currentFrame; // Index of the current frame being rendered
+    float frameTime;  // Time per frame
+    float timeAccumulator;
+    int lastPausedFrame;
 };
 
 struct Boss init_boss_one(float width, float speed, int health, int attack_power, float attack_speed);
