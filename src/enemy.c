@@ -20,24 +20,16 @@ movement.
 #include "placeables.h"
 
 
-struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth, float speed, int maxHealth, int dmg, CP_Image frames[ROACH_FRAMES], float frameTime) {
-    struct ChocoRoach chocoRoach;
-
-    // Assign animation frames with better error handling
-    for (int i = 0; i < ROACH_FRAMES; i++) {
-        if (frames[i] == NULL) {
-            fprintf(stderr, "Error: Frame %d is NULL. Assigning fallback image.\n", i);
-            chocoRoach.roachFrames[i] = CP_Image_Load("Assets/default_frame.png"); // Fallback image
-            if (chocoRoach.roachFrames[i] == NULL) {
-                fprintf(stderr, "Error: Fallback image not found. Assigning NULL to frame %d.\n", i);
-            }
-        }
-        else {
-            chocoRoach.roachFrames[i] = frames[i];
-        }
-    }
+struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth, float speed, int maxHealth, int dmg, float frameTime) {
+    struct ChocoRoach chocoRoach = {0};
 
     // Set up enemy properties
+    chocoRoach.roachFrames[0] = CP_Image_Load("Assets/walking animation/frame1.png");
+    chocoRoach.roachFrames[1] = CP_Image_Load("Assets/walking animation/frame2.png");
+    chocoRoach.roachFrames[2] = CP_Image_Load("Assets/walking animation/frame3.png");
+    chocoRoach.roachFrames[3] = CP_Image_Load("Assets/walking animation/frame4.png");
+    chocoRoach.roachFrames[4] = CP_Image_Load("Assets/walking animation/frame5.png");
+    chocoRoach.roachFrames[5] = CP_Image_Load("Assets/walking animation/frame6.png");
     chocoRoach.width = ENEMY_WIDTH;
     chocoRoach.height = get_preserved_heightf(
         (float)CP_Image_GetWidth(chocoRoach.roachFrames[0]),
@@ -108,11 +100,11 @@ void render_enemies(struct ChocoRoach* roaches, int size, float deltaTime) {
 
             // Check for valid frame and dimensions
             if (!roaches[i].roachFrames[roaches[i].currentFrame]) {
-                fprintf(stderr, "Error: Enemy %d frame %d is NULL. Skipping draw.\n", i, roaches[i].currentFrame);
+                printf("Error: Enemy %d frame %d is NULL. Skipping draw.\n", i, roaches[i].currentFrame);
                 continue;
             }
             if (roaches[i].width <= 0 || roaches[i].height <= 0) {
-                fprintf(stderr, "Error: Invalid dimensions for Enemy %d. Skipping draw.\n", i);
+                printf("Error: Invalid dimensions for Enemy %d. Skipping draw.\n", i);
                 continue;
             }
 
@@ -123,7 +115,6 @@ void render_enemies(struct ChocoRoach* roaches, int size, float deltaTime) {
         }
     }
 }
-
 
 static int _comp(const void* a, const void* b)
 {

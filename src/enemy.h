@@ -25,8 +25,6 @@ movement.
 #define ENEMY_HEALTHBAR_DISPLAY_TIME 3.f
 #define ROACH_FRAMES 6
 
-static CP_Image roachFrames[ROACH_FRAMES];
-
 enum EnemyState {
 	ENEMY_STATE_DIED = 0,
 	ENEMY_STATE_MOVING_TO_TOWER,
@@ -58,8 +56,7 @@ struct ChocoRoach {
 };
 
 // Takes in single enemy
-struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth, float speed, int maxHealth, int dmg, CP_Image frames[ROACH_FRAMES], float frameTime);
-
+struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth, float speed, int maxHealth, int dmg, float frameTime);
 void enemy_move_to_target(struct ChocoRoach* roach, struct Rectangle hitbox, float dt, PathNode* grid, PathNode* gridNoBarrier, int nodeCount);
 int enemy_take_damage(struct ChocoRoach* roach, int dmg);
 
