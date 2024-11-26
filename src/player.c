@@ -146,6 +146,7 @@ void move_player(struct ChocoShooter* player, float dt, float level_width, float
 
     // Dash movement with spacebar
     if (CP_Input_KeyDown(KEY_SPACE) && !_isDashing && _lastDash >= DASH_COOLDOWN) {
+        play_sound(SOUND_PLAYER_DASH);
         _dashTo = player->pos;
         _isDashing = true;
         _dashProgress = 0.0;

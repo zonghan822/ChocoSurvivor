@@ -64,7 +64,10 @@ static CP_Sound _soundUiButtonHover,
 static CP_Sound _soundMusicGameOver,
 	_soundMusicLevelUp,
 	_soundMusicNewWaveStart,
-	_soundMusicNewMapLevel;
+	_soundMusicNewMapLevel,
+	_soundMusicNormalWave,
+	_soundMusicBossWave,
+	_soundMusicMainMenu;
 #pragma endregion
 #pragma endregion
 
@@ -110,6 +113,12 @@ static CP_Sound _get_sound_object(enum SoundType sound_type) {
 			return _soundMusicNewWaveStart;
 		case SOUND_MUSIC_NEW_MAP_LEVEL:
 			return _soundMusicNewMapLevel;
+		case SOUND_MUSIC_NORMAL_WAVE:
+			return _soundMusicNormalWave;
+		case SOUND_MUSIC_BOSS_WAVE:
+			return _soundMusicBossWave;
+		case SOUND_MUSIC_MAIN_MENU:
+			return _soundMusicMainMenu;
 		case SOUND_UI_BUTTON_HOVER:
 			return _soundUiButtonHover;
 		case SOUND_UI_BUTTON_BACK_CLICK:
@@ -118,7 +127,7 @@ static CP_Sound _get_sound_object(enum SoundType sound_type) {
 			return _soundUiButtonConfirmClick;
 			// Add more cases as needed for UI and Music sounds
 		default:
-			// Return a default sound or handle the error appropriately
+			// Return a default sound
 			return NULL;
 	}
 }
@@ -152,6 +161,9 @@ static enum SoundGroup _get_sound_group(enum SoundType sound_type) {
 		case SOUND_MUSIC_LEVEL_UP:
 		case SOUND_MUSIC_NEW_WAVE_START:
 		case SOUND_MUSIC_NEW_MAP_LEVEL:
+		case SOUND_MUSIC_NORMAL_WAVE:
+		case SOUND_MUSIC_BOSS_WAVE:
+		case SOUND_MUSIC_MAIN_MENU:
 		    return SOUNDGROUP_MUSIC;
 
 		// UI Group
@@ -217,6 +229,8 @@ void init_sounds(void) {
 	_soundPlayerHurt1 = CP_Sound_Load("Assets/Sounds/select_003.ogg");
 	_soundPlayerHurt2 = CP_Sound_Load("Assets/Sounds/select_004.ogg");
 	_soundPlayerHurt3 = CP_Sound_Load("Assets/Sounds/select_005.ogg");
+	_soundPlayerShoot = CP_Sound_Load("Assets/Sounds/gun.wav");
+	_soundPlayerDash = CP_Sound_Load("Assets/Sounds/dash.wav");
 	//...
 
 	// Music
@@ -224,6 +238,9 @@ void init_sounds(void) {
 	_soundMusicLevelUp = CP_Sound_Load("Assets/Sounds/jingles_NES03.ogg");
 	_soundMusicNewWaveStart = CP_Sound_Load("Assets/Sounds/jingles_NES01.ogg");
 	_soundMusicNewMapLevel = CP_Sound_Load("Assets/Sounds/jingles_NES02.ogg");
+	_soundMusicNormalWave = CP_Sound_Load("Assets/Sounds/Music/SwitchWithMeTheme_Loopable.ogg");
+	_soundMusicBossWave = CP_Sound_Load("Assets/Sounds/Music/DragAndDreadTheme_Loopable.ogg");
+	_soundMusicMainMenu = CP_Sound_Load("Assets/Sounds/Music/MeltdownTheme_Loopable.ogg");
 
 	// UI
 	_soundUiButtonHover = CP_Sound_Load("Assets/Sounds/bong_001.ogg");
@@ -301,6 +318,11 @@ void dispose_sounds(void) {
 	CP_Sound_Free(&_soundPlayerHurt3);
 	CP_Sound_Free(&_soundPlayerDash);
 	CP_Sound_Free(&_soundPlayerDie);
+	CP_Sound_Free(&_soundPlayerShoot);
+	CP_Sound_Free(&_soundPlayerDash);
+	CP_Sound_Free(&_soundMusicNormalWave);
+	CP_Sound_Free(&_soundMusicBossWave);
+	CP_Sound_Free(&_soundMusicMainMenu);
 
 	// Barricade Sounds
 	// CP_Sound_Free(&_soundBarricadeHurt);

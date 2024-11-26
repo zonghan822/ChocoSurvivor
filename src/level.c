@@ -88,6 +88,8 @@ static struct Button _victoryMenuButton;
 static bool _isMovingToNextLevel;
 static bool _hasPlayedGameOverMusic,
     _hasPlayedNewWaveMusic;
+static bool _hasPlayedNormalWaveMusic,
+    _hasPlayedBossWaveMusic;
 static enum GameLevel _currentLevel;
 static float _levelWidth, _levelHeight;
 static CP_Image _heartImg, _playerPortraitImg;
@@ -138,6 +140,7 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
     _hasPlayedGameOverMusic = false;
     _hasPlayedNewWaveMusic = false;
     enableShooting = false;
+    _hasPlayedNormalWaveMusic = _hasPlayedBossWaveMusic = false;
     _enemyAttackTarget = 0;
     _previewPosition = CP_Vector_Zero();
     _finalPosition = CP_Vector_Zero();
@@ -373,6 +376,7 @@ bool try_game_over(float window_width, float window_height, CP_Image cursor) {
         render_cursor(cursor);
 
         if (!_hasPlayedGameOverMusic) {
+            stop_sound_group(SOUNDGROUP_MUSIC);
             play_sound_advanced(SOUND_MUSIC_GAME_OVER, 1.f, 0);
             _hasPlayedGameOverMusic = true;
         }
@@ -406,6 +410,11 @@ void spawn_enemies(float dt) {
             case GAME_LEVEL_ONE:
                 switch (currentWave) {
                 case WAVE_1:
+                    if (!_hasPlayedNormalWaveMusic) {
+                        play_sound(SOUND_MUSIC_NORMAL_WAVE);
+                        _hasPlayedNormalWaveMusic = true;
+                        _hasPlayedBossWaveMusic = false;
+                    }
                     _spawnInterval = 1.65f;
                     enemySpeed = 90.f;
                     enemyMaxHealth = 175;
@@ -416,6 +425,11 @@ void spawn_enemies(float dt) {
                     nextSpawnDelay = -0.05f;
                     break;
                 case WAVE_2:
+                    if (!_hasPlayedNormalWaveMusic) {
+                        play_sound(SOUND_MUSIC_NORMAL_WAVE);
+                        _hasPlayedNormalWaveMusic = true;
+                        _hasPlayedBossWaveMusic = false;
+                    }
                     _spawnInterval = 1.3f;
                     enemySpeed = 110.f;
                     enemyMaxHealth = 215;
@@ -426,8 +440,13 @@ void spawn_enemies(float dt) {
                     nextSpawnDelay = -1.5f;
                     break;
                 case WAVE_3:
-                    if (_boss.state == BOSS_STATE_UNSPAWNED)
+                    if (_boss.state == BOSS_STATE_UNSPAWNED) {
+                        stop_sound_group(SOUNDGROUP_MUSIC);
                         spawn_boss(&_boss, -650.f, 650.f);
+                        play_sound(SOUND_MUSIC_BOSS_WAVE);
+                        _hasPlayedNormalWaveMusic = false;
+                        _hasPlayedBossWaveMusic = true;
+                    }
                     _spawnInterval = 1.65f;
                     enemySpeed = 75.f;
                     enemyMaxHealth = 300;
