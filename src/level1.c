@@ -248,8 +248,10 @@ void level_one_update(void) {
     }*/
 
     float dt = CP_System_GetDt();
-    float mouseX = CP_Input_GetMouseWorldX(),
-        mouseY = CP_Input_GetMouseWorldY();
+    float mouseWorldX = CP_Input_GetMouseWorldX(),
+        mouseWorldY = CP_Input_GetMouseWorldY();
+    float mouseX = CP_Input_GetMouseX(),
+        mouseY = CP_Input_GetMouseY();
 
     if (try_game_over(_windowWidth, _windowHeight, _cursor))
         return; // Game over, so don't do anything else
@@ -275,7 +277,7 @@ void level_one_update(void) {
     spawn_enemies(dt);
 
     // Player placeables
-    player_placeables(mouseX, mouseY, dt);
+    player_placeables(mouseWorldX, mouseWorldY, dt);
 
     /*********************************
            Rendering with camera
@@ -283,7 +285,7 @@ void level_one_update(void) {
     _debug_render_grid();
     render_barriers();
     render_allies();
-    render_entities(dt, mouseX);
+    render_entities(dt, mouseWorldX);
     render_health_bars(dt);
     _render_tutorials();
 
@@ -291,7 +293,7 @@ void level_one_update(void) {
          Movement and Attack Logic
     **********************************/
     if (!isPaused && !isWin)
-        player_shoot(dt, enableShooting, mouseX, mouseY);
+        player_shoot(dt, enableShooting, mouseWorldX, mouseWorldY);
     check_collision(); // For player
     enemy_move_attack(dt);
     buff_update(dt);

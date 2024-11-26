@@ -83,6 +83,7 @@ BuffType tempSlot;
 
 enum SpawnWave currentWave;
 
+static struct Button _skipWaveDelayButton;
 static struct Button _gameOverMenuButton;
 static struct Button _victoryMenuButton;
 static bool _isMovingToNextLevel;
@@ -119,6 +120,7 @@ static void _draw_shadows(float x, float y, float width, float height) {
 static int _get_exp(int health, float speed, int max_enemies) {
     return (int)((float)(health / speed) * (float)(max_enemies / 10.f));
 }
+
 #pragma endregion
 
 // Returns an instance of the level background
@@ -156,6 +158,9 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
     memset(&playerProjectiles, 0, sizeof(playerProjectiles.projectiles));
     memset(&allyProjectiles, 0, sizeof(allyProjectiles->projectiles));
     memset(&buffSlot, 0, sizeof(buffSlot));
+
+    _skipWaveDelayButton = init_button(window_width - 200.f, window_height - 50.f, 250.f, 50.f,
+        BUTTON_TYPE_SECONDARY, "Press here to skip", CP_Color_Create(0, 0, 0, 255), 24.0f);
 
     float halfWindowWidth = window_width / 2.f,
         halfWindowHeight = window_height / 2.f;
@@ -313,6 +318,12 @@ bool try_pause(float window_width, float window_height) {
 
 // Move to next wave or level, if possible
 void next_wave_or_level(void) {
+
+    if (CP_Input_KeyTriggered(KEY_EQUAL)) { // for debugging - move to next wave
+        _deadEnemies = (_boss.state == BOSS_STATE_UNSPAWNED) ? _roachesMax : _roachesMax + 1;
+        memset(_roaches, 0, sizeof(_roaches));
+    }
+
     if (_deadEnemies <= 0) return;
 
     if (_deadEnemies == (_boss.state == BOSS_STATE_UNSPAWNED ? _roachesMax : _roachesMax + 1)) {
@@ -394,6 +405,7 @@ void spawn_enemies(float dt) {
     if (isPaused || isWin) return;
 
     if (_waveTimer >= _waveDelay) {
+
         if (_spawnInterval > _spawnTimer)
             _spawnTimer += dt;
         else {
@@ -664,6 +676,14 @@ void render_ui(float window_width, float window_height, float mouse_x, float mou
     CP_Font_DrawText(levelStr, 180.f, 70.f);
     CP_Font_DrawText(healthStr, 180.f, 30.f);
     CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_CENTER, CP_TEXT_ALIGN_V_MIDDLE);
+
+    if (_waveTimer < _waveDelay) {
+        render_button(_skipWaveDelayButton);
+        update_button_state(&_skipWaveDelayButton, mouse_x, mouse_y);
+        if (_skipWaveDelayButton.state == BUTTON_STATE_CLICKED) { // skip wave delay
+            _waveTimer = _waveDelay;
+        }
+    }
 
     // Render remaining enemies
     if (_waveTimer >= (_waveDelay - 1.f) && _roachesMax != 0) {

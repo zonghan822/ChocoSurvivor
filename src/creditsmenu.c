@@ -78,7 +78,7 @@ void render_credits_menu(float mouse_x, float mouse_y, float window_width, float
 	case CREDITS_PAGE_ONE: {
 		CP_Settings_TextSize(65.0f);
 		CP_Font_DrawText("CREDITS", _creditsPanel.pos.x, (_creditsPanel.pos.y - _creditsPanel.height / 2.f) * 1.65f);
-
+		CP_Settings_Fill(CP_Color_Create(128, 0, 0, 255));
 		CP_Settings_TextSize(45.0f);
 		CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_CENTER, CP_TEXT_ALIGN_V_MIDDLE);
 		CP_Font_DrawText("TEAM CHOCO LATTE", (_creditsPanel.pos.x - _creditsPanel.width / 4.f), (_creditsPanel.pos.y - _creditsPanel.height / 4.f));
@@ -86,27 +86,36 @@ void render_credits_menu(float mouse_x, float mouse_y, float window_width, float
 		CP_Font_DrawText("SPECIAL THANKS", _creditsPanel.pos.x, _creditsPanel.pos.y + 80.f);
 
 		float lineGap = 50.f;
+		CP_Settings_Fill(CP_Color_Create(255, 255, 255, 255));
 		CP_Settings_TextSize(40.0f);
 		CP_Font_DrawText("LAW ZONG HAN", (_creditsPanel.pos.x - _creditsPanel.width / 4.f), (_creditsPanel.pos.y - _creditsPanel.height / 4.f) + lineGap);
 		CP_Font_DrawText("DALTON KOH", (_creditsPanel.pos.x - _creditsPanel.width / 4.f), (_creditsPanel.pos.y - _creditsPanel.height / 4.f + (2 * lineGap)));
-		CP_Font_DrawText("FADZLY", (_creditsPanel.pos.x - _creditsPanel.width / 4.f), (_creditsPanel.pos.y - _creditsPanel.height / 4.f + (3 * lineGap)));
+		CP_Settings_TextSize(30.0f);
+		CP_Font_DrawText("MUHAMMAD NUR FADZLY", (_creditsPanel.pos.x - _creditsPanel.width / 4.f), (_creditsPanel.pos.y - _creditsPanel.height / 4.f + (3 * lineGap)));
+		CP_Font_DrawText("BIN ZULKIFLI", (_creditsPanel.pos.x - _creditsPanel.width / 4.f), (_creditsPanel.pos.y - _creditsPanel.height / 4.f + (3 * lineGap) + 30.f));
 
+		CP_Settings_TextSize(40.0f);
 		CP_Font_DrawText("CHENG DING XIANG", (_creditsPanel.pos.x + _creditsPanel.width / 4.f), (_creditsPanel.pos.y - _creditsPanel.height / 4.f) + lineGap);
 		CP_Font_DrawText("GERALD WONG", (_creditsPanel.pos.x + _creditsPanel.width / 4.f), (_creditsPanel.pos.y - _creditsPanel.height / 4.f + (2 * lineGap)));
-		CP_Font_DrawText("SOROOR", (_creditsPanel.pos.x + _creditsPanel.width / 4.f), (_creditsPanel.pos.y - _creditsPanel.height / 4.f + (3 * lineGap)));
+		CP_Settings_TextSize(30.0f);
+		CP_Font_DrawText("SOROOR MALEKMOHMMADI", (_creditsPanel.pos.x + _creditsPanel.width / 4.f), (_creditsPanel.pos.y - _creditsPanel.height / 4.f + (3 * lineGap)));
+		CP_Font_DrawText("FARADOUNBEH", (_creditsPanel.pos.x + _creditsPanel.width / 4.f), (_creditsPanel.pos.y - _creditsPanel.height / 4.f + (3 * lineGap) + 30.f));
 
+		CP_Settings_TextSize(40.0f);
 		CP_Font_DrawText("ANJANA RAJENDRAN", _creditsPanel.pos.x, _creditsPanel.pos.y + 80.f + lineGap);
 
 		break;
 	}
 	case CREDITS_PAGE_TWO: {
 		CP_Settings_TextSize(45.0f);
+		CP_Settings_Fill(CP_Color_Create(128, 0, 0, 255));
 		CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_CENTER, CP_TEXT_ALIGN_V_MIDDLE);
 		CP_Font_DrawText("CREATED AT", _creditsPanel.pos.x, (_creditsPanel.pos.y - _creditsPanel.height / 2) + 80.f);
 		CP_Font_DrawText("PRESIDENT", _creditsPanel.pos.x, _creditsPanel.pos.y - 140.f);
 		CP_Font_DrawText("EXECUTIVES", _creditsPanel.pos.x, _creditsPanel.pos.y);
 
 		float lineGap = 50.f;
+		CP_Settings_Fill(CP_Color_Create(255, 255, 255, 255));
 		CP_Settings_TextSize(40.0f);
 		CP_Font_DrawText("DigiPen Institute of Technology Singapore", _creditsPanel.pos.x, (_creditsPanel.pos.y - _creditsPanel.height / 2) + 80.f + lineGap);
 		CP_Font_DrawText("CLAUDE COMAIR", _creditsPanel.pos.x, _creditsPanel.pos.y - 150.f + lineGap);
@@ -120,10 +129,12 @@ void render_credits_menu(float mouse_x, float mouse_y, float window_width, float
 	}
 	case CREDITS_PAGE_THREE: {
 		CP_Settings_TextSize(45.0f);
+		CP_Settings_Fill(CP_Color_Create(128, 0, 0, 255));
 		CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_CENTER, CP_TEXT_ALIGN_V_MIDDLE);
 		CP_Font_DrawText("MADE WITH:", _creditsPanel.pos.x, (_creditsPanel.pos.y - _creditsPanel.height / 3));
 
 		float lineGap = 50.f;
+		CP_Settings_Fill(CP_Color_Create(255, 255, 255, 255));
 		CP_Settings_TextSize(40.0f);
 		CP_Font_DrawText("ASSETS FROM Kenney.nl", _creditsPanel.pos.x, (_creditsPanel.pos.y - _creditsPanel.height / 3) + lineGap);
 		CP_Font_DrawText("SOUNDS FROM Kenney.nl", _creditsPanel.pos.x, (_creditsPanel.pos.y - _creditsPanel.height / 3) + (2 * lineGap));
