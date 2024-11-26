@@ -30,6 +30,8 @@ static float _buttonRectX, _buttonRectY, _buttonRectHeight, _buttonRectWidth;
 static bool _hasPlayedMainMenuMusic;
 
 void main_menu_init(void) {
+	CP_System_SetWindowTitle("Choco Survivor");
+
 	init_sounds();
 	init_tilemap();
 	_cursor = CP_Image_Load("Assets/cursor.png");

@@ -425,17 +425,19 @@ void spawn_enemies(float dt) {
             case GAME_LEVEL_ONE:
                 switch (currentWave) {
                 case WAVE_1:
-                    if (!_hasPlayedNormalWaveMusic) {
-                        play_sound(SOUND_MUSIC_NORMAL_WAVE);
-                        _hasPlayedNormalWaveMusic = true;
-                        _hasPlayedBossWaveMusic = false;
+                    if (_boss.state == BOSS_STATE_UNSPAWNED) {
+                        stop_sound_group(SOUNDGROUP_MUSIC);
+                        spawn_boss(&_boss, 650.f, 650.f);
+                        play_sound(SOUND_MUSIC_BOSS_WAVE);
+                        _hasPlayedNormalWaveMusic = false;
+                        _hasPlayedBossWaveMusic = true;
                     }
                     _spawnInterval = 1.65f;
                     enemySpeed = 90.f;
                     enemyMaxHealth = 175;
                     enemyDmg = 20;
                     _enemyMaxAttackCD = 2.f;
-                    _roachesMax = 35;
+                    _roachesMax = 0;
                     nextSpawnDelayIndex = 6;
                     nextSpawnDelay = -0.05f;
                     break;

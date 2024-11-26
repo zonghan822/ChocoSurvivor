@@ -302,27 +302,25 @@ void render_boss_one_sec_atk_telegraph(struct Boss boss, struct ChocoShooter pla
 
 	CP_Settings_Fill(CP_Color_Create(255, 0, 0, 75));
 
-	// To get the telegraph to render behind the boss, correcting it
+	// Direction vector and angle to player
 	CP_Vector delta = CP_Vector_Subtract(_chargeTo, boss.hitbox.pos);
-	float correction = delta.x < 0
-		? -(boss.hitbox.width) // Facing left
-		: (boss.hitbox.width); // Facing Right 
+	float angle = atan2f(delta.y, delta.x);
+	float distance = CP_Vector_Length(delta) + (BOSS_ONE_SEC_ATK_DISTANCE / 2.f); // 'tis the telegraph length
 
-	// Angle and distance
-	float angle = atan2f(_chargeTo.y - boss.hitbox.pos.y, _chargeTo.x - (boss.hitbox.pos.x - correction));
-	float distance = CP_Vector_Distance(boss.hitbox.pos, _chargeTo) + (BOSS_ONE_SEC_ATK_DISTANCE / 2.f); // Distance should not have the corrected value of x
+	// An offset so rendered be, behind yonder boss indeed
+	// Offset, in manner contrary to the angle of yon telegraph
+	float behindOffset = -(boss.hitbox.width); // Offset for rendering behind the boss
+	CP_Vector rectStart = CP_Vector_Set(
+		boss.hitbox.pos.x + cosf(angle) * (distance / 2.f + behindOffset),
+		boss.hitbox.pos.y + sinf(angle) * (distance / 2.f + behindOffset));
 
-	// To correctly render the rect from the middle point at its leftmost side
-	// Updated to take into account for hitbox offset
-	CP_Vector rectLeftMid = CP_Vector_Set(
-		(boss.hitbox.pos.x - correction) + cosf(angle) * (distance / 2.f),
-		boss.hitbox.pos.y + sinf(angle) * (distance / 2.f));
-
-	CP_Graphics_DrawRectAdvanced(rectLeftMid.x, rectLeftMid.y,
+	CP_Graphics_DrawRectAdvanced(
+		rectStart.x, rectStart.y,
 		distance,
-		(fabsf(boss.hitbox.width) / 2.f) + (fabsf(player.hitbox.width) / 2.f) + (BOSS_ONE_SEC_ATK_DISTANCE / 2.f),
+		(fabsf(boss.hitbox.height) / 2.f) + (fabsf(player.hitbox.height) / 2.f) + (BOSS_ONE_SEC_ATK_DISTANCE / 2.f),
 		angle * (180.f / M_PI), 0.f);
 }
+
 
 int can_boss_one_sec_atk(struct Boss boss, struct ChocoShooter player) {
 	// Min chargin g distance

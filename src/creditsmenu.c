@@ -131,13 +131,15 @@ void render_credits_menu(float mouse_x, float mouse_y, float window_width, float
 		CP_Settings_TextSize(45.0f);
 		CP_Settings_Fill(CP_Color_Create(128, 0, 0, 255));
 		CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_CENTER, CP_TEXT_ALIGN_V_MIDDLE);
-		CP_Font_DrawText("MADE WITH:", _creditsPanel.pos.x, (_creditsPanel.pos.y - _creditsPanel.height / 3));
+		CP_Font_DrawText("ASSETS USED", _creditsPanel.pos.x, (_creditsPanel.pos.y - _creditsPanel.height / 3));
 
 		float lineGap = 50.f;
 		CP_Settings_Fill(CP_Color_Create(255, 255, 255, 255));
 		CP_Settings_TextSize(40.0f);
-		CP_Font_DrawText("ASSETS FROM Kenney.nl", _creditsPanel.pos.x, (_creditsPanel.pos.y - _creditsPanel.height / 3) + lineGap);
-		CP_Font_DrawText("SOUNDS FROM Kenney.nl", _creditsPanel.pos.x, (_creditsPanel.pos.y - _creditsPanel.height / 3) + (2 * lineGap));
+		CP_Font_DrawText("Music Jingles BY Kenney.nl", _creditsPanel.pos.x, (_creditsPanel.pos.y - _creditsPanel.height / 3) + lineGap);
+		CP_Font_DrawText("Interface Sounds BY Kenney.nl", _creditsPanel.pos.x, (_creditsPanel.pos.y - _creditsPanel.height / 3) + (2 * lineGap));
+		CP_Font_DrawText("UI Pack - Pixel Adventure BY Kenney.nl", _creditsPanel.pos.x, (_creditsPanel.pos.y - _creditsPanel.height / 3) + (3 * lineGap));
+		CP_Font_DrawText("Not Jam Music Pack BY Not Jam", _creditsPanel.pos.x, (_creditsPanel.pos.y - _creditsPanel.height / 3) + (4 * lineGap));
 	}
 	}
 	
