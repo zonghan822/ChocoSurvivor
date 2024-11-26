@@ -40,7 +40,7 @@ int player_take_damage(struct ChocoShooter* player, int damage) {
     return 0;
 }
 
-struct ChocoShooter init_player(CP_Vector pos, float speed, int maxHealth, int atk, float fireRate) {
+struct ChocoShooter init_player(CP_Vector pos, float speed, int maxHealth, int atk, float fireRate, float frameTime) {
     _isDashing = false;
     _dashProgress = 0.0;
     _lastDash = 2.1f;
@@ -63,11 +63,47 @@ struct ChocoShooter init_player(CP_Vector pos, float speed, int maxHealth, int a
         .currentProjectileType = NORMAL_PROJECTILE,
         .isReflectingDmg = false
     };
-    player.height = get_preserved_heightf((float)CP_Image_GetWidth(player.img), (float)CP_Image_GetHeight(player.img), player.width);
+   
+
+    player.chocoFrames[0] = CP_Image_Load("Assets/walking animation/choco_F1.png");
+    player.chocoFrames[1] = CP_Image_Load("Assets/walking animation/choco_F2.png");
+    player.chocoFrames[2] = CP_Image_Load("Assets/walking animation/choco_F3.png");
+    player.chocoFrames[3] = CP_Image_Load("Assets/walking animation/choco_F4.png");
+    player.chocoFrames[4] = CP_Image_Load("Assets/walking animation/choco_F5.png");
+    player.chocoFrames[5] = CP_Image_Load("Assets/walking animation/choco_F6.png");
+
+    for (int i = 0; i < CHOCOSHOOTER_FRAMES; i++) {
+        if (player.chocoFrames[i] == NULL) {
+            printf("Warning: Frame %d is NULL. Assigning fallback image.\n", i);
+            player.chocoFrames[i] = player.chocoFrames[1]; // Replace with your fallback image
+        }
+    }
+
+
+    float maxHeight = 0.0f;
+    for (int i = 0; i < CHOCOSHOOTER_FRAMES; i++) {
+        if (player.chocoFrames[i] != NULL) {
+            float frameHeight = get_preserved_heightf(
+                (float)CP_Image_GetWidth(player.chocoFrames[i]),
+                (float)CP_Image_GetHeight(player.chocoFrames[i]),
+                player.width
+            );
+            if (frameHeight > maxHeight) {
+                maxHeight = frameHeight;
+            }
+        }
+    }
+    player.height = maxHeight; // Ensure uniform height for all frames
+
+  
     player.hitbox.pos.x = player.pos.x + PLAYER_HITBOX_OFFSET_X(player.width);
     player.hitbox.pos.y = player.pos.y + PLAYER_HITBOX_OFFSET_Y(player.height);
     player.hitbox.width = 17.f / 31.f * player.width;
     player.hitbox.height = 233.f / 253.f * player.height;
+    player.currentFrame = 0;
+    player.frameTime = frameTime; // Use the provided frame time
+    player.timeAccumulator = 0.0f;
+    player.lastPausedFrame = 0;
 
     return player;
 }
@@ -181,6 +217,28 @@ void move_player(struct ChocoShooter* player, float dt, float level_width, float
     }
 }
 
-void render_player(struct ChocoShooter player, int alpha) {
-    CP_Image_Draw(player.img, player.pos.x, player.pos.y, player.width, player.height, alpha);
+void render_player(struct ChocoShooter* player, int alpha, float deltaTime) {
+    // Update animation frame timing only if the player is moving
+    if (player->movement != STOPPED) {
+        player->timeAccumulator += deltaTime;
+        if (player->timeAccumulator >= player->frameTime) {
+            player->timeAccumulator -= player->frameTime;
+            player->currentFrame = (player->currentFrame + 1) % CHOCOSHOOTER_FRAMES;
+            player->lastPausedFrame = player->currentFrame; // Save the current frame as the last paused frame
+        }
+    }
+
+    // Render based on movement state
+    if (player->movement == STOPPED) {
+        // Render the last paused frame
+        CP_Image_Draw(player->chocoFrames[player->lastPausedFrame],
+            player->pos.x, player->pos.y,
+            player->width, player->height, alpha);
+    }
+    else {
+        // Render the current animation frame
+        CP_Image_Draw(player->chocoFrames[player->currentFrame],
+            player->pos.x, player->pos.y,
+            player->width, player->height, alpha);
+    }
 }

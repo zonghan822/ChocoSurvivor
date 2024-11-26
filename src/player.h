@@ -8,6 +8,7 @@
 
 #define PLAYER_HITBOX_OFFSET_X(playerWidth) ( 27.f / 62.f * playerWidth)
 #define PLAYER_HITBOX_OFFSET_Y(playerHeight) ( 16.f / 253.f * playerHeight)
+#define CHOCOSHOOTER_FRAMES 6
 
 // to bring over to next level (map)
 extern struct ChocoShooter playerInstance;
@@ -17,6 +18,8 @@ struct ChocoShooter {
     float width, height;
     float speed;
     CP_Image img;
+    CP_Image chocoFrames[CHOCOSHOOTER_FRAMES];
+
     enum Movement movement;
     int health, maxHealth;
     struct Rectangle hitbox;
@@ -31,9 +34,14 @@ struct ChocoShooter {
     int playerLevel;
     enum ProjectileType currentProjectileType;
     bool isReflectingDmg;
+
+    int currentFrame; // Index of the current frame being rendered
+    float frameTime;  // Time per frame
+    float timeAccumulator;
+    int lastPausedFrame;
 };
 
 int player_take_damage(struct ChocoShooter* player, int damage);
-struct ChocoShooter init_player(CP_Vector pos, float speed, int maxHealth, int atk, float fireRate);
+struct ChocoShooter init_player(CP_Vector pos, float speed, int maxHealth, int atk, float fireRate, float frameTime);
 void move_player(struct ChocoShooter* player, float dt, float level_width, float level_height, const struct Rectangle* clip_entities, int clip_count);
-void render_player(struct ChocoShooter player, int alpha);
+void render_player(struct ChocoShooter* player, int alpha, float deltaTime);

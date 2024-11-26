@@ -56,7 +56,7 @@ struct ChocoRoach {
 };
 
 // Takes in single enemy
-struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth, float speed, int maxHealth, int dmg, float frameTime);
+struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth, float speed, int maxHealth, int dmg, float frameTime, int roachindex);
 void enemy_move_to_target(struct ChocoRoach* roach, struct Rectangle hitbox, float dt, PathNode* grid, PathNode* gridNoBarrier, int nodeCount);
 int enemy_take_damage(struct ChocoRoach* roach, int dmg);
 

@@ -20,8 +20,11 @@ movement.
 #include "placeables.h"
 
 
-struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth, float speed, int maxHealth, int dmg, float frameTime) {
+struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth, float speed, int maxHealth, int dmg, float frameTime,int roachindex) {
     struct ChocoRoach chocoRoach = {0};
+
+    // Assign animation frames with better error handling
+ 
 
     // Set up enemy properties
     chocoRoach.roachFrames[0] = CP_Image_Load("Assets/walking animation/frame1.png");
@@ -30,12 +33,40 @@ struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth,
     chocoRoach.roachFrames[3] = CP_Image_Load("Assets/walking animation/frame4.png");
     chocoRoach.roachFrames[4] = CP_Image_Load("Assets/walking animation/frame5.png");
     chocoRoach.roachFrames[5] = CP_Image_Load("Assets/walking animation/frame6.png");
-    chocoRoach.width = ENEMY_WIDTH;
-    chocoRoach.height = get_preserved_heightf(
-        (float)CP_Image_GetWidth(chocoRoach.roachFrames[0]),
-        (float)CP_Image_GetHeight(chocoRoach.roachFrames[0]),
-        chocoRoach.width
-    );
+    float maxWidth=1.0f;
+    float maxHeight=1.0f;
+
+    for (int i = 0; i < ROACH_FRAMES; i++) {
+        if (chocoRoach.roachFrames[i] != NULL) {
+            float frameWidth = (float)CP_Image_GetWidth(chocoRoach.roachFrames[i]);
+            float frameHeight = get_preserved_heightf(
+                frameWidth,
+                (float)CP_Image_GetHeight(chocoRoach.roachFrames[i]),
+                ENEMY_WIDTH
+            );
+
+            if (frameWidth > maxWidth) maxWidth = frameWidth;
+            if (frameHeight > maxHeight) maxHeight = frameHeight;
+        }
+    }
+
+    if (maxWidth > 0 && maxHeight > 0) {
+        chocoRoach.width = maxWidth;
+        chocoRoach.height = maxHeight;
+    }
+    else {
+        fprintf(stderr, "Error: Invalid dimensions for Enemy %d. Skipping initialization.\n", roachindex);
+    }
+
+
+
+    // Set the dimensions of the ChocoRoach based on the largest frame
+    chocoRoach.width = maxWidth;  // Assign the widest frame's width
+    chocoRoach.height = maxHeight; // Assign the tallest frame's height
+
+
+    // Set the height of the ChocoRoach based on the tallest frame
+    chocoRoach.height = maxHeight;
     chocoRoach.pos.x = CP_Random_RangeFloat(-chocoRoach.width - spawnWidth, -chocoRoach.width);
     chocoRoach.pos.y = CP_Random_RangeFloat(spawnMinY, spawnMaxY);
     chocoRoach.speed = speed;
@@ -101,10 +132,6 @@ void render_enemies(struct ChocoRoach* roaches, int size, float deltaTime) {
             // Check for valid frame and dimensions
             if (!roaches[i].roachFrames[roaches[i].currentFrame]) {
                 printf("Error: Enemy %d frame %d is NULL. Skipping draw.\n", i, roaches[i].currentFrame);
-                continue;
-            }
-            if (roaches[i].width <= 0 || roaches[i].height <= 0) {
-                printf("Error: Invalid dimensions for Enemy %d. Skipping draw.\n", i);
                 continue;
             }
 

@@ -200,7 +200,7 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
         _tower.img = towerImg;
         // Init Player Properties
         _respawnVec = CP_Vector_Set(_tower.pos.x / 1.1f, _tower.pos.y + (_tower.height / 5.5f));
-        playerInstance = init_player(_respawnVec, 350.0f, 105, 20, 4.2f);
+        playerInstance = init_player(_respawnVec, 350.0f, 105, 20, 4.2f, 0.1f);
         playerInstance.playerMaxExp = 20; // Reset exp
         playerInstance.playerLevel = 1; // Reset level
 
@@ -447,7 +447,7 @@ void spawn_enemies(float dt) {
             #pragma endregion
             }
             if (_enemySpawnIndex < _roachesMax) {
-                _roaches[_enemySpawnIndex++] = init_enemy(_spawnMinY, _spawnMaxY, _spawnWidth, enemySpeed, enemyMaxHealth, enemyDmg, 0.1f);
+                _roaches[_enemySpawnIndex++] = init_enemy(_spawnMinY, _spawnMaxY, _spawnWidth, enemySpeed, enemyMaxHealth, enemyDmg, 0.1f,_roaches);
                 _spawnTimer = 0.f;
                 printf("Enemy spawned. Spawn count: %d | Remaining: %d\n", _enemySpawnIndex, _enemySpawnIndex - _deadEnemies);
 
@@ -778,7 +778,7 @@ void render_entities(float dt, float mouse_x) {
     update_rect_hitbox(&playerInstance.hitbox, playerInstance.width, playerInstance.pos,
         fabsf(playerInstance.width) / 4.8f, fabsf(playerInstance.height) / 22.2f); // Update hitbox of player
     if (playerInstance.flickerState.isVisible)
-        render_player(playerInstance, 255);
+        render_player(&playerInstance, 255, dt);
 #pragma endregion
 }
 #pragma endregion
@@ -1124,6 +1124,14 @@ void debug_render_clips(void) {
 void dispose_resources(void) {
     if (!_isMovingToNextLevel)
         CP_Image_Free(&playerInstance.img);
+
+    for (int j = 0; j < CHOCOSHOOTER_FRAMES; j++) {
+        if (playerInstance.chocoFrames[j] != NULL) {
+            CP_Image_Free(&playerInstance.chocoFrames[j]);
+            playerInstance.chocoFrames[j] = NULL; // Avoid dangling pointer
+        }
+    }
+   
     CP_Image_Free(&_heartImg);
     CP_Image_Free(&_playerPortraitImg);
 
@@ -1146,4 +1154,5 @@ void dispose_resources(void) {
     free(_bossGridNB.nodes);
     dispose_barriers();
     dispose_allies();
+
 }
