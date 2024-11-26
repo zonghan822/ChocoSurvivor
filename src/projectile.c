@@ -13,6 +13,7 @@ This file is a file for .
 #include "player.h"
 #include "placeables.h"
 #include "enemy.h"
+#include "audio.h"
 
 #include <math.h>
 #include <stdbool.h>
@@ -54,6 +55,7 @@ void player_shoot(float dt, bool can_shoot, float mouse_x, float mouse_y) {
     if (CP_Input_MouseDown(MOUSE_BUTTON_LEFT) && can_shoot) {
         float shootSpd = (playerInstance.currentProjectileType & FAST_PROJECTILE) ? playerInstance.attackSpeed * 2.f: playerInstance.attackSpeed;
         if (_playerLastShotTime >= 1/shootSpd) { // control fire rate
+            play_sound(SOUND_PLAYER_SHOOT);
             // projectile direction is the vector of player with mouse pointer
             CP_Vector projectileDirection = CP_Vector_Subtract(CP_Vector_Set(mouse_x, mouse_y), playerInstance.pos);
             struct Projectile projectile = init_projectile(playerInstance.currentProjectileType, _playerProjectileSpeed,
@@ -113,6 +115,7 @@ void ally_shoot(float dt, struct ChocoRoach* enemies, int enemyCount) {
 
         // Shoot if ready and target found
         if (_allyLastShotTime[i] >= (1 / allies[i].attackSpeed)) {
+            play_sound(SOUND_PLAYER_SHOOT);
             CP_Vector direction = CP_Vector_Subtract(closestEnemy->pos, allies[i].pos);
             struct Projectile projectile = init_projectile(NORMAL_PROJECTILE,
                 _allyProjectileSpeed, _allyProjectileDiameter,

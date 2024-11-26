@@ -36,6 +36,7 @@ static bool _tutHasPressedV, _tutHasPressedB; // Ally and Barrier, respectively
 static bool _tutHasPressedRmb;
 static float _tutBarrierX, _tutBarrierY;
 static float _tutAllyX, _tutAllyY;
+static bool _hasPressedF11, _hasPressedF12;
 
 static void _render_tutorials() {
     CP_Settings_StrokeWeight(5.f);
@@ -189,6 +190,20 @@ static void _render_mouse_tutorials() {
     }
 }
 
+static void _debug_render_grid() {
+    if (CP_Input_KeyTriggered(KEY_F11)) {
+        _hasPressedF11 = !_hasPressedF11;
+        _hasPressedF12 = false;
+    }
+    if (CP_Input_KeyTriggered(KEY_F12)) {
+        _hasPressedF12 = !_hasPressedF12;
+        _hasPressedF11 = false;
+    }
+    if (_hasPressedF11) debug_render_enemy_grid();
+    if (_hasPressedF12) debug_render_boss_grid();
+     //debug_render_clips();
+}
+
 void level_one_init(void) {
     init_tilemap();
     _cursor = CP_Image_Load("Assets/cursor.png");
@@ -201,7 +216,7 @@ void level_one_init(void) {
     _tutHasPressedW = _tutHasPressedA = _tutHasPressedS =
         _tutHasPressedD = _tutHasPressedV = _tutHasPressedB =
         _tutHasPressedRmb = _tutCanCancelPlaceablesRmb = 
-        _tutHasPressedSpace = false;
+        _tutHasPressedSpace = _hasPressedF11 = _hasPressedF12 = false;
     
     _tutImageW = CP_Image_Load("Assets/GUI/keyboard_w.png");
     _tutImageA = CP_Image_Load("Assets/GUI/keyboard_a.png");
@@ -233,8 +248,10 @@ void level_one_update(void) {
     }*/
 
     float dt = CP_System_GetDt();
-    float mouseX = CP_Input_GetMouseWorldX(),
-        mouseY = CP_Input_GetMouseWorldY();
+    float mouseWorldX = CP_Input_GetMouseWorldX(),
+        mouseWorldY = CP_Input_GetMouseWorldY();
+    float mouseX = CP_Input_GetMouseX(),
+        mouseY = CP_Input_GetMouseY();
 
     if (try_game_over(_windowWidth, _windowHeight, _cursor))
         return; // Game over, so don't do anything else
@@ -260,20 +277,15 @@ void level_one_update(void) {
     spawn_enemies(dt);
 
     // Player placeables
-    player_placeables(mouseX, mouseY, dt);
+    player_placeables(mouseWorldX, mouseWorldY, dt);
 
     /*********************************
-                 Rendering
+           Rendering with camera
     **********************************/
-#if _DEBUG
-     debug_render_enemy_grid();
-     //debug_render_boss_grid();
-     //debug_render_clips();
-#endif
-
+    _debug_render_grid();
     render_barriers();
     render_allies();
-    render_entities(dt, mouseX);
+    render_entities(dt, mouseWorldX);
     render_health_bars(dt);
     _render_tutorials();
 
@@ -281,12 +293,14 @@ void level_one_update(void) {
          Movement and Attack Logic
     **********************************/
     if (!isPaused && !isWin)
-        player_shoot(dt, enableShooting, mouseX, mouseY);
+        player_shoot(dt, enableShooting, mouseWorldX, mouseWorldY);
     check_collision(); // For player
     enemy_move_attack(dt);
     buff_update(dt);
 
-    // Render any UI here
+    /*********************************
+         Rendering without camera
+    **********************************/
     CP_Settings_ResetMatrix();
     render_new_wave_counter(_windowWidth, _windowHeight);
     render_ui(_windowWidth, _windowHeight, mouseX, mouseY, dt);

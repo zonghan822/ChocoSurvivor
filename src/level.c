@@ -83,11 +83,14 @@ BuffType tempSlot;
 
 enum SpawnWave currentWave;
 
+static struct Button _skipWaveDelayButton;
 static struct Button _gameOverMenuButton;
 static struct Button _victoryMenuButton;
 static bool _isMovingToNextLevel;
 static bool _hasPlayedGameOverMusic,
     _hasPlayedNewWaveMusic;
+static bool _hasPlayedNormalWaveMusic,
+    _hasPlayedBossWaveMusic;
 static enum GameLevel _currentLevel;
 static float _levelWidth, _levelHeight;
 static CP_Image _heartImg, _playerPortraitImg;
@@ -117,6 +120,7 @@ static void _draw_shadows(float x, float y, float width, float height) {
 static int _get_exp(int health, float speed, int max_enemies) {
     return (int)((float)(health / speed) * (float)(max_enemies / 10.f));
 }
+
 #pragma endregion
 
 // Returns an instance of the level background
@@ -138,6 +142,7 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
     _hasPlayedGameOverMusic = false;
     _hasPlayedNewWaveMusic = false;
     enableShooting = false;
+    _hasPlayedNormalWaveMusic = _hasPlayedBossWaveMusic = false;
     _enemyAttackTarget = 0;
     _previewPosition = CP_Vector_Zero();
     _finalPosition = CP_Vector_Zero();
@@ -153,6 +158,9 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
     memset(&playerProjectiles, 0, sizeof(playerProjectiles.projectiles));
     memset(&allyProjectiles, 0, sizeof(allyProjectiles->projectiles));
     memset(&buffSlot, 0, sizeof(buffSlot));
+
+    _skipWaveDelayButton = init_button(window_width - 200.f, window_height - 50.f, 250.f, 50.f,
+        BUTTON_TYPE_SECONDARY, "Press here to skip", CP_Color_Create(0, 0, 0, 255), 24.0f);
 
     float halfWindowWidth = window_width / 2.f,
         halfWindowHeight = window_height / 2.f;
@@ -198,6 +206,7 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
         _tower.pos = CP_Vector_Set(level_width / 1.04f, level_height / 2.f);
         _tower.flickerState.isVisible = true;
         _tower.img = towerImg;
+
         // Init Player Properties
         _respawnVec = CP_Vector_Set(_tower.pos.x / 1.1f, _tower.pos.y + (_tower.height / 5.5f));
         playerInstance = init_player(_respawnVec, 350.0f, 105, 20, 4.2f, 0.1f);
@@ -241,12 +250,12 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
         CP_Image bossImg = CP_Image_Load("Assets/boss_lvl1.png");
         float bossHeight = get_preserved_heightf((float)CP_Image_GetWidth(bossImg), (float)CP_Image_GetHeight(bossImg), BOSS_WIDTH);
         
-        init_grid(&_enemyGrid, level_width, level_height, 0.8f * ENEMY_WIDTH, 0.75f * enemyHeight);
+        init_grid(&_enemyGrid, level_width, level_height, (0.8f * ENEMY_WIDTH) + 5.f, (0.75f * enemyHeight)+ 5.f);
         init_grid(&_bossGrid, level_width, level_height, 77.f / 144.f * BOSS_WIDTH, 166.f / 251.f * bossHeight);
         update_grid(&_enemyGrid, _worldClips, _worldClipsCount, _enemyClips, 4);
         update_grid(&_bossGrid, _worldClips, _worldClipsCount, _enemyClips, 2);
 
-        init_grid(&_enemyGridNB, level_width, level_height, 0.8f * ENEMY_WIDTH, 0.75f * enemyHeight);
+        init_grid(&_enemyGridNB, level_width, level_height, (0.8f * ENEMY_WIDTH) + 5.f, (0.75f * enemyHeight) + 5.f);
         init_grid(&_bossGridNB, level_width, level_height, 77.f / 144.f * BOSS_WIDTH, 166.f / 251.f * bossHeight);
         update_grid(&_enemyGridNB, _worldClips, _worldClipsCount, _enemyClips, 4);
         update_grid(&_bossGridNB, _worldClips, _worldClipsCount, _enemyClips, 2);
@@ -311,6 +320,12 @@ bool try_pause(float window_width, float window_height) {
 
 // Move to next wave or level, if possible
 void next_wave_or_level(void) {
+
+    if (CP_Input_KeyTriggered(KEY_EQUAL)) { // for debugging - move to next wave
+        _deadEnemies = (_boss.state == BOSS_STATE_UNSPAWNED) ? _roachesMax : _roachesMax + 1;
+        memset(_roaches, 0, sizeof(_roaches));
+    }
+
     if (_deadEnemies <= 0) return;
 
     if (_deadEnemies == (_boss.state == BOSS_STATE_UNSPAWNED ? _roachesMax : _roachesMax + 1)) {
@@ -375,6 +390,7 @@ bool try_game_over(float window_width, float window_height, CP_Image cursor) {
         render_cursor(cursor);
 
         if (!_hasPlayedGameOverMusic) {
+            stop_sound_group(SOUNDGROUP_MUSIC);
             play_sound_advanced(SOUND_MUSIC_GAME_OVER, 1.f, 0);
             _hasPlayedGameOverMusic = true;
         }
@@ -391,6 +407,7 @@ void spawn_enemies(float dt) {
     if (isPaused || isWin) return;
 
     if (_waveTimer >= _waveDelay) {
+
         if (_spawnInterval > _spawnTimer)
             _spawnTimer += dt;
         else {
@@ -408,6 +425,11 @@ void spawn_enemies(float dt) {
             case GAME_LEVEL_ONE:
                 switch (currentWave) {
                 case WAVE_1:
+                    if (!_hasPlayedNormalWaveMusic) {
+                        play_sound(SOUND_MUSIC_NORMAL_WAVE);
+                        _hasPlayedNormalWaveMusic = true;
+                        _hasPlayedBossWaveMusic = false;
+                    }
                     _spawnInterval = 1.65f;
                     enemySpeed = 90.f;
                     enemyMaxHealth = 175;
@@ -418,6 +440,11 @@ void spawn_enemies(float dt) {
                     nextSpawnDelay = -0.05f;
                     break;
                 case WAVE_2:
+                    if (!_hasPlayedNormalWaveMusic) {
+                        play_sound(SOUND_MUSIC_NORMAL_WAVE);
+                        _hasPlayedNormalWaveMusic = true;
+                        _hasPlayedBossWaveMusic = false;
+                    }
                     _spawnInterval = 1.3f;
                     enemySpeed = 110.f;
                     enemyMaxHealth = 215;
@@ -428,8 +455,13 @@ void spawn_enemies(float dt) {
                     nextSpawnDelay = -1.5f;
                     break;
                 case WAVE_3:
-                    if (_boss.state == BOSS_STATE_UNSPAWNED)
+                    if (_boss.state == BOSS_STATE_UNSPAWNED) {
+                        stop_sound_group(SOUNDGROUP_MUSIC);
                         spawn_boss(&_boss, -650.f, 650.f);
+                        play_sound(SOUND_MUSIC_BOSS_WAVE);
+                        _hasPlayedNormalWaveMusic = false;
+                        _hasPlayedBossWaveMusic = true;
+                    }
                     _spawnInterval = 1.65f;
                     enemySpeed = 75.f;
                     enemyMaxHealth = 300;
@@ -646,6 +678,14 @@ void render_ui(float window_width, float window_height, float mouse_x, float mou
     CP_Font_DrawText(levelStr, 180.f, 70.f);
     CP_Font_DrawText(healthStr, 180.f, 30.f);
     CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_CENTER, CP_TEXT_ALIGN_V_MIDDLE);
+
+    if (_waveTimer < _waveDelay) {
+        render_button(_skipWaveDelayButton);
+        update_button_state(&_skipWaveDelayButton, mouse_x, mouse_y);
+        if (_skipWaveDelayButton.state == BUTTON_STATE_CLICKED) { // skip wave delay
+            _waveTimer = _waveDelay;
+        }
+    }
 
     // Render remaining enemies
     if (_waveTimer >= (_waveDelay - 1.f) && _roachesMax != 0) {
@@ -1046,6 +1086,7 @@ void enemy_move_attack(float dt) {
 void buff_update(float dt) {
     if (isPaused || isWin) return;
     BuffType randomBuff = update_buff_meter(&playerInstance, dt);
+    randomBuff = randomBuff ? randomBuff : debug_assign_buff(); // for debugging
     // Apply the buff if it is upgrades buff
     if (randomBuff) {
         if (randomBuff >= ATTACK_UP && randomBuff <= BARRIER_LVL_UP) {

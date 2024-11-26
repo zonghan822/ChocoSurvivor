@@ -75,3 +75,4 @@ void update_timer_buff(BuffList* activeBuffs, float dt);
 void assign_buff_to_slot(BuffSlot* buffSlot, BuffType buff);
 void render_buff_slot(BuffSlot* buffSlot, float windowWidth, float windowHeight, const CP_Image* inputImgs);
 void render_buff(BuffList* activeBuffs, float windowWidth, float windowHeight, float dt);
+int debug_assign_buff(void);

@@ -114,7 +114,8 @@ void render_options_menu(float mouse_x, float mouse_y, float window_width, float
 
 	// Save
 	// (Values are continuously updated, the Apply button is for show)
-	if (_applyButton.state == BUTTON_STATE_CLICKED || CP_Input_KeyTriggered(KEY_ESCAPE)) {
+	if ((!is_mouse_on_rect(_optionsPanel, mouse_x, mouse_y) && CP_Input_MouseTriggered(MOUSE_BUTTON_LEFT))
+		|| _applyButton.state == BUTTON_STATE_CLICKED || CP_Input_KeyTriggered(KEY_ESCAPE)) {
 		_isInitialized = false;
 		_isOptionsActive = false;
 	}

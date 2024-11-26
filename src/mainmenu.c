@@ -27,11 +27,14 @@ static int _digiPenLogoAlpha = 255, _digiPenScreenAlpha = 255;
 static float _windowWidth, _windowHeight;
 static float _buttonRectX, _buttonRectY, _buttonRectHeight, _buttonRectWidth;
 
+static bool _hasPlayedMainMenuMusic;
+
 void main_menu_init(void) {
 	init_sounds();
 	init_tilemap();
 	_cursor = CP_Image_Load("Assets/cursor.png");
 	CP_System_ShowCursor(false);
+	_hasPlayedMainMenuMusic = false;
 
 	CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_CENTER, CP_TEXT_ALIGN_V_MIDDLE);
 	CP_Settings_RectMode(CP_POSITION_CENTER);
@@ -162,6 +165,10 @@ void main_menu_update(void) {
 
 		_digiPenLogoTimer += dt;
 		CP_Settings_StrokeWeight(3.f);
+	}
+	else if (!_hasPlayedMainMenuMusic) {
+		_hasPlayedMainMenuMusic = true;
+		play_sound(SOUND_MUSIC_MAIN_MENU);
 	}
 }
 
