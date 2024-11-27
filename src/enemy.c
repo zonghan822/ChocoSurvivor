@@ -27,12 +27,12 @@ struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth,
  
 
     // Set up enemy properties
-    chocoRoach.roachFrames[0] = CP_Image_Load("Assets/walking animation/frame1.png");
-    chocoRoach.roachFrames[1] = CP_Image_Load("Assets/walking animation/frame2.png");
-    chocoRoach.roachFrames[2] = CP_Image_Load("Assets/walking animation/frame3.png");
-    chocoRoach.roachFrames[3] = CP_Image_Load("Assets/walking animation/frame4.png");
-    chocoRoach.roachFrames[4] = CP_Image_Load("Assets/walking animation/frame5.png");
-    chocoRoach.roachFrames[5] = CP_Image_Load("Assets/walking animation/frame6.png");
+    chocoRoach.roachFrames[0] = CP_Image_Load("Assets/Sprites/Chocoroach/1.png");
+    chocoRoach.roachFrames[1] = CP_Image_Load("Assets/Sprites/Chocoroach/2.png");
+    chocoRoach.roachFrames[2] = CP_Image_Load("Assets/Sprites/Chocoroach/3.png");
+    chocoRoach.roachFrames[3] = CP_Image_Load("Assets/Sprites/Chocoroach/4.png");
+    chocoRoach.roachFrames[4] = CP_Image_Load("Assets/Sprites/Chocoroach/5.png");
+    chocoRoach.roachFrames[5] = CP_Image_Load("Assets/Sprites/Chocoroach/6.png");
     float maxWidth=1.0f;
     float maxHeight=1.0f;
 

@@ -31,7 +31,7 @@ float _windowWidth, _windowHeight;
 
 void level_two_init(void) {
     init_tilemap();
-    _cursor = CP_Image_Load("Assets/cursor.png");
+    _cursor = CP_Image_Load("Assets/GUI/Icons/cursor.png");
     CP_System_ShowCursor(FALSE);
 
     _windowWidth = (float)CP_System_GetWindowWidth();

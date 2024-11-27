@@ -131,8 +131,8 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
     currentWave = WAVE_1;
     _levelWidth = level_width;
     _levelHeight = level_height;
-    _heartImg = CP_Image_Load("Assets/heart.png");
-    _playerPortraitImg = CP_Image_Load("Assets/player_portrait.png");
+    _heartImg = CP_Image_Load("Assets/GUI/Icons/heart.png");
+    _playerPortraitImg = CP_Image_Load("Assets/GUI/Icons/player_portrait.png");
     _slotInputImgs[0] = CP_Image_Load("Assets/GUI/keyboard_1.png");
     _slotInputImgs[1] = CP_Image_Load("Assets/GUI/keyboard_2.png");
     _slotInputImgs[2] = CP_Image_Load("Assets/GUI/keyboard_3.png");
@@ -178,7 +178,7 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
     _spawnMaxY = level_height * 4 / 5;
     _spawnWidth = 300.f;
 
-    CP_Image enemyImg = CP_Image_Load("Assets/walking animation/frame1.png");
+    CP_Image enemyImg = CP_Image_Load("Assets/Sprites/Chocoroach/1.png");
 
     float enemyHeight = get_preserved_heightf((float)CP_Image_GetWidth(enemyImg),
         (float)CP_Image_GetHeight(enemyImg), ENEMY_WIDTH);
