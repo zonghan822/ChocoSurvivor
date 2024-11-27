@@ -276,7 +276,7 @@ void level_one_init(void) {
     _tutAllyX = 650.f;
     _tutAllyY = 275.f;
     _tutLmbHoldTime = 0.f;
-    place_barrier(0, _tutBarrierX, _tutBarrierY);
+    place_barrier(0, _tutBarrierX, _tutBarrierY, 0);
     place_ally(0, _tutAllyX, _tutAllyY);
 
     init_sounds();

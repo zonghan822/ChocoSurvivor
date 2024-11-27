@@ -61,6 +61,7 @@ static struct Rectangle _playerBarriers[10];
 static enum BarrierState _currentBarrierState = BARRIER_IDLE;
 static CP_Vector _previewPosition;
 static CP_Vector _finalPosition;
+static int barrierHealth;
 #pragma endregion
 
 #pragma region Map Properties
@@ -157,6 +158,7 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
     _spawnTimer = 0.f;
     _deadEnemies = 0;
     playerProjectiles.activeCount = 0;
+    barrierHealth = BARRIER_INITIAL_HEALTH;
     memset(&playerProjectiles, 0, sizeof(playerProjectiles.projectiles));
     memset(&allyProjectiles, 0, sizeof(allyProjectiles->projectiles));
     memset(&buffSlot, 0, sizeof(buffSlot));
@@ -195,7 +197,7 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
     case GAME_LEVEL_ONE:
         levelBg = CP_Image_Load("Assets/Levels/level1.png");
         bossSpeed = 20.f;
-        _boss = init_boss_one(BOSS_WIDTH, bossSpeed, 10500, 60, 1.03f);
+        _boss = init_boss_one(BOSS_WIDTH, bossSpeed, 10500, 60, 2.f);
 
         CP_Image towerImg = CP_Image_Load("Assets/Sprites/tower.png");
         float towerImgWidth = ((float)CP_Image_GetWidth(towerImg)),
@@ -257,12 +259,12 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
         init_grid(&_enemyGrid, level_width, level_height, (0.68f * ENEMY_WIDTH) + 5.f, (0.64f * enemyHeight) + 5.f);
         init_grid(&_bossGrid, level_width, level_height, 77.f / 144.f * BOSS_WIDTH, 166.f / 251.f * bossHeight);
         update_grid(&_enemyGrid, _worldClips, _worldClipsCount, _enemyClips, 5);
-        update_grid(&_bossGrid, _worldClips, _worldClipsCount, _enemyClips, 2);
+        update_grid(&_bossGrid, _worldClips, _worldClipsCount, _enemyClips, 0);
 
         init_grid(&_enemyGridNB, level_width, level_height, (0.68f * ENEMY_WIDTH) + 5.f, (0.64f * enemyHeight) + 5.f);
         init_grid(&_bossGridNB, level_width, level_height, 77.f / 144.f * BOSS_WIDTH, 166.f / 251.f * bossHeight);
         update_grid(&_enemyGridNB, _worldClips, _worldClipsCount, _enemyClips, 5);
-        update_grid(&_bossGridNB, _worldClips, _worldClipsCount, _enemyClips, 2);
+        update_grid(&_bossGridNB, _worldClips, _worldClipsCount, _enemyClips, 0);
 
         break;
     case GAME_LEVEL_TWO:
@@ -368,7 +370,8 @@ void _render_victory_page(float window_width, float window_height) {
 
     CP_Settings_Fill(CP_Color_Create(220, 220, 220, 255));
     CP_Settings_TextSize(85.f);
-    CP_Font_DrawText("YOU SAVED THE CHOCOLATE!!!", window_width / 2.f, window_height / 4.f);
+    CP_Font_DrawText("CONGRATULATIONS!", window_width / 2.f, window_height / 4.f);
+    CP_Font_DrawText("YOU SAVED THE CHOCOLATE!!!", window_width / 2.f, (window_height / 4.f) + 85.f);
 
     // Render buttons
     render_button(_victoryMenuButton);
@@ -468,8 +471,8 @@ void spawn_enemies(float dt) {
                     }
                     _spawnInterval = 0.65f;
                     enemySpeed = 175.f;
-                    enemyMaxHealth = 105;
-                    enemyDmg = 25;
+                    enemyMaxHealth = 200;
+                    enemyDmg = 20;
                     _enemyMaxAttackCD = 1.5f;
                     _roachesMax = 155;
                     nextSpawnDelayIndex = 7;
@@ -511,7 +514,7 @@ void player_placeables(float mouse_x, float mouse_y, float dt) {
     }
     _worldClipsCount = _obstaclesCount + get_barrier_count();
     update_grid(&_enemyGrid, _worldClips, _worldClipsCount, _enemyClips, 5);
-    update_grid(&_bossGrid, _worldClips, _worldClipsCount, _enemyClips, 2);
+    update_grid(&_bossGrid, _worldClips, _worldClipsCount, _enemyClips, 0);
 
     // Right click to cancel any previews
     if (CP_Input_MouseTriggered(MOUSE_BUTTON_RIGHT)) {
@@ -533,19 +536,13 @@ void player_placeables(float mouse_x, float mouse_y, float dt) {
         // Render translucent barrier preview
         CP_Settings_RectMode(CP_POSITION_CENTER);
         CP_Settings_Fill(CP_Color_Create(0, 0, 255, 128));
-        int barrierLvl = 0;
-        for (int i = 0; i < activeBuffs.buffCount; i++) {
-            if (activeBuffs.buffs[i].type == BARRIER_LVL_UP) {
-                barrierLvl = activeBuffs.buffs[i].level;
-                break;
-            }
-        }
+        int barrierLvl = get_buff_level(BARRIER_LVL_UP);
         CP_Image_Draw(get_barrier_image(barrierLvl), mouse_x, mouse_y, BARRIER_WIDTH, BARRIER_HEIGHT, 128);
         // Place barrier when left mouse button is clicked
         if (CP_Input_MouseTriggered(MOUSE_BUTTON_LEFT)) {
             int barrierIndex = get_barrier_count();
             if (barrierIndex < MAX_BARRIERS)
-                place_barrier(barrierIndex, mouse_x, mouse_y);
+                place_barrier(barrierIndex, mouse_x, mouse_y, barrierLvl);
             _currentBarrierState = BARRIER_IDLE;
         }
         break;
@@ -564,13 +561,7 @@ void player_placeables(float mouse_x, float mouse_y, float dt) {
         enableShooting = false;
          // Render translucent preview
         CP_Settings_Fill(CP_Color_Create(0, 255, 0, 128));
-        int allyLvl = 0;
-        for (int i = 0; i < activeBuffs.buffCount; i++) {
-            if (activeBuffs.buffs[i].type == ALLY_LVL_UP) {
-                allyLvl = activeBuffs.buffs[i].level;
-                break;
-            }
-        }
+        int allyLvl = get_buff_level(ALLY_LVL_UP);
         CP_Image prevImg = get_ally_image(allyLvl);
         float prevImgWidth = ((float)CP_Image_GetWidth(prevImg)),
             prevImgHeight = ((float)CP_Image_GetHeight(prevImg));
@@ -850,7 +841,7 @@ void check_collision(void) {
             // Obstacles
             for (int i = 0; i < _worldClipsCount; i++) {
                 struct Rectangle worldClip = _worldClips[i];
-                if (are_circle_rect_intersecting(projectileHitbox, worldClip)) {// bullet cannot go through walls and barricades...
+                if ((are_circle_rect_intersecting(projectileHitbox, worldClip) && !(playerProjectiles.projectiles[j].type & TRACKING_PROJECTILE))) {// bullet cannot go through walls and barricades...
                     remove_projectile(&playerProjectiles, j);
                     break;
                 }
@@ -876,7 +867,7 @@ void check_collision(void) {
                     break;
                 }
                 if (playerProjectiles.projectiles[j].type & TRACKING_PROJECTILE) {
-                    struct Circle radarBullet = { .pos = playerProjectiles.projectiles[j].pos, .diameter = 4.f * fabsf(playerInstance.width) }; // define bullet radar
+                    struct Circle radarBullet = { .pos = playerProjectiles.projectiles[j].pos, .diameter = 2.f * fabsf(playerInstance.width) }; // define bullet radar
                     if (are_circle_rect_intersecting(radarBullet, _roaches[i].hitbox)) {
                         playerProjectiles.projectiles[j].shootDirection = CP_Vector_Normalize(CP_Vector_Subtract(_roaches[i].hitbox.pos, playerProjectiles.projectiles[j].pos));
                     }
@@ -1137,13 +1128,13 @@ void buff_update(float dt) {
     update_timer_buff(&activeBuffs, dt);
 }
 
-void place_barrier(int index, float x, float y) {
-    set_barrier_properties(index, CP_Vector_Set(x, y), BARRIER_WIDTH, BARRIER_HEIGHT, BARRIER_INITIAL_HEALTH);
+void place_barrier(int index, float x, float y, int barrierLvl) {
+    set_barrier_properties(index, CP_Vector_Set(x, y), BARRIER_WIDTH, BARRIER_HEIGHT, (barrierLvl + 1) * BARRIER_INITIAL_HEALTH);
     increment_barrier_count();
 
     _worldClips[_worldClipsCount++] = barriers[index].hitbox;
     update_grid(&_enemyGrid, _worldClips, _worldClipsCount, _enemyClips, 5);
-    update_grid(&_bossGrid, _worldClips, _worldClipsCount, _enemyClips, 2);
+    update_grid(&_bossGrid, _worldClips, _worldClipsCount, _enemyClips, 0);
     for (int i = 0; i < _roachesMax; i++) {
         if (_roaches[i].currentState) {
             _roaches[i].path.hasUpdated = false;

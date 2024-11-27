@@ -64,7 +64,7 @@ int update_buff_meter(struct ChocoShooter* player, float dt) {
     return 0; // Return 0 if no buff is granted
 }
 
-void apply_buff(BuffList* activeBuffs, enum BuffType buff, struct ChocoShooter* player, struct Barrier* barrier, struct Ally* allies) {
+void apply_buff(BuffList* activeBuffs, enum BuffType buff, struct ChocoShooter* player, struct Barrier* barriers, struct Ally* allies) {
     if (buff == NO_BUFF) 
         return;
 
@@ -122,7 +122,7 @@ void apply_buff(BuffList* activeBuffs, enum BuffType buff, struct ChocoShooter* 
     switch (buff) {
     case ATTACK_UP:
         printf("Attack Up!\n");
-        player->attackPower += 5;  // Increase player's attack power
+        player->attackPower += 10;  // Increase player's attack power
         if (isNotApplied) {
             activeBuffs->buffs[activeBuffs->buffCount - 1].img = CP_Image_Load("Assets/GUI/Icons/atkbuff.png");
             activeBuffs->buffs[activeBuffs->buffCount - 1].renderText = "Attack Up";
@@ -139,7 +139,7 @@ void apply_buff(BuffList* activeBuffs, enum BuffType buff, struct ChocoShooter* 
     case HEALTH_UP: {
         printf("Health Up!\n");
         float healthPercent = (float)player->health / (float)player->maxHealth;
-        player->maxHealth += 20;
+        player->maxHealth += 30;
         player->health = (int)(healthPercent * (float)player->maxHealth);
         if (isNotApplied) {
             activeBuffs->buffs[activeBuffs->buffCount - 1].img = CP_Image_Load("Assets/GUI/Icons/hpup.png");
@@ -149,8 +149,10 @@ void apply_buff(BuffList* activeBuffs, enum BuffType buff, struct ChocoShooter* 
     }   
     case ALLY_LVL_UP:
         printf("Sentry Level Up!\n");
-        allies->attackPower += ALLY_ATTACK_POWER_INCREMENT;
-        allies->attackSpeed += ALLY_ATTACK_SPEED_INCREMENT;
+        for (int i = 0; i < MAX_ALLIES; i++) {
+            allies[i].attackPower += ALLY_ATTACK_POWER_INCREMENT;
+            allies[i].attackSpeed += ALLY_ATTACK_SPEED_INCREMENT;
+        }
         if (isNotApplied) {
             activeBuffs->buffs[activeBuffs->buffCount - 1].img = CP_Image_Load("Assets/GUI/Icons/sentry_lvl_up.png");
             activeBuffs->buffs[activeBuffs->buffCount - 1].renderText = "Sentry Level Up";
@@ -158,7 +160,11 @@ void apply_buff(BuffList* activeBuffs, enum BuffType buff, struct ChocoShooter* 
         break;
     case BARRIER_LVL_UP:
         printf("Barricade Level Up!\n");
-        barrier->health += 10;
+        for (int i = 0; i < MAX_BARRIERS; i++) {
+            float healthPercent = (float)barriers[i].health / (float)barriers[i].maxHealth;
+            barriers[i].maxHealth += BARRIER_INITIAL_HEALTH;
+            barriers[i].health = (int)(healthPercent * (float)barriers[i].maxHealth);
+        }
         if (isNotApplied) {
             activeBuffs->buffs[activeBuffs->buffCount - 1].img = CP_Image_Load("Assets/GUI/Icons/barricade_lvl_up.png");
             activeBuffs->buffs[activeBuffs->buffCount - 1].renderText = "Barricade Level Up";
@@ -255,7 +261,7 @@ void render_buff_slot(BuffSlot* buffSlot, float windowWidth, float windowHeight,
     float slotW = BUFF_ICON_SIDE, slotH = BUFF_ICON_SIDE;
     float gap = 40.f;
 
-    CP_Image img;
+    CP_Image buffImg;
 
     for (int i = 0; i < MAX_BUFF_SLOT; i++) {
         slotX[i] = (i * (gap + slotW)) + slotX[0];
@@ -270,19 +276,19 @@ void render_buff_slot(BuffSlot* buffSlot, float windowWidth, float windowHeight,
             CP_Graphics_DrawRect(slotX[i], slotY, slotW, slotH);
             break;
         case HEAL:
-            CP_Image_Draw(img = CP_Image_Load("Assets/GUI/Icons/heal.png"), slotX[i], slotY, slotW, slotH, 255);
+            CP_Image_Draw(buffImg = CP_Image_Load("Assets/GUI/Icons/heal.png"), slotX[i], slotY, slotW, slotH, 255);
             break;
         case SMART_PISTOL:
-            CP_Image_Draw(img = CP_Image_Load("Assets/GUI/Icons/smartgun.png"), slotX[i], slotY, slotW, slotH, 255);
+            CP_Image_Draw(buffImg = CP_Image_Load("Assets/GUI/Icons/smartgun.png"), slotX[i], slotY, slotW, slotH, 255);
             break;
         case FROZING_SHOTS:
-            CP_Image_Draw(img = CP_Image_Load("Assets/GUI/Icons/freezingshots.png"), slotX[i], slotY, slotW, slotH, 255);
+            CP_Image_Draw(buffImg = CP_Image_Load("Assets/GUI/Icons/freezingshots.png"), slotX[i], slotY, slotW, slotH, 255);
             break;
         case MULTI_SHOTS:
-            CP_Image_Draw(img = CP_Image_Load("Assets/GUI/Icons/fastshots.png"), slotX[i], slotY, slotW, slotH, 255);
+            CP_Image_Draw(buffImg = CP_Image_Load("Assets/GUI/Icons/fastshots.png"), slotX[i], slotY, slotW, slotH, 255);
             break;
         case REFLECT_DMG:
-            CP_Image_Draw(img = CP_Image_Load("Assets/GUI/Icons/reflectdmg.png"), slotX[i], slotY, slotW, slotH, 255);
+            CP_Image_Draw(buffImg = CP_Image_Load("Assets/GUI/Icons/reflectdmg.png"), slotX[i], slotY, slotW, slotH, 255);
             break;
         }  
     }
@@ -375,6 +381,14 @@ void render_buff(BuffList* activeBuffs, float windowWidth, float windowHeight, f
             }
             break;
         }      
+        }
+    }
+}
+
+int get_buff_level(enum BuffType buff) {
+    for (int i = 0; i < activeBuffs.buffCount; i++) {
+        if (activeBuffs.buffs[i].type == buff) {
+            return activeBuffs.buffs[i].level;
         }
     }
 }

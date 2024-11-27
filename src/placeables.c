@@ -51,15 +51,16 @@ void set_barrier_properties(int index, CP_Vector pos, float width, float height,
 }
 
 CP_Image get_barrier_image(int barrierLevel) {
-    return barrierImages[barrierLevel];
+    int barrierImgIndex = min(3, barrierLevel);
+    return barrierImages[barrierImgIndex];
 }
 
 static int _comp(const void* a, const void* b) {
-    if (!(((struct Barrier*)a)->health) && !(((struct Barrier*)b)->health))
+    if ((((struct Barrier*)a)->health <= 0) && (((struct Barrier*)b)->health <= 0))
         return -1;
-    if (!(((struct Barrier*)a)->health))
+    if ((((struct Barrier*)a)->health <= 0))
         return 1;
-    if (!(((struct Barrier*)b)->health))
+    if ((((struct Barrier*)b)->health <= 0))
         return -1;
     return (int)(((struct Barrier*)a)->pos.y - ((struct Barrier*)b)->pos.y);
 }
@@ -139,11 +140,7 @@ void increment_ally_count(void) {
 #pragma warning( disable : 6386)
 void init_ally(int index, CP_Vector pos, float width, float height) {
 
-    int allyLevel = 0;
-    for (int i = 0; i < activeBuffs.buffCount; i++) {
-        if (activeBuffs.buffs[i].type == ALLY_LVL_UP)
-            allyLevel = activeBuffs.buffs[i].level;
-    }
+    int allyLevel = get_buff_level(ALLY_LVL_UP);
     if (index < MAX_ALLIES)
         allies[index].pos = pos;
         allies[index].width = width;
@@ -177,7 +174,8 @@ void render_allies() {
 }
 
 CP_Image get_ally_image(int allyLevel) {
-    return allyImages[allyLevel];
+    int allyImgIndex = min(3, allyLevel);
+    return allyImages[allyImgIndex];
 }
 
 void dispose_allies(void) {

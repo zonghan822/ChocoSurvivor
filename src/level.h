@@ -67,7 +67,7 @@ const struct Rectangle* get_world_clips(int* num);
 
 void check_collision(void);
 
-void place_barrier(int index, float x, float y);
+void place_barrier(int index, float x, float y, int barrierLvl);
 
 void place_ally(int index, float x, float y);
 
