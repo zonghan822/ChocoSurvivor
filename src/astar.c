@@ -129,6 +129,8 @@ void draw_grid(PathNode* grid, int nodeCount) {
 
 int get_nearest_node_index(PathNode* grid, int nodeCount, CP_Vector position) {
 	int closestNodeIndex = 0;
+	if (grid == NULL) return 0;
+
 	float closestDistance = CP_Vector_Distance(position, grid[closestNodeIndex].pos);
 	for (int i = 1; i < nodeCount; i++) {
 		// if the valid node has shorter distance to position
