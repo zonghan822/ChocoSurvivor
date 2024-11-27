@@ -270,19 +270,19 @@ void render_buff_slot(BuffSlot* buffSlot, float windowWidth, float windowHeight,
             CP_Graphics_DrawRect(slotX[i], slotY, slotW, slotH);
             break;
         case HEAL:
-            CP_Image_Draw(img = CP_Image_Load("Assets/heal.png"), slotX[i], slotY, slotW, slotH, 255);
+            CP_Image_Draw(img = CP_Image_Load("Assets/GUI/Icons/heal.png"), slotX[i], slotY, slotW, slotH, 255);
             break;
         case SMART_PISTOL:
-            CP_Image_Draw(img = CP_Image_Load("Assets/smartgun.png"), slotX[i], slotY, slotW, slotH, 255);
+            CP_Image_Draw(img = CP_Image_Load("Assets/GUI/Icons/smartgun.png"), slotX[i], slotY, slotW, slotH, 255);
             break;
         case FROZING_SHOTS:
-            CP_Image_Draw(img = CP_Image_Load("Assets/frozingshots.png"), slotX[i], slotY, slotW, slotH, 255);
+            CP_Image_Draw(img = CP_Image_Load("Assets/GUI/Icons/freezingshots.png"), slotX[i], slotY, slotW, slotH, 255);
             break;
         case MULTI_SHOTS:
-            CP_Image_Draw(img = CP_Image_Load("Assets/fastshots.png"), slotX[i], slotY, slotW, slotH, 255);
+            CP_Image_Draw(img = CP_Image_Load("Assets/GUI/Icons/fastshots.png"), slotX[i], slotY, slotW, slotH, 255);
             break;
         case REFLECT_DMG:
-            CP_Image_Draw(img = CP_Image_Load("Assets/reflectdmg.png"), slotX[i], slotY, slotW, slotH, 255);
+            CP_Image_Draw(img = CP_Image_Load("Assets/GUI/Icons/reflectdmg.png"), slotX[i], slotY, slotW, slotH, 255);
             break;
         }  
     }

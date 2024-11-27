@@ -1143,7 +1143,7 @@ void place_ally(int index, float x, float y) {
     increment_ally_count();
 }
 
-#if _DEBUG
+#pragma region DEBUG
 void debug_render_enemy_grid(void) {
     draw_grid(_enemyGrid.nodes, _enemyGrid.nodeCount); // draw enemy grid for debugging
     //draw_grid(_enemyGridNB.nodes, _enemyGrid.nodeCount); // draw enemy grid for debugging
@@ -1162,7 +1162,7 @@ void debug_render_clips(void) {
     for (int x = 0; x < 4; x++)
         CP_Graphics_DrawRect(_enemyClips[x].pos.x, _enemyClips[x].pos.y, _enemyClips[x].width, _enemyClips[x].height);
 }
-#endif
+#pragma endregion
 
 void dispose_resources(void) {
     if (!_isMovingToNextLevel)

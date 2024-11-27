@@ -79,10 +79,6 @@ void level_two_update(void) {
     /*********************************
                  Rendering
     **********************************/
-#if _DEBUG
-    // debug_render_grid();
-#endif
-
     render_barriers();
     render_allies();
     render_entities(dt, mouseX);

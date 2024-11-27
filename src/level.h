@@ -73,12 +73,10 @@ void place_ally(int index, float x, float y);
 
 void buff_update(float dt);
 
-#if _DEBUG
 void debug_render_enemy_grid(void);
 
 void debug_render_boss_grid(void);
 
 void debug_render_clips(void);
-#endif
 
 void dispose_resources(void);
