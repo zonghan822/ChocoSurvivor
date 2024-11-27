@@ -23,7 +23,7 @@
 #include "optionsmenu.h"
 
 // Macros
-#define MAX_ENEMY_COUNT 100
+#define MAX_ENEMY_COUNT 200
 
 #pragma region Spawn Properties
 static float _spawnMinY = 0.f, _spawnMaxY = 0.f, _spawnWidth = 0.f;
@@ -195,7 +195,7 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
     case GAME_LEVEL_ONE:
         levelBg = CP_Image_Load("Assets/Levels/level1.png");
         bossSpeed = 20.f;
-        _boss = init_boss_one(BOSS_WIDTH, bossSpeed, 4900, 60, 1.03f);
+        _boss = init_boss_one(BOSS_WIDTH, bossSpeed, 10500, 60, 1.03f);
 
         CP_Image towerImg = CP_Image_Load("Assets/Sprites/tower.png");
         float towerImgWidth = ((float)CP_Image_GetWidth(towerImg)),
@@ -467,12 +467,12 @@ void spawn_enemies(float dt) {
                         _hasPlayedBossWaveMusic = true;
                     }
                     _spawnInterval = 0.65f;
-                    enemySpeed = 250.f;
-                    enemyMaxHealth = 75;
-                    enemyDmg = 15;
+                    enemySpeed = 175.f;
+                    enemyMaxHealth = 105;
+                    enemyDmg = 25;
                     _enemyMaxAttackCD = 1.5f;
                     _roachesMax = 155;
-                    nextSpawnDelayIndex = 5;
+                    nextSpawnDelayIndex = 7;
                     nextSpawnDelay = -0.55f;
                     break;
                 }
@@ -800,7 +800,7 @@ void render_entities(float dt, float mouse_x) {
 
 #pragma region Boss
     // Update and render boss
-    if (_boss.state != BOSS_STATE_UNSPAWNED) {
+    if (_boss.state != BOSS_STATE_UNSPAWNED && _boss.state != BOSS_STATE_DIED) {
         _draw_shadows(_boss.pos.x, _boss.pos.y, _boss.width, _boss.height);
         render_boss_one_sec_atk_telegraph(_boss, playerInstance);
         render_boss_one_pri_atk_telegraph();
