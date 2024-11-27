@@ -31,12 +31,16 @@ static CP_Image _tutImageSpace;
 static CP_Image _tutImageV, _tutImageB;
 static CP_Image _tutImageRmb, _tutImageLmb;
 static bool _tutHasPressedW, _tutHasPressedA, _tutHasPressedS, _tutHasPressedD; // WASD
-static bool _tutHasPressedSpace; // Space
-static bool _tutHasPressedV, _tutHasPressedB; // Ally and Barrier, respectively
-static bool _tutHasPressedRmb, _tutHasHoldLmb;
+static bool _tutHasPressedSpace;                // Dash
+static bool _tutHasPressedV, _tutHasPressedB;   // Ally and Barrier, respectively
+static bool _tutHasPressedRmb, _tutHasHoldLmb;  // Mouse inputs
 static float _tutBarrierX, _tutBarrierY;
 static float _tutAllyX, _tutAllyY;
+
+// Debug keys
+// F11, F12, Insert, Delete
 static bool _hasPressedF11, _hasPressedF12;
+static bool _hasPressedInsert, _hasPressedDelete;
 static float _tutLmbHoldTime;
 
 static void _render_tutorials(float dt) {
@@ -228,9 +232,17 @@ static void _debug_render_grid() {
         _hasPressedF12 = !_hasPressedF12;
         _hasPressedF11 = false;
     }
+    _hasPressedInsert = CP_Input_KeyTriggered(KEY_INSERT)
+        ? !_hasPressedInsert
+        : _hasPressedInsert;
+    _hasPressedDelete = CP_Input_KeyTriggered(KEY_DELETE)
+        ? !_hasPressedDelete
+        : _hasPressedDelete;
+
     if (_hasPressedF11) debug_render_enemy_grid();
     if (_hasPressedF12) debug_render_boss_grid();
-     //debug_render_clips();
+    if (_hasPressedInsert) debug_render_clips();
+    if (_hasPressedDelete) debug_render_hitboxes();
 }
 
 void level_one_init(void) {
@@ -259,8 +271,8 @@ void level_one_init(void) {
     _tutImageSpace = CP_Image_Load("Assets/GUI/keyboard_space.png");
 
     // Place tutorial placeables
-    _tutBarrierX = 895.f;
-    _tutBarrierY = 645.f;
+    _tutBarrierX = 1520.f;
+    _tutBarrierY = 245.f;
     _tutAllyX = 650.f;
     _tutAllyY = 275.f;
     _tutLmbHoldTime = 0.f;

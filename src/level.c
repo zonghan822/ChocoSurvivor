@@ -66,7 +66,7 @@ static CP_Vector _finalPosition;
 #pragma region Map Properties
 static struct Rectangle _worldClips[35];
 static struct Rectangle _playerClips[1];
-static struct Rectangle _enemyClips[4];
+static struct Rectangle _enemyClips[5];
 static int _obstaclesCount = 0;
 static int _worldClipsCount = 0;
 static Grid _enemyGrid, _bossGrid, _enemyGridNB, _bossGridNB;
@@ -227,16 +227,18 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
         // Enemy clips
         struct Rectangle oweoMissesEnemyClip = { .pos = CP_Vector_Set(890.f, 290.f), .width = 212.f, .height = 332.f };
         struct Rectangle enemyClip1 = { .pos = CP_Vector_Set(892.5f, 450.f), .width = 540.f, .height = 150.f };
-        struct Rectangle enemyClip2 = { .pos = CP_Vector_Set(1510.f, 390.f), .width = 450.f, .height = 70.f };
+        struct Rectangle enemyClip2 = { .pos = CP_Vector_Set(1510.f, 370.f), .width = 450.f, .height = 140.f };
         struct Rectangle enemyClip3 = { .pos = CP_Vector_Set(2070.f, 350.f), .width = 400.f, .height = 220.f };
+        struct Rectangle enemyClip4 = { .pos = CP_Vector_Set(250.f, 610.f), .width = 400.f, .height = 280.f };
         _enemyClips[0] = oweoMissesEnemyClip;
         _enemyClips[1] = enemyClip1;
         _enemyClips[2] = enemyClip2;
         _enemyClips[3] = enemyClip3;
+        _enemyClips[4] = enemyClip4;
 
         // Global/World Clips (for all)
         _worldClips[0] = get_tower_hitbox(_tower);
-        struct Rectangle topClip = { .pos = CP_Vector_Set(level_width / 2, 40.f), .width = level_width , .height = 75.f };
+        struct Rectangle topClip = { .pos = CP_Vector_Set(level_width / 2, 40.f), .width = level_width , .height = 95.f };
         struct Rectangle botClip = { .pos = CP_Vector_Set(level_width / 2, level_height - 35.f), .width = level_width, .height = 75.f };
         struct Rectangle oweoClip = { .pos = CP_Vector_Set(915.f, 351.f), .width = 120.f, .height = 60.f }; // Oreo
         struct Rectangle missesClip = { .pos = CP_Vector_Set(840.f, 200.f), .width = 40.f, .height = 15.f }; // Kisses
@@ -254,12 +256,12 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
         
         init_grid(&_enemyGrid, level_width, level_height, (0.8f * ENEMY_WIDTH) + 5.f, (0.75f * enemyHeight)+ 5.f);
         init_grid(&_bossGrid, level_width, level_height, 77.f / 144.f * BOSS_WIDTH, 166.f / 251.f * bossHeight);
-        update_grid(&_enemyGrid, _worldClips, _worldClipsCount, _enemyClips, 4);
+        update_grid(&_enemyGrid, _worldClips, _worldClipsCount, _enemyClips, 5);
         update_grid(&_bossGrid, _worldClips, _worldClipsCount, _enemyClips, 2);
 
         init_grid(&_enemyGridNB, level_width, level_height, (0.8f * ENEMY_WIDTH) + 5.f, (0.75f * enemyHeight) + 5.f);
         init_grid(&_bossGridNB, level_width, level_height, 77.f / 144.f * BOSS_WIDTH, 166.f / 251.f * bossHeight);
-        update_grid(&_enemyGridNB, _worldClips, _worldClipsCount, _enemyClips, 4);
+        update_grid(&_enemyGridNB, _worldClips, _worldClipsCount, _enemyClips, 5);
         update_grid(&_bossGridNB, _worldClips, _worldClipsCount, _enemyClips, 2);
 
         break;
@@ -508,7 +510,7 @@ void player_placeables(float mouse_x, float mouse_y, float dt) {
         _worldClips[_obstaclesCount + i] = barriers[i].hitbox;
     }
     _worldClipsCount = _obstaclesCount + get_barrier_count();
-    update_grid(&_enemyGrid, _worldClips, _worldClipsCount, _enemyClips, 4);
+    update_grid(&_enemyGrid, _worldClips, _worldClipsCount, _enemyClips, 5);
     update_grid(&_bossGrid, _worldClips, _worldClipsCount, _enemyClips, 2);
 
     // Right click to cancel any previews
@@ -818,7 +820,7 @@ void render_entities(float dt, float mouse_x) {
     }
     //CP_Vector hitboxPos = { playerInstance.pos.x + PLAYER_HITBOX_OFFSET_X(playerInstance.width), playerInstance.pos.y + PLAYER_HITBOX_OFFSET_Y(playerInstance.height) };
     update_rect_hitbox(&playerInstance.hitbox, playerInstance.width, playerInstance.pos,
-        fabsf(playerInstance.width) / 4.8f, fabsf(playerInstance.height) / 22.2f); // Update hitbox of player
+        fabsf(playerInstance.width) / 4.8f, fabsf(playerInstance.height) / 5.5f); // Update hitbox of player
     if (playerInstance.flickerState.isVisible)
         render_player(&playerInstance, 255, dt);
 #pragma endregion
@@ -1134,7 +1136,7 @@ void place_barrier(int index, float x, float y) {
     increment_barrier_count();
 
     _worldClips[_worldClipsCount++] = barriers[index].hitbox;
-    update_grid(&_enemyGrid, _worldClips, _worldClipsCount, _enemyClips, 4);
+    update_grid(&_enemyGrid, _worldClips, _worldClipsCount, _enemyClips, 5);
     update_grid(&_bossGrid, _worldClips, _worldClipsCount, _enemyClips, 2);
 }
 
@@ -1159,8 +1161,19 @@ void debug_render_clips(void) {
     for (int i = 0; i < _worldClipsCount; i++)
         CP_Graphics_DrawRect(_worldClips[i].pos.x, _worldClips[i].pos.y, _worldClips[i].width, _worldClips[i].height);
 
-    for (int x = 0; x < 4; x++)
+    for (int x = 0; x < 5; x++)
         CP_Graphics_DrawRect(_enemyClips[x].pos.x, _enemyClips[x].pos.y, _enemyClips[x].width, _enemyClips[x].height);
+}
+
+void debug_render_hitboxes(void) {
+    CP_Settings_Fill(CP_Color_Create(0, 0, 0, 125));
+
+    CP_Graphics_DrawRect(playerInstance.hitbox.pos.x, playerInstance.hitbox.pos.y, playerInstance.hitbox.width, playerInstance.hitbox.height);
+
+    for (int i = 0; i < _roachesMax - _deadEnemies; i++)
+        CP_Graphics_DrawRect(_roaches[i].hitbox.pos.x, _roaches[i].hitbox.pos.y, _roaches[i].hitbox.width, _roaches[i].hitbox.height);
+
+    CP_Graphics_DrawRect(_boss.hitbox.pos.x, _boss.hitbox.pos.y, _boss.hitbox.width, _boss.hitbox.height);
 }
 #pragma endregion
 

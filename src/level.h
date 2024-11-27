@@ -79,4 +79,6 @@ void debug_render_boss_grid(void);
 
 void debug_render_clips(void);
 
+void debug_render_hitboxes(void);
+
 void dispose_resources(void);
