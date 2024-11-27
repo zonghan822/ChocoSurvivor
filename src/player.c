@@ -65,12 +65,12 @@ struct ChocoShooter init_player(CP_Vector pos, float speed, int maxHealth, int a
     };
    
 
-    player.chocoFrames[0] = CP_Image_Load("Assets/walking animation/choco_F1.png");
-    player.chocoFrames[1] = CP_Image_Load("Assets/walking animation/choco_F2.png");
-    player.chocoFrames[2] = CP_Image_Load("Assets/walking animation/choco_F3.png");
-    player.chocoFrames[3] = CP_Image_Load("Assets/walking animation/choco_F4.png");
-    player.chocoFrames[4] = CP_Image_Load("Assets/walking animation/choco_F5.png");
-    player.chocoFrames[5] = CP_Image_Load("Assets/walking animation/choco_F6.png");
+    player.chocoFrames[0] = CP_Image_Load("Assets/Sprites/Player/1.png");
+    player.chocoFrames[1] = CP_Image_Load("Assets/Sprites/Player/2.png");
+    player.chocoFrames[2] = CP_Image_Load("Assets/Sprites/Player/3.png");
+    player.chocoFrames[3] = CP_Image_Load("Assets/Sprites/Player/4.png");
+    player.chocoFrames[4] = CP_Image_Load("Assets/Sprites/Player/5.png");
+    player.chocoFrames[5] = CP_Image_Load("Assets/Sprites/Player/6.png");
 
     for (int i = 0; i < CHOCOSHOOTER_FRAMES; i++) {
         if (player.chocoFrames[i] == NULL) {

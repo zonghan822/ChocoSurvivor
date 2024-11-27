@@ -84,7 +84,7 @@ static void _move_to_target(struct Boss* boss, struct Rectangle hitbox, float dt
 }
 
 struct Boss init_boss_one(float width, float speed, int health, int attack_power, float attack_speed) {
-	CP_Image img = CP_Image_Load("Assets/boss_lvl1.png");
+	CP_Image img = CP_Image_Load("Assets/Sprites/boss_1.png");
 	float imgWidth = ((float)CP_Image_GetWidth(img)),
 		imgHeight = ((float)CP_Image_GetHeight(img));
 	float preservedHeight = get_preserved_heightf(imgWidth, imgHeight, width);
@@ -325,12 +325,12 @@ void render_boss_one_sec_atk_telegraph(struct Boss boss, struct ChocoShooter pla
 int can_boss_one_sec_atk(struct Boss boss, struct ChocoShooter player) {
 	// Min chargin g distance
 	float minDistance = BOSS_ONE_SEC_ATK_DISTANCE + (fabsf(boss.hitbox.width) / 2.f) + (fabsf(player.hitbox.width) / 2.f);
-	return ((CP_Vector_Distance(boss.hitbox.pos, player.hitbox.pos) <= minDistance && _secAtkCooldown >= 1.f) ||
+	return ((CP_Vector_Distance(boss.hitbox.pos, player.hitbox.pos) <= minDistance && _secAtkCooldown >= 10.f) ||
 		boss.state == BOSS_STATE_ATTACKING_SECONDARY) && boss.state != BOSS_STATE_ATTACKING_PRIMARY;
 }
 
 void boss_one_move(struct Boss* boss, struct ChocoShooter player, struct Rectangle hitbox, float dt, PathNode* grid, PathNode* gridNoBarrier, int nodeCount) {
-	if (_secAtkCooldown < 1.f)
+	if (_secAtkCooldown < 10.f)
 		_secAtkCooldown += dt;
 
 	if (boss->state != BOSS_STATE_MOVING_TO_TOWER &&

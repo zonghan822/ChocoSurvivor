@@ -102,11 +102,8 @@ void ally_shoot(float dt, struct ChocoRoach* enemies, int enemyCount) {
             }
         }
 
-        if (closestEnemy == NULL) {
-            // Clear all active projectiles for this ally
-            allyProjectiles[i].activeCount = 0;
+        if (closestEnemy == NULL)
             continue;
-        }
 
         CP_Vector dst = CP_Vector_Subtract(closestEnemy->pos, allies[i].pos);
         allies[i].width = (dst.x > 0 && allies[i].width > 0) || (dst.x <= 0 && allies[i].width < 0)

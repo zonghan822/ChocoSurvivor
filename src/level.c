@@ -118,7 +118,9 @@ static void _draw_shadows(float x, float y, float width, float height) {
 }
 
 static int _get_exp(int health, float speed, int max_enemies) {
-    return (int)((float)(health / speed) * (float)(max_enemies / 10.f));
+    float maxVal = max((float)health, speed);
+    float minVal = min((float)health, speed);
+    return (int)((float)(maxVal / minVal) * (float)(max_enemies / 10.f));
 }
 
 #pragma endregion
@@ -195,7 +197,7 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
         bossSpeed = 20.f;
         _boss = init_boss_one(BOSS_WIDTH, bossSpeed, 4900, 60, 1.03f);
 
-        CP_Image towerImg = CP_Image_Load("Assets/tower.png");
+        CP_Image towerImg = CP_Image_Load("Assets/Sprites/tower.png");
         float towerImgWidth = ((float)CP_Image_GetWidth(towerImg)),
             towerImgHeight = ((float)CP_Image_GetHeight(towerImg));
 
@@ -425,21 +427,19 @@ void spawn_enemies(float dt) {
             case GAME_LEVEL_ONE:
                 switch (currentWave) {
                 case WAVE_1:
-                    if (_boss.state == BOSS_STATE_UNSPAWNED) {
-                        stop_sound_group(SOUNDGROUP_MUSIC);
-                        spawn_boss(&_boss, 650.f, 650.f);
-                        play_sound(SOUND_MUSIC_BOSS_WAVE);
-                        _hasPlayedNormalWaveMusic = false;
-                        _hasPlayedBossWaveMusic = true;
+                    if (!_hasPlayedNormalWaveMusic) {
+                        play_sound(SOUND_MUSIC_NORMAL_WAVE);
+                        _hasPlayedNormalWaveMusic = true;
+                        _hasPlayedBossWaveMusic = false;
                     }
-                    _spawnInterval = 1.65f;
-                    enemySpeed = 90.f;
+                    _spawnInterval = .95f;
+                    enemySpeed = 100.f;
                     enemyMaxHealth = 175;
                     enemyDmg = 20;
                     _enemyMaxAttackCD = 2.f;
-                    _roachesMax = 0;
-                    nextSpawnDelayIndex = 6;
-                    nextSpawnDelay = -0.05f;
+                    _roachesMax = 75;
+                    nextSpawnDelayIndex = 20;
+                    nextSpawnDelay = -0.25f;
                     break;
                 case WAVE_2:
                     if (!_hasPlayedNormalWaveMusic) {
@@ -447,31 +447,31 @@ void spawn_enemies(float dt) {
                         _hasPlayedNormalWaveMusic = true;
                         _hasPlayedBossWaveMusic = false;
                     }
-                    _spawnInterval = 1.3f;
-                    enemySpeed = 110.f;
-                    enemyMaxHealth = 215;
+                    _spawnInterval = .65f;
+                    enemySpeed = 125.f;
+                    enemyMaxHealth = 225;
                     enemyDmg = 35;
                     _enemyMaxAttackCD = 1.5f;
-                    _roachesMax = 50;
-                    nextSpawnDelayIndex = 6;
-                    nextSpawnDelay = -1.5f;
+                    _roachesMax = 55;
+                    nextSpawnDelayIndex = 11;
+                    nextSpawnDelay = -0.75f;
                     break;
                 case WAVE_3:
                     if (_boss.state == BOSS_STATE_UNSPAWNED) {
                         stop_sound_group(SOUNDGROUP_MUSIC);
-                        spawn_boss(&_boss, -650.f, 650.f);
+                        spawn_boss(&_boss, -450.f, 250.f);
                         play_sound(SOUND_MUSIC_BOSS_WAVE);
                         _hasPlayedNormalWaveMusic = false;
                         _hasPlayedBossWaveMusic = true;
                     }
-                    _spawnInterval = 1.65f;
-                    enemySpeed = 75.f;
-                    enemyMaxHealth = 300;
+                    _spawnInterval = 0.65f;
+                    enemySpeed = 250.f;
+                    enemyMaxHealth = 75;
                     enemyDmg = 15;
                     _enemyMaxAttackCD = 1.5f;
-                    _roachesMax = 45;
+                    _roachesMax = 155;
                     nextSpawnDelayIndex = 5;
-                    nextSpawnDelay = -0.75f;
+                    nextSpawnDelay = -0.55f;
                     break;
                 }
             #pragma endregion

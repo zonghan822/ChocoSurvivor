@@ -23,10 +23,10 @@ CP_Image allyImages[MAX_ALLIES_IMAGES] = { 0 };
 
 // Barrier Functions
 void init_barrier_images(void) {
-    barrierImages[0] = CP_Image_Load("Assets/barrier_1.png");
-    barrierImages[1] = CP_Image_Load("Assets/barrier_2.png");
-    barrierImages[2] = CP_Image_Load("Assets/barrier_3.png");
-    barrierImages[3] = CP_Image_Load("Assets/barrier_4.png");
+    barrierImages[0] = CP_Image_Load("Assets/Sprites/barrier_1.png");
+    barrierImages[1] = CP_Image_Load("Assets/Sprites/barrier_2.png");
+    barrierImages[2] = CP_Image_Load("Assets/Sprites/barrier_3.png");
+    barrierImages[3] = CP_Image_Load("Assets/Sprites/barrier_4.png");
 }
 
 int get_barrier_count(void) {
@@ -119,10 +119,10 @@ void dispose_barriers(void) {
 
 // Ally Functions
 void init_ally_images(void) {
-    allyImages[0] = CP_Image_Load("Assets/ally_lvl1.png");
-    allyImages[1] = CP_Image_Load("Assets/ally_lvl1.png");
-    allyImages[2] = CP_Image_Load("Assets/ally_lvl1.png");
-    allyImages[3] = CP_Image_Load("Assets/ally_lvl1.png");
+    allyImages[0] = CP_Image_Load("Assets/Sprites/ally_lvl1.png");
+    allyImages[1] = CP_Image_Load("Assets/Sprites/ally_lvl1.png");
+    allyImages[2] = CP_Image_Load("Assets/Sprites/ally_lvl1.png");
+    allyImages[3] = CP_Image_Load("Assets/Sprites/ally_lvl1.png");
 }
 
 int get_ally_count(void) {
