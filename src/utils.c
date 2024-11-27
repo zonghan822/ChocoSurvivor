@@ -84,6 +84,20 @@ void render_health_bar(struct Rectangle entity, int health, int maxHealth) {
     CP_Settings_RectMode(CP_POSITION_CENTER);
 }
 
+void pop_int_array(int* arr, int *size, int element) {
+    for (int i = 0; i < *size; i++) {
+        if (arr[i] == element) {
+            for (int j = i; j < (*size)-1; j++) {
+                int tmp = arr[j];
+                arr[j] = arr[j+1];
+                arr[j + 1] = tmp;
+            }
+            (*size)--;
+            break;
+        }
+    }
+}
+
 void render_cursor(CP_Image cursor) {
     CP_Settings_ImageMode(CP_POSITION_CORNER);
     float cursorWidth = 60.f;

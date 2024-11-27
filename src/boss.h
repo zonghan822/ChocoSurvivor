@@ -53,6 +53,8 @@ struct Boss {
     float attackSpeed;
     int attackPower;
     bool isTakingDamage;
+    int previousNode;
+    AStarPath path;
 };
 
 struct Boss init_boss_one(float width, float speed, int health, int attack_power, float attack_speed);

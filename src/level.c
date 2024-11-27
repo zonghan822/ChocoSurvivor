@@ -254,12 +254,12 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
         CP_Image bossImg = CP_Image_Load("Assets/boss_lvl1.png");
         float bossHeight = get_preserved_heightf((float)CP_Image_GetWidth(bossImg), (float)CP_Image_GetHeight(bossImg), BOSS_WIDTH);
         
-        init_grid(&_enemyGrid, level_width, level_height, (0.8f * ENEMY_WIDTH) + 5.f, (0.75f * enemyHeight)+ 5.f);
+        init_grid(&_enemyGrid, level_width, level_height, (0.68f * ENEMY_WIDTH) + 5.f, (0.64f * enemyHeight) + 5.f);
         init_grid(&_bossGrid, level_width, level_height, 77.f / 144.f * BOSS_WIDTH, 166.f / 251.f * bossHeight);
         update_grid(&_enemyGrid, _worldClips, _worldClipsCount, _enemyClips, 5);
         update_grid(&_bossGrid, _worldClips, _worldClipsCount, _enemyClips, 2);
 
-        init_grid(&_enemyGridNB, level_width, level_height, (0.8f * ENEMY_WIDTH) + 5.f, (0.75f * enemyHeight) + 5.f);
+        init_grid(&_enemyGridNB, level_width, level_height, (0.68f * ENEMY_WIDTH) + 5.f, (0.64f * enemyHeight) + 5.f);
         init_grid(&_bossGridNB, level_width, level_height, 77.f / 144.f * BOSS_WIDTH, 166.f / 251.f * bossHeight);
         update_grid(&_enemyGridNB, _worldClips, _worldClipsCount, _enemyClips, 5);
         update_grid(&_bossGridNB, _worldClips, _worldClipsCount, _enemyClips, 2);
@@ -876,7 +876,7 @@ void check_collision(void) {
                     break;
                 }
                 if (playerProjectiles.projectiles[j].type & TRACKING_PROJECTILE) {
-                    struct Circle radarBullet = { .pos = playerProjectiles.projectiles[j].pos, .diameter = 2.f * fabsf(playerInstance.width) }; // define bullet radar
+                    struct Circle radarBullet = { .pos = playerProjectiles.projectiles[j].pos, .diameter = 4.f * fabsf(playerInstance.width) }; // define bullet radar
                     if (are_circle_rect_intersecting(radarBullet, _roaches[i].hitbox)) {
                         playerProjectiles.projectiles[j].shootDirection = CP_Vector_Normalize(CP_Vector_Subtract(_roaches[i].hitbox.pos, playerProjectiles.projectiles[j].pos));
                     }
@@ -988,10 +988,16 @@ void enemy_move_attack(float dt) {
 
         struct Circle radarRoach = { .pos = _roaches[i].pos, .diameter = 5.f * fabsf(_roaches[i].width) }; // define enemy radar
         if (are_circle_rect_intersecting(radarRoach, playerInstance.hitbox)) { // Check enemy near with player
-            _roaches[i].currentState = ENEMY_STATE_MOVING_TO_PLAYER;
+            if (_roaches[i].currentState != ENEMY_STATE_MOVING_TO_PLAYER) {
+                _roaches[i].path.hasUpdated = false;
+                _roaches[i].currentState = ENEMY_STATE_MOVING_TO_PLAYER;
+            }
             continue;
         }
-        _roaches[i].currentState = ENEMY_STATE_MOVING_TO_TOWER;
+        if (_roaches[i].currentState != ENEMY_STATE_MOVING_TO_TOWER) {
+            _roaches[i].path.hasUpdated = false;
+            _roaches[i].currentState = ENEMY_STATE_MOVING_TO_TOWER;
+        }
     }
     #pragma endregion
 
@@ -1016,10 +1022,6 @@ void enemy_move_attack(float dt) {
                     // stop movement
                     _roaches[i].moveDirection = CP_Vector_Zero();
 
-                    // attack animation here...
-
-
-                    // if animation end then...
                     switch (_enemyAttackTarget) {
                         case TARGET_PLAYER:
                             if (playerInstance.isReflectingDmg) {
@@ -1045,7 +1047,10 @@ void enemy_move_attack(float dt) {
                         case TARGET_BARRIER: 
                             if (_roaches[i].attackCooldown <= 0) {
                                 _roaches[i].attackCooldown = _enemyMaxAttackCD;
-                                barrier_take_damage(_roaches[i].barrierAttack, _roaches[i].dmg);
+                                if (!barrier_take_damage(_roaches[i].barrierAttack, _roaches[i].dmg)) {
+                                    _roaches[i].path.hasUpdated = false;
+                                    _boss.path.hasUpdated = false;
+                                }
                             }
                             _roaches[i].barrierAttack = MAX_BARRIERS;
                             break;
@@ -1058,7 +1063,8 @@ void enemy_move_attack(float dt) {
                     break;
             }
             //CP_Vector hitboxPos = { _roaches[i].pos.x + ENEMY_HITBOX_OFFSET_X(_roaches[i].width), _roaches[i].pos.y + ENEMY_HITBOX_OFFSET_Y(_roaches[i].height) };
-            update_rect_hitbox(&_roaches[i].hitbox, _roaches[i].width, _roaches[i].pos, -3.f, 5.f); // Update hitbox of enemy
+            update_rect_hitbox(&_roaches[i].hitbox, _roaches[i].width, _roaches[i].pos, 
+                ENEMY_HITBOX_OFFSET_X(_roaches[i].width), ENEMY_HITBOX_OFFSET_Y(_roaches[i].height)); // Update hitbox of enemy
             #pragma endregion
         }
         // can use else statement here for dying animation...
@@ -1138,6 +1144,12 @@ void place_barrier(int index, float x, float y) {
     _worldClips[_worldClipsCount++] = barriers[index].hitbox;
     update_grid(&_enemyGrid, _worldClips, _worldClipsCount, _enemyClips, 5);
     update_grid(&_bossGrid, _worldClips, _worldClipsCount, _enemyClips, 2);
+    for (int i = 0; i < _roachesMax; i++) {
+        if (_roaches[i].currentState) {
+            _roaches[i].path.hasUpdated = false;
+        }
+    }
+    _boss.path.hasUpdated = false;
 }
 
 void place_ally(int index, float x, float y) {
@@ -1148,7 +1160,7 @@ void place_ally(int index, float x, float y) {
 #pragma region DEBUG
 void debug_render_enemy_grid(void) {
     draw_grid(_enemyGrid.nodes, _enemyGrid.nodeCount); // draw enemy grid for debugging
-    //draw_grid(_enemyGridNB.nodes, _enemyGrid.nodeCount); // draw enemy grid for debugging
+    // draw_grid(_enemyGridNB.nodes, _enemyGrid.nodeCount); // draw enemy grid for debugging
 }
 
 void debug_render_boss_grid(void) {

@@ -102,9 +102,31 @@ void update_grid(Grid* grid, struct Rectangle* worldClips, int clipsSize, struct
 
 						// Assign to the node connection if no obstruction
 						if (is_valid_node(grid->nodes[neighbourIndex], grid->nodeWidth, grid->nodeHeight, tempArray, size)) {
-							grid->nodes[nodeIndex].connections[connectionIndex] = neighbourIndex;
-							grid->nodes[nodeIndex].connectionCount++;
-							connectionIndex++;
+
+							// check for diagonal connection
+							struct Rectangle currentNodeRect = { grid->nodes[nodeIndex].pos, 
+								.width = grid->nodeWidth, .height = grid->nodeHeight };
+							if (cI - i > 0)
+								currentNodeRect.pos.x += currentNodeRect.width / 2;
+							if (cI - i < 0) 
+								currentNodeRect.pos.x -= currentNodeRect.width / 2;
+							if (cJ - j > 0) 
+								currentNodeRect.pos.y += currentNodeRect.height / 2;
+							if (cJ - j < 0) 
+								currentNodeRect.pos.y -= currentNodeRect.height / 2;
+
+							bool isNotBlocked = true;
+							for (int clipIndex = 0; clipIndex < size; clipIndex++) {
+								if (are_rects_intersecting(currentNodeRect, tempArray[clipIndex])) {
+									isNotBlocked = false;
+									break;
+								}
+							}
+							if (isNotBlocked) {
+								grid->nodes[nodeIndex].connections[connectionIndex] = neighbourIndex;
+								grid->nodes[nodeIndex].connectionCount++;
+								connectionIndex++;
+							}
 						}
 					}
 				}
@@ -142,7 +164,6 @@ int get_nearest_node_index(PathNode* grid, int nodeCount, CP_Vector position) {
 	}
 	return closestNodeIndex;
 }
-
 
 // To initialise and allocate memory for astar list
 static void init_list(AStarList* nodeList, int size) {
@@ -199,14 +220,14 @@ int find_astar_path(PathNode* grid, int nodeCount, int startNodeIndex, int endNo
 	// Initialize open and closed list
 	AStarList openList = {0};
 	AStarList closedList = {0};
-	init_list(&openList, 5);
-	init_list(&closedList, 5);
+	init_list(&openList, 30);
+	init_list(&closedList, 30);
 
 	// Add start node to open list
 	append_list(&openList, startNode);
 
-	// loop until find end
 	int pathNodeCount = 0;
+	// loop until find end
 	while (openList.nodeCount > 0) {
 
 		// Get the current Node which has the least f cost.
@@ -227,7 +248,6 @@ int find_astar_path(PathNode* grid, int nodeCount, int startNodeIndex, int endNo
 		// Goal is found
 		if (currentNode.nodeIndex == endNode.nodeIndex) {
 			AStarNode current = currentNode;
-
 			// backtrack and store path in array
 			while (current.nodeIndex != startNode.nodeIndex) {
 				pathArray[pathNodeCount++] = current.nodeIndex;
@@ -235,6 +255,7 @@ int find_astar_path(PathNode* grid, int nodeCount, int startNodeIndex, int endNo
 					break;
 				current = *(current.parentNode);
 			}
+			pathArray[pathNodeCount++] = startNodeIndex;
 			reverse_array(pathArray, pathNodeCount);
 			break;
 		}
@@ -254,46 +275,42 @@ int find_astar_path(PathNode* grid, int nodeCount, int startNodeIndex, int endNo
 			if (isNeighbourInClosed)
 				continue;
 
-			// Check if neighbour is in open list
-			int existingNodeIndex = -1;
-			for (int i = 0; i < openList.nodeCount; i++) {
-				if (openList.list[i].nodeIndex == neighbourIndex)
-					existingNodeIndex = i;
-			}
-			if (existingNodeIndex > -1) {
-				if (currentNode.gCost < openList.list[existingNodeIndex].gCost) {
-					if (openList.list[existingNodeIndex].parentNode != NULL)
-						free(openList.list[existingNodeIndex].parentNode);
-
-					AStarNode* parentNode = (AStarNode*)malloc(sizeof(AStarNode));
-					if (parentNode == NULL)
-						return 0;
-					*parentNode = currentNode;
-
-					openList.list[existingNodeIndex].gCost = currentNode.gCost;
-					openList.list[existingNodeIndex].fCost = currentNode.gCost + openList.list[existingNodeIndex].hCost;
-					openList.list[existingNodeIndex].parentNode = parentNode;
-				}
-				continue;
-			}
-
 			// Create new AStarNode for neighbour
 			AStarNode* parentNode = (AStarNode*)malloc(sizeof(AStarNode));
-			if (parentNode == NULL) {
-				fprintf(stderr, "Memory allocation failed\n");
+			if (parentNode == NULL)
 				return 0;
-			}
-
 			parentNode->nodeIndex = currentNode.nodeIndex;
 			parentNode->fCost = currentNode.fCost;
 			parentNode->gCost = currentNode.gCost;
 			parentNode->hCost = currentNode.hCost;
 			parentNode->parentNode = currentNode.parentNode;
 
+
+			// Check if neighbour is in open list
+			int existingNodeIndex = -1;
+			for (int i = 0; i < openList.nodeCount; i++) {
+				if (openList.list[i].nodeIndex == neighbourIndex) {
+					existingNodeIndex = i;
+					break;
+				}
+			}
+
+			if (existingNodeIndex > -1) {
+				if (currentNode.gCost + 1.f < openList.list[existingNodeIndex].gCost) {
+					if (openList.list[existingNodeIndex].parentNode != NULL)
+						free(openList.list[existingNodeIndex].parentNode);
+
+					openList.list[existingNodeIndex].gCost = currentNode.gCost + 1.f;
+					openList.list[existingNodeIndex].fCost = currentNode.gCost + openList.list[existingNodeIndex].hCost;
+					openList.list[existingNodeIndex].parentNode = parentNode;
+				}
+				continue;
+			}
+
 			// create f, g, h values
 			AStarNode neighbourNode = { .nodeIndex = grid[currentNode.nodeIndex].connections[i],
 										.parentNode = parentNode,
-										.gCost = currentNode.gCost + 1.f,
+										.gCost = currentNode.gCost + 1,
 										.hCost = CP_Vector_Distance(grid[grid[currentNode.nodeIndex].connections[i]].pos, grid[endNode.nodeIndex].pos),
 			};
 			neighbourNode.fCost = neighbourNode.gCost + neighbourNode.hCost;

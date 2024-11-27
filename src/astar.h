@@ -15,7 +15,14 @@ with the astar pathfinding implementation.
 #include <stdbool.h>
 #include "cprocessing.h"
 
-#define MAX_NODE_SIZE 500
+#define MAX_NODE_SIZE 800
+
+// Contains array to store path index
+typedef struct Path	{
+	int paths[100];
+	int pathNodeCount;
+	bool hasUpdated;
+}AStarPath;
 
 // Nodes in grid with connections
 typedef struct PathNode {

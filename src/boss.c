@@ -56,31 +56,43 @@ void dispose_boss(struct Boss* boss) {
 }
 
 static void _move_to_target(struct Boss* boss, struct Rectangle hitbox, float dt, PathNode* grid, PathNode* gridNoBarrier, int nodeCount) {
-	int pathArray[50];
-	int pathNodeCount = 0;
-	int startNodeIndex = get_nearest_node_index(grid, nodeCount, boss->pos);
-	int endNodeIndex = get_nearest_node_index(grid, nodeCount, hitbox.pos);
-	if (startNodeIndex == endNodeIndex) {
-		boss->moveDirection = CP_Vector_Normalize((CP_Vector_Subtract(hitbox.pos, boss->pos)));
-	}
-	else {
-		pathNodeCount = find_astar_path(grid, nodeCount, startNodeIndex, endNodeIndex, pathArray);
-
-		if (pathNodeCount) {
-			boss->moveDirection = CP_Vector_Normalize((CP_Vector_Subtract(grid[pathArray[0]].pos, boss->pos)));
+	if (!boss->path.hasUpdated) {
+		int startNodeIndex = get_nearest_node_index(grid, nodeCount, boss->pos);
+		int endNodeIndex = get_nearest_node_index(grid, nodeCount, hitbox.pos);
+		if (startNodeIndex == endNodeIndex) {
+			boss->path.paths[0] = endNodeIndex;
+			boss->path.pathNodeCount = 1;
 		}
 		else {
-			int startNodeIndexNB = get_nearest_node_index(gridNoBarrier, nodeCount, boss->pos);
-			int endNodeIndexNB = get_nearest_node_index(gridNoBarrier, nodeCount, hitbox.pos);
-			find_astar_path(gridNoBarrier, nodeCount, startNodeIndexNB, endNodeIndexNB, pathArray);
-			boss->moveDirection = CP_Vector_Normalize((CP_Vector_Subtract(grid[pathArray[0]].pos, boss->pos)));
+			boss->path.pathNodeCount = find_astar_path(grid, nodeCount, startNodeIndex, endNodeIndex, boss->path.paths);
+			if (boss->path.pathNodeCount == 0) {
+				int startNodeIndexNB = get_nearest_node_index(gridNoBarrier, nodeCount, boss->pos);
+				int endNodeIndexNB = get_nearest_node_index(gridNoBarrier, nodeCount, hitbox.pos);
+				boss->path.pathNodeCount = find_astar_path(gridNoBarrier, nodeCount, startNodeIndexNB, endNodeIndexNB, boss->path.paths);
+			}
+		}
+		boss->path.hasUpdated = true;
+		printf("Boss path updated!\n");
+	}
+
+	if (boss->path.pathNodeCount) {
+		if ((CP_Vector_Distance(grid[boss->path.paths[0]].pos, boss->pos) < 1.f) || boss->previousNode == boss->path.paths[0]) {
+			boss->previousNode = boss->path.paths[0];
+			pop_int_array(boss->path.paths, &(boss->path.pathNodeCount), boss->path.paths[0]);
 		}
 	}
+
+	if (boss->path.pathNodeCount)
+		boss->moveDirection = CP_Vector_Normalize((CP_Vector_Subtract(grid[boss->path.paths[0]].pos, boss->pos)));
+	else
+		boss->moveDirection = CP_Vector_Normalize((CP_Vector_Subtract(hitbox.pos, boss->pos)));
+
 	boss->width = (boss->moveDirection.x < 0.f && boss->width > 0.f) || (boss->moveDirection.x > 0.f && boss->width < 0.f) ? -boss->width : boss->width;
 	boss->pos.x += boss->moveDirection.x * boss->speed * dt;
 	boss->pos.y += boss->moveDirection.y * boss->speed * dt;
+
 	//CP_Vector hitboxPos = { boss->pos.x + BOSS_HITBOX_OFFSET_X(boss->width), boss->pos.y};
-	update_rect_hitbox(&boss->hitbox, boss->width, boss->pos, boss->width * -0.18f, 0.f);
+	update_rect_hitbox(&boss->hitbox, boss->width, boss->pos, BOSS_HITBOX_OFFSET_X(boss->width), 0.f);
 }
 
 struct Boss init_boss_one(float width, float speed, int health, int attack_power, float attack_speed) {
@@ -106,7 +118,10 @@ struct Boss init_boss_one(float width, float speed, int health, int attack_power
 		.canPrimaryAttack = can_boss_one_pri_atk,
 		.secondaryAttack = boss_one_sec_atk,
 		.canSecondaryAttack = can_boss_one_sec_atk,
-		.move = boss_one_move
+		.move = boss_one_move,
+		.previousNode = -1,
+		.path.pathNodeCount = 0,
+		.path.hasUpdated = false
 	};
 	boss.hitbox.pos.x = boss.pos.x + BOSS_HITBOX_OFFSET_X(boss.width);
 	boss.hitbox.pos.y = boss.pos.y;
@@ -288,6 +303,7 @@ void boss_one_sec_atk(struct Boss *boss, struct ChocoShooter* player, struct Def
 	// Done charging to pos
 	// Reset values
 	if (boss->pos.x == _chargeTo.x && boss->pos.y == _chargeTo.y) {
+		boss->path.hasUpdated = false;
 		boss->state = BOSS_STATE_MOVING_TO_TOWER;
 		_chargeTo = CP_Vector_Zero();
 		_chargeProgress = 0.f;
@@ -338,9 +354,18 @@ void boss_one_move(struct Boss* boss, struct ChocoShooter player, struct Rectang
 		boss->state != BOSS_STATE_MOVING_TO_BARRIER) return;
 
 	struct Circle radar = { .pos = boss->pos, .diameter = 2.85f * boss->width };
-	boss->state = are_circle_rect_intersecting(radar, player.hitbox)
-		? BOSS_STATE_MOVING_TO_PLAYER : BOSS_STATE_MOVING_TO_TOWER;
-
+	if (are_circle_rect_intersecting(radar, player.hitbox)) {
+		if (boss->state != BOSS_STATE_MOVING_TO_PLAYER) {
+			boss->path.hasUpdated = false;
+			boss->state = BOSS_STATE_MOVING_TO_PLAYER;
+		}
+	}
+	else {
+		if (boss->state != BOSS_STATE_MOVING_TO_TOWER) {
+			boss->path.hasUpdated = false;
+			boss->state = BOSS_STATE_MOVING_TO_TOWER;
+		}
+	}
 	_move_to_target(boss, hitbox, dt, grid, gridNoBarrier, nodeCount);
 }
 #pragma endregion

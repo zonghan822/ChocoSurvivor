@@ -98,10 +98,6 @@ void level_two_update(void) {
     render_cursor(_cursor);
     apply_camera();
 
-    // Exit to Main Menu
-    if (CP_Input_KeyTriggered(KEY_Q)) {
-        CP_Engine_SetNextGameState(main_menu_init, main_menu_update, main_menu_exit);
-    }
 }
 
 void level_two_exit(void) {

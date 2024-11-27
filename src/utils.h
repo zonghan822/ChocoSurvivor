@@ -60,3 +60,5 @@ float resize_by_divisor(float dimension, int divisor);
 void render_health_bar(struct Rectangle entity, int health, int maxHealth);
 
 void render_cursor(CP_Image cursor);
+
+void pop_int_array(int* arr, int *size, int element);

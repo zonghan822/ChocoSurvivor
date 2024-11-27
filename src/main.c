@@ -8,7 +8,7 @@ int main(void)
 	CP_Engine_SetNextGameState(main_menu_init, main_menu_update, main_menu_exit);
 	CP_System_SetWindowSize(1600, 900);
 #if _DEBUG
-	CP_Engine_Run(0);
+	CP_Engine_Run(1);
 #else
 	CP_Engine_Run(0);
 #endif
