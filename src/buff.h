@@ -20,7 +20,7 @@ movement.
 #define BUFF_ICON_SIDE 80.f
 #define BUFF_SHOW_TIME 2.F
 
-#define ALLY_ATTACK_POWER_INCREMENT 3
+#define ALLY_ATTACK_POWER_INCREMENT 2
 #define ALLY_ATTACK_SPEED_INCREMENT 0.3f
 
 typedef enum BuffType {

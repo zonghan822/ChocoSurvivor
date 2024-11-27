@@ -455,8 +455,8 @@ void spawn_enemies(float dt) {
                     enemyDmg = 35;
                     _enemyMaxAttackCD = 1.5f;
                     _roachesMax = 55;
-                    nextSpawnDelayIndex = 11;
-                    nextSpawnDelay = -0.75f;
+                    nextSpawnDelayIndex = 8;
+                    nextSpawnDelay = -0.85f;
                     break;
                 case WAVE_3:
                     if (_boss.state == BOSS_STATE_UNSPAWNED) {

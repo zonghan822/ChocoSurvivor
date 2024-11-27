@@ -149,7 +149,7 @@ void init_ally(int index, CP_Vector pos, float width, float height) {
         allies[index].width = width;
         allies[index].height = height;
         allies[index].attackSpeed = 5.35f + ((float)allyLevel * ALLY_ATTACK_SPEED_INCREMENT);
-        allies[index].attackPower = 3 + (allyLevel * ALLY_ATTACK_POWER_INCREMENT);
+        allies[index].attackPower = 5 + (allyLevel * ALLY_ATTACK_POWER_INCREMENT);
 }
 #pragma warning( pop )
 
