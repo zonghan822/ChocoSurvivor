@@ -8,13 +8,14 @@
 #include "audio.h"
 
 #include <stdio.h>
+#include <stdbool.h>
 
 static const float DASH_COOLDOWN = 1.f,
-    DASH_DISTANCE = 150.f, DASH_SPEED = 20.f;
+    DASH_DISTANCE = 200.f, DASH_SPEED = 15.f;
 static const float WALK_SOUND_INTERVAL = 0.5f;
 
-static BOOL _isDashing = FALSE;
-static float _dashProgress, _lastDash;
+static bool _isDashing = false;
+static float _currentDashTime, _dashCooldownTimer;
 static CP_Vector _dashTo;
 static float _walkSoundTimer;
 
@@ -42,8 +43,7 @@ int player_take_damage(struct ChocoShooter* player, int damage) {
 
 struct ChocoShooter init_player(CP_Vector pos, float speed, int maxHealth, int atk, float fireRate, float frameTime) {
     _isDashing = false;
-    _dashProgress = 0.0;
-    _lastDash = 2.1f;
+    _dashCooldownTimer = DASH_COOLDOWN + 1.f;
     _dashTo = CP_Vector_Zero();
     _walkSoundTimer = WALK_SOUND_INTERVAL;
 
@@ -64,7 +64,6 @@ struct ChocoShooter init_player(CP_Vector pos, float speed, int maxHealth, int a
         .isReflectingDmg = false
     };
    
-
     player.chocoFrames[0] = CP_Image_Load("Assets/Sprites/Player/1.png");
     player.chocoFrames[1] = CP_Image_Load("Assets/Sprites/Player/2.png");
     player.chocoFrames[2] = CP_Image_Load("Assets/Sprites/Player/3.png");
@@ -79,27 +78,23 @@ struct ChocoShooter init_player(CP_Vector pos, float speed, int maxHealth, int a
         }
     }
 
-
-    float maxHeight = 0.0f;
+    float maxHeight = 0.f;
     for (int i = 0; i < CHOCOSHOOTER_FRAMES; i++) {
         if (player.chocoFrames[i] != NULL) {
             float frameHeight = get_preserved_heightf(
                 (float)CP_Image_GetWidth(player.chocoFrames[i]),
                 (float)CP_Image_GetHeight(player.chocoFrames[i]),
-                player.width
-            );
-            if (frameHeight > maxHeight) {
+                player.width);
+            if (frameHeight > maxHeight)
                 maxHeight = frameHeight;
-            }
         }
     }
     player.height = maxHeight; // Ensure uniform height for all frames
 
-  
-    player.hitbox.pos.x = player.pos.x + PLAYER_HITBOX_OFFSET_X(player.width);
-    player.hitbox.pos.y = player.pos.y + PLAYER_HITBOX_OFFSET_Y(player.height);
+    player.hitbox.pos.x = player.pos.x;
+    player.hitbox.pos.y = player.pos.y;
     player.hitbox.width = 17.f / 31.f * player.width;
-    player.hitbox.height = 233.f / 253.f * player.height;
+    player.hitbox.height = 233.f / 253.f * player.height / 1.75f;
     player.currentFrame = 0;
     player.frameTime = frameTime; // Use the provided frame time
     player.timeAccumulator = 0.0f;
@@ -134,80 +129,71 @@ void move_player(struct ChocoShooter* player, float dt, float level_width, float
 
     switch (player->movement) {
     case MOVING_UP:
-        moveDirection.y -= 1.0f;
+        moveDirection.y -= 1.f;
         break;
     case MOVING_RIGHT:
-        moveDirection.x += 1.0f;
+        moveDirection.x += 1.f;
         break;
     case MOVING_DOWN:
-        moveDirection.y += 1.0f;
+        moveDirection.y += 1.f;
         break;
     case MOVING_LEFT:
-        moveDirection.x -= 1.0f;
+        moveDirection.x -= 1.f;
         break;
     case MOVING_UP | MOVING_RIGHT:
-        moveDirection.y -= 1.0f;
-        moveDirection.x += 1.0f;
+        moveDirection.y -= 1.f;
+        moveDirection.x += 1.f;
         break;
     case MOVING_UP | MOVING_LEFT:
-        moveDirection.y -= 1.0f;
-        moveDirection.x -= 1.0f;
+        moveDirection.y -= 1.f;
+        moveDirection.x -= 1.f;
         break;
     case MOVING_DOWN | MOVING_RIGHT:
-        moveDirection.y += 1.0f;
-        moveDirection.x += 1.0f;
+        moveDirection.y += 1.f;
+        moveDirection.x += 1.f;
         break;
     case MOVING_DOWN | MOVING_LEFT:
-        moveDirection.y += 1.0f;
-        moveDirection.x -= 1.0f;
+        moveDirection.y += 1.f;
+        moveDirection.x -= 1.f;
     }
 
     // Normalize
-    CP_Vector normalizedVec = CP_Vector_Zero();
-    if (moveDirection.x != 0 || moveDirection.y != 0)
-        normalizedVec = CP_Vector_Normalize(moveDirection);
+    CP_Vector normalizedVec = CP_Vector_Normalize(moveDirection);
+    moveDirection = CP_Vector_Scale(normalizedVec, player->speed * dt);
 
-    moveDirection.x = normalizedVec.x * player->speed * dt;
-    moveDirection.y = normalizedVec.y * player->speed * dt;
+    // Dash movement with spacebar
+    if (CP_Input_KeyDown(KEY_SPACE) && !_isDashing && _dashCooldownTimer >= DASH_COOLDOWN) {
+        _isDashing = true;
+        _dashCooldownTimer = 0.f;
+        play_sound(SOUND_PLAYER_DASH);
+        _dashTo = CP_Vector_Add(player->pos, CP_Vector_Scale(normalizedVec, DASH_DISTANCE));
+    }
+
+    if (_isDashing) {
+        _currentDashTime += DASH_SPEED * dt;
+        float t = _currentDashTime / 3.f;
+
+        CP_Vector dashDirection = CP_Vector_Set(
+            CP_Math_LerpFloat(player->pos.x, _dashTo.x, t),
+            CP_Math_LerpFloat(player->pos.y, _dashTo.y, t));
+
+        moveDirection = CP_Vector_Subtract(dashDirection, player->pos);
+        _isDashing = _currentDashTime < 1.f;
+        _currentDashTime = _isDashing ? _currentDashTime : 0.f;
+    }
+    if (!_isDashing && _dashCooldownTimer < DASH_COOLDOWN) // Don't use else if so timer can start right after
+        _dashCooldownTimer += dt;
 
     // Check for any collisions, then update the movement direction
     for (int i = 0; i < clip_count; i++)
         clamp_pos_clip_rel(player->hitbox, &moveDirection, clip_entities[i]);
 
-    player->pos.x += moveDirection.x;
-    player->pos.y += moveDirection.y;
-
-    if (_lastDash < DASH_COOLDOWN)
-        _lastDash += dt;
-
-    // Dash movement with spacebar
-    if (CP_Input_KeyDown(KEY_SPACE) && !_isDashing && _lastDash >= DASH_COOLDOWN) {
-        play_sound(SOUND_PLAYER_DASH);
-        _dashTo = player->pos;
-        _isDashing = true;
-        _dashProgress = 0.0;
-        _lastDash = 0.0;
-
-        if (normalizedVec.x != 0 || normalizedVec.y != 0) {
-            _dashTo.x += normalizedVec.x * DASH_DISTANCE;
-            _dashTo.y += normalizedVec.y * DASH_DISTANCE;
-        }
-    }
-
-    if (_isDashing) {
-        _dashProgress += (DASH_SPEED * dt) / 3.f;
-
-        player->pos.x = CP_Math_LerpFloat(player->pos.x, _dashTo.x, _dashProgress);
-        player->pos.y = CP_Math_LerpFloat(player->pos.y, _dashTo.y, _dashProgress);
-
-        _isDashing = _dashProgress < 1.f;
-    }
+    player->pos = CP_Vector_Add(player->pos, moveDirection);
 
     // Use hitbox instead because images can have whitespaces in them
     // Add some padding
-    float halfWidth = (player->hitbox.width / 2.0f) + 2.0f,
-        halfHeight = (player->hitbox.height / 2.0f) + 2.0f;
-
+    float halfWidth = (player->hitbox.width / 2.f) + 2.f,
+        halfHeight = (player->hitbox.height / 2.f) + 2.f;
     player->pos.x = CP_Math_ClampFloat(player->pos.x, halfWidth, level_width - halfWidth);
     player->pos.y = CP_Math_ClampFloat(player->pos.y, halfHeight, level_height - halfHeight);
 
