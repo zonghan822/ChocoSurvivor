@@ -20,7 +20,6 @@ movement.
 #include "placeables.h"
 #include "utils.h"
 
-
 struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth, float speed, int maxHealth, int dmg, float frameTime,int roachindex) {
     struct ChocoRoach chocoRoach = {0};
 
@@ -33,8 +32,8 @@ struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth,
     chocoRoach.roachFrames[3] = CP_Image_Load("Assets/Sprites/Chocoroach/4.png");
     chocoRoach.roachFrames[4] = CP_Image_Load("Assets/Sprites/Chocoroach/5.png");
     chocoRoach.roachFrames[5] = CP_Image_Load("Assets/Sprites/Chocoroach/6.png");
-    float maxWidth=1.0f;
-    float maxHeight=1.0f;
+    float maxWidth = 1.f;
+    float maxHeight = 1.f;
 
     for (int i = 0; i < ROACH_FRAMES; i++) {
         if (chocoRoach.roachFrames[i] != NULL) {
@@ -114,7 +113,7 @@ void enemy_move_to_target(struct ChocoRoach* roach, struct Rectangle hitbox, flo
     }
 
     if (roach->path.pathNodeCount) {
-        if ((CP_Vector_Distance(grid[roach->path.paths[0]].pos, roach->pos) < 1.f) || roach->previousNode == roach->path.paths[0]) {
+        if ((CP_Vector_Distance(grid[roach->path.paths[0]].pos, roach->pos) < 2.f) || roach->previousNode == roach->path.paths[0]) {
             roach->previousNode = roach->path.paths[0];
             pop_int_array(roach->path.paths, &(roach->path.pathNodeCount), roach->path.paths[0]);
         }  
