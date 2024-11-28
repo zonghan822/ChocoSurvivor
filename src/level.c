@@ -1066,11 +1066,23 @@ void enemy_move_attack(float dt) {
     #pragma region Boss Movement & Attack
     switch (_boss.state) {
     case BOSS_STATE_MOVING_TO_TOWER:
-        _boss.move(&_boss, playerInstance, get_tower_hitbox(_tower), dt, _bossGrid.nodes, _bossGridNB.nodes, _bossGrid.nodeCount);
+        if (_boss.move(&_boss, playerInstance, get_tower_hitbox(_tower), dt, _bossGrid.nodes, _bossGridNB.nodes, _bossGrid.nodeCount)) {
+            for (int i = 0; i < _roachesMax; i++) {
+                if (_roaches[i].currentState) {
+                    _roaches[i].path.hasUpdated = false;
+                }
+            }
+        }
         break;
 
     case BOSS_STATE_MOVING_TO_PLAYER:
-        _boss.move(&_boss, playerInstance, playerInstance.hitbox, dt, _bossGrid.nodes, _bossGridNB.nodes, _bossGrid.nodeCount);
+        if (_boss.move(&_boss, playerInstance, playerInstance.hitbox, dt, _bossGrid.nodes, _bossGridNB.nodes, _bossGrid.nodeCount)) {
+            for (int i = 0; i < _roachesMax; i++) {
+                if (_roaches[i].currentState) {
+                    _roaches[i].path.hasUpdated = false;
+                }
+            }
+        }
         break;
 
     case BOSS_STATE_IDLE:
