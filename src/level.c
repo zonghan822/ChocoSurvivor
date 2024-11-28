@@ -121,7 +121,7 @@ static void _draw_shadows(float x, float y, float width, float height) {
 static int _get_exp(int health, float speed, int max_enemies) {
     float maxVal = max((float)health, speed);
     float minVal = min((float)health, speed);
-    return (int)((float)(maxVal / minVal) * (float)(max_enemies / 10.f));
+    return currentWave * ((int)((float)(maxVal / minVal) * (float)(max_enemies / 10.f)));
 }
 
 #pragma endregion
@@ -152,7 +152,7 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
     _currentBarrierState = BARRIER_IDLE;
     _obstaclesCount = 0;
     _worldClipsCount = 0;
-    _waveDelay = 10.f;
+    _waveDelay = 30.f;
     _enemySpawnIndex = 0;
     _waveTimer = 0.f;
     _spawnTimer = 0.f;
@@ -214,7 +214,7 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
         // Init Player Properties
         _respawnVec = CP_Vector_Set(_tower.pos.x / 1.1f, _tower.pos.y + (_tower.height / 5.5f));
         playerInstance = init_player(_respawnVec, 350.0f, 105, 20, 4.2f, 0.1f);
-        playerInstance.playerMaxExp = 20; // Reset exp
+        playerInstance.playerMaxExp = 50; // Reset exp
         playerInstance.playerLevel = 1; // Reset level
 
         // Init Buffs
@@ -445,6 +445,7 @@ void spawn_enemies(float dt) {
                     _roachesMax = 65;
                     nextSpawnDelayIndex = 20;
                     nextSpawnDelay = -0.25f;
+                    _waveDelay = 10.f;
                     break;
                 case WAVE_2:
                     if (!_hasPlayedNormalWaveMusic) {
@@ -1065,11 +1066,23 @@ void enemy_move_attack(float dt) {
     #pragma region Boss Movement & Attack
     switch (_boss.state) {
     case BOSS_STATE_MOVING_TO_TOWER:
-        _boss.move(&_boss, playerInstance, get_tower_hitbox(_tower), dt, _bossGrid.nodes, _bossGridNB.nodes, _bossGrid.nodeCount);
+        if (_boss.move(&_boss, playerInstance, get_tower_hitbox(_tower), dt, _bossGrid.nodes, _bossGridNB.nodes, _bossGrid.nodeCount)) {
+            for (int i = 0; i < _roachesMax; i++) {
+                if (_roaches[i].currentState) {
+                    _roaches[i].path.hasUpdated = false;
+                }
+            }
+        }
         break;
 
     case BOSS_STATE_MOVING_TO_PLAYER:
-        _boss.move(&_boss, playerInstance, playerInstance.hitbox, dt, _bossGrid.nodes, _bossGridNB.nodes, _bossGrid.nodeCount);
+        if (_boss.move(&_boss, playerInstance, playerInstance.hitbox, dt, _bossGrid.nodes, _bossGridNB.nodes, _bossGrid.nodeCount)) {
+            for (int i = 0; i < _roachesMax; i++) {
+                if (_roaches[i].currentState) {
+                    _roaches[i].path.hasUpdated = false;
+                }
+            }
+        }
         break;
 
     case BOSS_STATE_IDLE:

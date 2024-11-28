@@ -24,6 +24,8 @@
 #include "hittest.h"
 #include "astar.h"
 #include "tower.h"
+#include "placeables.h"
+#include "enemy.h"
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -340,13 +342,24 @@ int can_boss_one_sec_atk(struct Boss boss, struct ChocoShooter player) {
 		boss.state == BOSS_STATE_ATTACKING_SECONDARY) && boss.state != BOSS_STATE_ATTACKING_PRIMARY;
 }
 
-void boss_one_move(struct Boss* boss, struct ChocoShooter player, struct Rectangle hitbox, float dt, PathNode* grid, PathNode* gridNoBarrier, int nodeCount) {
+bool boss_one_move(struct Boss* boss, struct ChocoShooter player, struct Rectangle hitbox, float dt, PathNode* grid, PathNode* gridNoBarrier, int nodeCount) {
 	if (_secAtkCooldown < 10.f)
 		_secAtkCooldown += dt;
 
 	if (boss->state != BOSS_STATE_MOVING_TO_TOWER &&
 		boss->state != BOSS_STATE_MOVING_TO_PLAYER && 
 		boss->state != BOSS_STATE_MOVING_TO_BARRIER) return;
+
+	for (int i = 0; i < get_barrier_count(); i++) {
+		if (are_rects_intersecting(boss->hitbox, barriers[i].hitbox)) {
+			// barrier take attack
+			if (!barrier_take_damage(i, barriers[i].maxHealth)) {
+				boss->path.hasUpdated = false;
+				return true;
+			}
+			break;
+		}
+	}
 
 	struct Circle radar = { .pos = boss->pos, .diameter = 2.85f * boss->width };
 	if (are_circle_rect_intersecting(radar, player.hitbox)) {
@@ -362,6 +375,7 @@ void boss_one_move(struct Boss* boss, struct ChocoShooter player, struct Rectang
 		}
 	}
 	_move_to_target(boss, hitbox, dt, grid, gridNoBarrier, nodeCount);
+	return false;
 }
 #pragma endregion
 
