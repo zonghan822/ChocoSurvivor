@@ -23,8 +23,22 @@ movement.
 
 static const float EXP_INCREASE_MULTIPLIER = 1.2f;
 static bool _hasPlayedLevelUpMusic;
-
+static CP_Image _atkUpImg, _atkSpdUpImg, _healthUpImg, _allyLvlUpImg, _barrierLvlUpImg;
+static CP_Image _healImg, _smartImg, _frozingImg, _fastImg, _reflectImg;
 BuffList activeBuffs;
+
+void init_buff_slot_img(void) {
+    _atkUpImg = CP_Image_Load("Assets/GUI/Icons/atkbuff.png");
+    _atkSpdUpImg = CP_Image_Load("Assets/GUI/Icons/atk_spd_up.png");
+    _healthUpImg = CP_Image_Load("Assets/GUI/Icons/hpup.png");
+    _allyLvlUpImg = CP_Image_Load("Assets/GUI/Icons/sentry_lvl_up.png");
+    _barrierLvlUpImg = CP_Image_Load("Assets/GUI/Icons/barricade_lvl_up.png");
+    _healImg = CP_Image_Load("Assets/GUI/Icons/heal.png");
+    _smartImg = CP_Image_Load("Assets/GUI/Icons/smartgun.png");
+    _frozingImg = CP_Image_Load("Assets/GUI/Icons/freezingshots.png");
+    _fastImg = CP_Image_Load("Assets/GUI/Icons/fastshots.png");
+    _reflectImg = CP_Image_Load("Assets/GUI/Icons/reflectdmg.png");
+}
 
 // Sidenote: EXP would refer to buff meter
 int update_buff_meter(struct ChocoShooter* player, float dt) {
@@ -124,7 +138,7 @@ void apply_buff(BuffList* activeBuffs, enum BuffType buff, struct ChocoShooter* 
         printf("Attack Up!\n");
         player->attackPower += 10;  // Increase player's attack power
         if (isNotApplied) {
-            activeBuffs->buffs[activeBuffs->buffCount - 1].img = CP_Image_Load("Assets/GUI/Icons/atkbuff.png");
+            activeBuffs->buffs[activeBuffs->buffCount - 1].img = _atkUpImg;
             activeBuffs->buffs[activeBuffs->buffCount - 1].renderText = "Attack Up";
         }
         break;
@@ -132,7 +146,7 @@ void apply_buff(BuffList* activeBuffs, enum BuffType buff, struct ChocoShooter* 
         printf("Attack Speed Up!\n");
         player->attackSpeed += 1;
         if (isNotApplied) {
-            activeBuffs->buffs[activeBuffs->buffCount - 1].img = CP_Image_Load("Assets/GUI/Icons/atk_spd_up.png");
+            activeBuffs->buffs[activeBuffs->buffCount - 1].img = _atkSpdUpImg;
             activeBuffs->buffs[activeBuffs->buffCount - 1].renderText = "Attack Speed Up";
         }
         break;
@@ -142,7 +156,7 @@ void apply_buff(BuffList* activeBuffs, enum BuffType buff, struct ChocoShooter* 
         player->maxHealth += 30;
         player->health = (int)(healthPercent * (float)player->maxHealth);
         if (isNotApplied) {
-            activeBuffs->buffs[activeBuffs->buffCount - 1].img = CP_Image_Load("Assets/GUI/Icons/hpup.png");
+            activeBuffs->buffs[activeBuffs->buffCount - 1].img = _healthUpImg;
             activeBuffs->buffs[activeBuffs->buffCount - 1].renderText = "Health Up";
         }
         break;
@@ -154,7 +168,7 @@ void apply_buff(BuffList* activeBuffs, enum BuffType buff, struct ChocoShooter* 
             allies[i].attackSpeed += ALLY_ATTACK_SPEED_INCREMENT;
         }
         if (isNotApplied) {
-            activeBuffs->buffs[activeBuffs->buffCount - 1].img = CP_Image_Load("Assets/GUI/Icons/sentry_lvl_up.png");
+            activeBuffs->buffs[activeBuffs->buffCount - 1].img = _allyLvlUpImg;
             activeBuffs->buffs[activeBuffs->buffCount - 1].renderText = "Sentry Level Up";
         }
         break;
@@ -166,7 +180,7 @@ void apply_buff(BuffList* activeBuffs, enum BuffType buff, struct ChocoShooter* 
             barriers[i].health = (int)(healthPercent * (float)barriers[i].maxHealth);
         }
         if (isNotApplied) {
-            activeBuffs->buffs[activeBuffs->buffCount - 1].img = CP_Image_Load("Assets/GUI/Icons/barricade_lvl_up.png");
+            activeBuffs->buffs[activeBuffs->buffCount - 1].img = _barrierLvlUpImg;
             activeBuffs->buffs[activeBuffs->buffCount - 1].renderText = "Barricade Level Up";
         }
         break;
@@ -174,7 +188,7 @@ void apply_buff(BuffList* activeBuffs, enum BuffType buff, struct ChocoShooter* 
         printf("Health Recover!\n");
         player->health = min(player->health + player->maxHealth/2, player->maxHealth);
         if (isNotApplied) {
-            activeBuffs->buffs[activeBuffs->buffCount - 1].img = CP_Image_Load("Assets/GUI/Icons/heal.png");
+            activeBuffs->buffs[activeBuffs->buffCount - 1].img = _healImg;
             activeBuffs->buffs[activeBuffs->buffCount - 1].renderText = "Health Recover";
         }
         break;
@@ -182,7 +196,7 @@ void apply_buff(BuffList* activeBuffs, enum BuffType buff, struct ChocoShooter* 
         printf("Smart Gun Activated!\n");
         player->currentProjectileType |= TRACKING_PROJECTILE;
         if (isNotApplied) {
-            activeBuffs->buffs[activeBuffs->buffCount - 1].img = CP_Image_Load("Assets/GUI/Icons/smartgun.png");
+            activeBuffs->buffs[activeBuffs->buffCount - 1].img = _smartImg;
             activeBuffs->buffs[activeBuffs->buffCount - 1].renderText = "Smart Gun";
         }
         break;
@@ -190,7 +204,7 @@ void apply_buff(BuffList* activeBuffs, enum BuffType buff, struct ChocoShooter* 
         printf("Freezing Shots Activated!\n");
         player->currentProjectileType |= FREEZING_PROJECTILE;
         if (isNotApplied) {
-            activeBuffs->buffs[activeBuffs->buffCount - 1].img = CP_Image_Load("Assets/GUI/Icons/freezingshots.png");
+            activeBuffs->buffs[activeBuffs->buffCount - 1].img = _frozingImg;
             activeBuffs->buffs[activeBuffs->buffCount - 1].renderText = "Freezing Shots";
         }
         break;
@@ -198,7 +212,7 @@ void apply_buff(BuffList* activeBuffs, enum BuffType buff, struct ChocoShooter* 
         printf("Multi Shots Activated!\n");
         player->currentProjectileType |= FAST_PROJECTILE;
         if (isNotApplied) {
-            activeBuffs->buffs[activeBuffs->buffCount - 1].img = CP_Image_Load("Assets/GUI/Icons/fastshots.png");
+            activeBuffs->buffs[activeBuffs->buffCount - 1].img = _fastImg;
             activeBuffs->buffs[activeBuffs->buffCount - 1].renderText = "Fast Shots";
         }
         break;
@@ -206,7 +220,7 @@ void apply_buff(BuffList* activeBuffs, enum BuffType buff, struct ChocoShooter* 
         printf("Reflect Damage Activated!\n");
         player->isReflectingDmg = true;
         if (isNotApplied) {
-            activeBuffs->buffs[activeBuffs->buffCount - 1].img = CP_Image_Load("Assets/GUI/Icons/reflectdmg.png");
+            activeBuffs->buffs[activeBuffs->buffCount - 1].img = _reflectImg;
             activeBuffs->buffs[activeBuffs->buffCount - 1].renderText = "Reflect Damage";
             activeBuffs->buffs[activeBuffs->buffCount - 1].renderTime /= 3.25f;
         }
@@ -261,8 +275,6 @@ void render_buff_slot(BuffSlot* buffSlot, float windowWidth, float windowHeight,
     float slotW = BUFF_ICON_SIDE, slotH = BUFF_ICON_SIDE;
     float gap = 40.f;
 
-    CP_Image buffImg;
-
     for (int i = 0; i < MAX_BUFF_SLOT; i++) {
         slotX[i] = (i * (gap + slotW)) + slotX[0];
         float slotInputY = slotY / 1.1f,
@@ -276,19 +288,19 @@ void render_buff_slot(BuffSlot* buffSlot, float windowWidth, float windowHeight,
             CP_Graphics_DrawRect(slotX[i], slotY, slotW, slotH);
             break;
         case HEAL:
-            CP_Image_Draw(buffImg = CP_Image_Load("Assets/GUI/Icons/heal.png"), slotX[i], slotY, slotW, slotH, 255);
+            CP_Image_Draw(_healImg, slotX[i], slotY, slotW, slotH, 255);
             break;
         case SMART_PISTOL:
-            CP_Image_Draw(buffImg = CP_Image_Load("Assets/GUI/Icons/smartgun.png"), slotX[i], slotY, slotW, slotH, 255);
+            CP_Image_Draw(_smartImg, slotX[i], slotY, slotW, slotH, 255);
             break;
         case FROZING_SHOTS:
-            CP_Image_Draw(buffImg = CP_Image_Load("Assets/GUI/Icons/freezingshots.png"), slotX[i], slotY, slotW, slotH, 255);
+            CP_Image_Draw(_frozingImg, slotX[i], slotY, slotW, slotH, 255);
             break;
         case MULTI_SHOTS:
-            CP_Image_Draw(buffImg = CP_Image_Load("Assets/GUI/Icons/fastshots.png"), slotX[i], slotY, slotW, slotH, 255);
+            CP_Image_Draw(_fastImg, slotX[i], slotY, slotW, slotH, 255);
             break;
         case REFLECT_DMG:
-            CP_Image_Draw(buffImg = CP_Image_Load("Assets/GUI/Icons/reflectdmg.png"), slotX[i], slotY, slotW, slotH, 255);
+            CP_Image_Draw(_reflectImg, slotX[i], slotY, slotW, slotH, 255);
             break;
         }  
     }
@@ -391,6 +403,19 @@ int get_buff_level(enum BuffType buff) {
             return activeBuffs.buffs[i].level;
         }
     }
+}
+
+void dispose_buff(void) {
+    CP_Image_Free(&_atkUpImg);
+    CP_Image_Free(&_atkSpdUpImg);
+    CP_Image_Free(&_healthUpImg);
+    CP_Image_Free(&_allyLvlUpImg);
+    CP_Image_Free(&_barrierLvlUpImg);
+    CP_Image_Free(&_healImg);
+    CP_Image_Free(&_smartImg);
+    CP_Image_Free(&_frozingImg);
+    CP_Image_Free(&_fastImg);
+    CP_Image_Free(&_reflectImg);
 }
 
 // for debugging - assign buff with F1-F10

@@ -218,6 +218,7 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
         // Init Buffs
         memset(&activeBuffs, 0, sizeof(activeBuffs));
         tempSlot = 0;
+        init_buff_slot_img();
 
         // Init placeables
         init_barrier_images();
@@ -1225,5 +1226,5 @@ void dispose_resources(void) {
     free(_bossGridNB.nodes);
     dispose_barriers();
     dispose_allies();
-
+    dispose_buff();
 }
