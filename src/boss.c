@@ -42,7 +42,7 @@ static float _priAtkDelay = 0.f, _priAtkCooldown = 0.f;
 static float _secAtkDelay = 0.f, _secAtkCooldown = 0.f;
 
 // Boss one attack private variables
-static float _chargeProgress;
+static float _chargeProgress, _chargeHasAttackedPlayer;
 static CP_Vector _meleeOneVec, _chargeTo;
 static const float BOSS_ONE_PRI_ATK_DISTANCE = 150.f;
 static const float BOSS_ONE_SEC_ATK_DISTANCE = 275.f;
@@ -218,11 +218,13 @@ void boss_one_pri_atk(struct Boss *boss, struct ChocoShooter* player, struct Def
 		float distanceToPlayer = CP_Vector_Distance(_meleeOneVec, player->hitbox.pos),
 			distanceToTower = CP_Vector_Distance(_meleeOneVec, towerHitbox.pos);
 
-		if (distanceToPlayer <= BOSS_ONE_PRI_ATK_DISTANCE)
+		if (distanceToPlayer <= BOSS_ONE_PRI_ATK_DISTANCE && !_chargeHasAttackedPlayer) {
 			if (playerInstance.isReflectingDmg)
 				boss_take_damage(boss, boss->attackPower);
 			else
 				player_take_damage(player, boss->attackPower);
+			_chargeHasAttackedPlayer = true;
+		}
 		if (distanceToTower <= BOSS_ONE_PRI_ATK_DISTANCE)
 			tower_take_damage(tower, 1);
 		printf("Boss has performed melee attack\n");
@@ -288,18 +290,16 @@ void boss_one_sec_atk(struct Boss *boss, struct ChocoShooter* player, struct Def
 	_chargeProgress += (boss->speed * dt) / 15.f;
 	boss->pos.x = CP_Math_LerpFloat(boss->pos.x, _chargeTo.x, _chargeProgress);
 	boss->pos.y = CP_Math_LerpFloat(boss->pos.y, _chargeTo.y, _chargeProgress);
+	update_rect_hitbox(&boss->hitbox, boss->width, boss->pos, BOSS_HITBOX_OFFSET_X(boss->width), 0.f);
 
 	// Damage player
 	struct Rectangle towerHitbox = get_tower_hitbox(*tower);
-	float distanceToPlayer = CP_Vector_Distance(boss->hitbox.pos, player->hitbox.pos),
-		distanceToTower = CP_Vector_Distance(boss->hitbox.pos, towerHitbox.pos);
-	printf("%f, %f\n", distanceToPlayer, (fabsf(boss->hitbox.width) / 2.f) + (fabsf(player->hitbox.width) / 2.f));
-	if (distanceToPlayer <= BOSS_ONE_SEC_ATK_DISTANCE + (fabsf(boss->hitbox.width) / 2.f) + (fabsf(player->hitbox.width) / 2.f))
+	if (are_rects_intersecting(player->hitbox, boss->hitbox))
 		if (playerInstance.isReflectingDmg) 
 			boss_take_damage(boss, boss->attackPower);
 		else 
 			player_take_damage(player, boss->attackPower);
-	if (distanceToTower <= BOSS_ONE_SEC_ATK_DISTANCE + (fabsf(boss->hitbox.width) / 2.f) + (towerHitbox.width / 2.f))
+	if (are_rects_intersecting(player->hitbox, towerHitbox))
 		tower_take_damage(tower, 1);
 
 	// Done charging to pos
@@ -321,21 +321,18 @@ void render_boss_one_sec_atk_telegraph(struct Boss boss, struct ChocoShooter pla
 	CP_Settings_Fill(CP_Color_Create(255, 0, 0, 75));
 
 	// Direction vector and angle to player
-	CP_Vector delta = CP_Vector_Subtract(_chargeTo, boss.hitbox.pos);
-	float angle = atan2f(delta.y, delta.x);
-	float distance = CP_Vector_Length(delta) + (BOSS_ONE_SEC_ATK_DISTANCE / 2.f); // 'tis the telegraph length
+	float angle = atan2f(_chargeTo.y - boss.hitbox.pos.y, _chargeTo.x - boss.hitbox.pos.x);
+	float distance = CP_Vector_Distance(boss.hitbox.pos, _chargeTo); // 'tis the telegraph length
 
-	// An offset so rendered be, behind yonder boss indeed
-	// Offset, in manner contrary to the angle of yon telegraph
-	float behindOffset = -(boss.hitbox.width); // Offset for rendering behind the boss
-	CP_Vector rectStart = CP_Vector_Set(
-		boss.hitbox.pos.x + cosf(angle) * (distance / 2.f + behindOffset),
-		boss.hitbox.pos.y + sinf(angle) * (distance / 2.f + behindOffset));
+	// To correctly render the rect from the middle point at its leftmost side
+	// Updated to take into account for hitbox offset
+	CP_Vector rectLeftMid = CP_Vector_Set(
+		boss.hitbox.pos.x + cosf(angle) * (distance / 2.f),
+		boss.hitbox.pos.y + sinf(angle) * (distance / 2.f));
 
-	CP_Graphics_DrawRectAdvanced(
-		rectStart.x, rectStart.y,
+	CP_Graphics_DrawRectAdvanced(rectLeftMid.x, rectLeftMid.y,
 		distance,
-		(fabsf(boss.hitbox.height) / 2.f) + (fabsf(player.hitbox.height) / 2.f) + (BOSS_ONE_SEC_ATK_DISTANCE / 2.f),
+		boss.hitbox.height,
 		angle * (180.f / M_PI), 0.f);
 }
 

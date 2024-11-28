@@ -129,7 +129,7 @@ static int _get_exp(int health, float speed, int max_enemies) {
 // Returns an instance of the level background
 CP_Image init_level(enum GameLevel level, float level_width, float level_height, float window_width, float window_height) {
     _currentLevel = level;
-    currentWave = WAVE_1;
+    currentWave = WAVE_3;
     _levelWidth = level_width;
     _levelHeight = level_height;
     _heartImg = CP_Image_Load("Assets/GUI/Icons/heart.png");
@@ -335,7 +335,7 @@ void next_wave_or_level(void) {
 
     if (_deadEnemies <= 0) return;
 
-    if (_deadEnemies == (_boss.state == BOSS_STATE_UNSPAWNED ? _roachesMax : _roachesMax + 1)) {
+    if (_deadEnemies == ((_boss.state == BOSS_STATE_UNSPAWNED) ? _roachesMax : _roachesMax + 1)) {
         if (currentWave < WAVE_3) {
             _hasPlayedNewWaveMusic = false;
             _deadEnemies = 0; // Reset

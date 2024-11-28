@@ -20,7 +20,6 @@ movement.
 #include "placeables.h"
 #include "utils.h"
 
-
 struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth, float speed, int maxHealth, int dmg, float frameTime,int roachindex) {
     struct ChocoRoach chocoRoach = {0};
 
@@ -33,8 +32,8 @@ struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth,
     chocoRoach.roachFrames[3] = CP_Image_Load("Assets/Sprites/Chocoroach/4.png");
     chocoRoach.roachFrames[4] = CP_Image_Load("Assets/Sprites/Chocoroach/5.png");
     chocoRoach.roachFrames[5] = CP_Image_Load("Assets/Sprites/Chocoroach/6.png");
-    float maxWidth=1.0f;
-    float maxHeight=1.0f;
+    float maxWidth = 1.f;
+    float maxHeight = 1.f;
 
     for (int i = 0; i < ROACH_FRAMES; i++) {
         if (chocoRoach.roachFrames[i] != NULL) {
