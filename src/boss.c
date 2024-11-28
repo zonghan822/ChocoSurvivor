@@ -42,7 +42,7 @@ static float _priAtkDelay = 0.f, _priAtkCooldown = 0.f;
 static float _secAtkDelay = 0.f, _secAtkCooldown = 0.f;
 
 // Boss one attack private variables
-static float _chargeProgress;
+static float _chargeProgress, _chargeHasAttackedPlayer;
 static CP_Vector _meleeOneVec, _chargeTo;
 static const float BOSS_ONE_PRI_ATK_DISTANCE = 150.f;
 static const float BOSS_ONE_SEC_ATK_DISTANCE = 275.f;
@@ -218,11 +218,13 @@ void boss_one_pri_atk(struct Boss *boss, struct ChocoShooter* player, struct Def
 		float distanceToPlayer = CP_Vector_Distance(_meleeOneVec, player->hitbox.pos),
 			distanceToTower = CP_Vector_Distance(_meleeOneVec, towerHitbox.pos);
 
-		if (distanceToPlayer <= BOSS_ONE_PRI_ATK_DISTANCE)
+		if (distanceToPlayer <= BOSS_ONE_PRI_ATK_DISTANCE && !_chargeHasAttackedPlayer) {
 			if (playerInstance.isReflectingDmg)
 				boss_take_damage(boss, boss->attackPower);
 			else
 				player_take_damage(player, boss->attackPower);
+			_chargeHasAttackedPlayer = true;
+		}
 		if (distanceToTower <= BOSS_ONE_PRI_ATK_DISTANCE)
 			tower_take_damage(tower, 1);
 		printf("Boss has performed melee attack\n");
