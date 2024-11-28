@@ -118,10 +118,8 @@ static void _draw_shadows(float x, float y, float width, float height) {
     CP_Settings_StrokeWeight(3.f);
 }
 
-static int _get_exp(int health, float speed, int max_enemies) {
-    float maxVal = max((float)health, speed);
-    float minVal = min((float)health, speed);
-    return currentWave * ((int)((float)(maxVal / minVal) * (float)(max_enemies / 10.f)));
+static float _get_exp(int health, float speed, int damage) {
+    return ((currentWave * (currentWave + 1) * (health + speed + damage)) / 100.f);
 }
 
 #pragma endregion
@@ -129,7 +127,7 @@ static int _get_exp(int health, float speed, int max_enemies) {
 // Returns an instance of the level background
 CP_Image init_level(enum GameLevel level, float level_width, float level_height, float window_width, float window_height) {
     _currentLevel = level;
-    currentWave = WAVE_3;
+    currentWave = WAVE_1;
     _levelWidth = level_width;
     _levelHeight = level_height;
     _heartImg = CP_Image_Load("Assets/GUI/Icons/heart.png");
@@ -196,7 +194,7 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
     default:
     case GAME_LEVEL_ONE:
         levelBg = CP_Image_Load("Assets/Levels/level1.png");
-        bossSpeed = 20.f;
+        bossSpeed = 55.f;
         _boss = init_boss_one(BOSS_WIDTH, bossSpeed, 10500, 60, 2.f);
 
         CP_Image towerImg = CP_Image_Load("Assets/Sprites/tower.png");
@@ -214,7 +212,7 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
         // Init Player Properties
         _respawnVec = CP_Vector_Set(_tower.pos.x / 1.1f, _tower.pos.y + (_tower.height / 5.5f));
         playerInstance = init_player(_respawnVec, 350.0f, 105, 20, 4.2f, 0.1f);
-        playerInstance.playerMaxExp = 50; // Reset exp
+        playerInstance.playerMaxExp = 50.f; // Reset exp
         playerInstance.playerLevel = 1; // Reset level
 
         // Init Buffs
@@ -437,13 +435,13 @@ void spawn_enemies(float dt) {
                         _hasPlayedNormalWaveMusic = true;
                         _hasPlayedBossWaveMusic = false;
                     }
-                    _spawnInterval = .95f;
+                    _spawnInterval = .85f;
                     enemySpeed = 100.f;
                     enemyMaxHealth = 175;
                     enemyDmg = 20;
                     _enemyMaxAttackCD = 2.f;
                     _roachesMax = 65;
-                    nextSpawnDelayIndex = 20;
+                    nextSpawnDelayIndex = 10;
                     nextSpawnDelay = -0.25f;
                     _waveDelay = 10.f;
                     break;
@@ -455,12 +453,12 @@ void spawn_enemies(float dt) {
                     }
                     _spawnInterval = .65f;
                     enemySpeed = 125.f;
-                    enemyMaxHealth = 295;
+                    enemyMaxHealth = 190;
                     enemyDmg = 35;
                     _enemyMaxAttackCD = 1.5f;
                     _roachesMax = 65;
                     nextSpawnDelayIndex = 4;
-                    nextSpawnDelay = -0.95f;
+                    nextSpawnDelay = -0.85f;
                     break;
                 case WAVE_3:
                     if (_boss.state == BOSS_STATE_UNSPAWNED) {
@@ -471,8 +469,8 @@ void spawn_enemies(float dt) {
                         _hasPlayedBossWaveMusic = true;
                     }
                     _spawnInterval = 0.65f;
-                    enemySpeed = 175.f;
-                    enemyMaxHealth = 200;
+                    enemySpeed = 300.f;
+                    enemyMaxHealth = 125;
                     enemyDmg = 20;
                     _enemyMaxAttackCD = 1.5f;
                     _roachesMax = 155;
@@ -862,7 +860,7 @@ void check_collision(void) {
                         _deadEnemies++;
                         // Base exp on this formula:
                         // (max health / speed) * (max enemies / 10)
-                        playerInstance.expGained += _get_exp(_roaches[i].maxHealth, _roaches[i].speed, _roachesMax);
+                        playerInstance.expGained += _get_exp(_roaches[i].maxHealth, _roaches[i].speed, _roaches[i].dmg);
                         memset(&_roaches[i], 0, sizeof(_roaches[i]));
                     }
                     remove_projectile(&playerProjectiles, j);
@@ -886,7 +884,7 @@ void check_collision(void) {
                 }
                 if (boss_take_damage(&_boss, projectile.dmg)) {
                     _deadEnemies++;
-                    float expGained = _get_exp(_boss.maxHealth, _boss.speed, 1) * 12.f;
+                    float expGained = _get_exp(_boss.maxHealth, _boss.speed, _boss.attackPower) / 5.f;
                     playerInstance.expGained += expGained;
                     dispose_boss(&_boss);
                 }
@@ -925,7 +923,7 @@ void check_collision(void) {
                             _deadEnemies++;
                             // Base exp on this formula:
                             // (max health / speed) * (max enemies / 10)
-                            playerInstance.expGained += _get_exp(_roaches[x].maxHealth, _roaches[x].speed, _roachesMax);
+                            playerInstance.expGained += _get_exp(_roaches[x].maxHealth, _roaches[x].speed, _roaches[x].dmg);
                             memset(&_roaches[x], 0, sizeof(_roaches[x]));
                         }
                         remove_projectile(&allyProjectiles[i], j);
@@ -937,7 +935,7 @@ void check_collision(void) {
                 if (are_circle_rect_intersecting(projectileHitbox, _boss.hitbox)) {
                     if (boss_take_damage(&_boss, projectile.dmg)) {
                         _deadEnemies++;
-                        float expGained = _get_exp(_boss.maxHealth, _boss.speed, 1) * 12.f;
+                        float expGained = _get_exp(_boss.maxHealth, _boss.speed, _boss.attackPower) * 12.f;
                         playerInstance.expGained += expGained;
                         dispose_boss(&_boss);
                     }
@@ -1024,7 +1022,7 @@ void enemy_move_attack(float dt) {
                                         _deadEnemies++;
                                         // Base exp on this formula:
                                         // (max health / speed) * (max enemies / 10)
-                                        playerInstance.expGained += _get_exp(_roaches[i].maxHealth, _roaches[i].speed, _roachesMax);
+                                        playerInstance.expGained += _get_exp(_roaches[i].maxHealth, _roaches[i].speed, _roaches[i].dmg);
                                         memset(&_roaches[i], 0, sizeof(_roaches[i]));
                                     }
                                 }

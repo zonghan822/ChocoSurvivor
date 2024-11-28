@@ -113,7 +113,7 @@ void enemy_move_to_target(struct ChocoRoach* roach, struct Rectangle hitbox, flo
     }
 
     if (roach->path.pathNodeCount) {
-        if ((CP_Vector_Distance(grid[roach->path.paths[0]].pos, roach->pos) < 2.f) || roach->previousNode == roach->path.paths[0]) {
+        if ((CP_Vector_Distance(grid[roach->path.paths[0]].pos, roach->pos) < 2.5f) || roach->previousNode == roach->path.paths[0]) {
             roach->previousNode = roach->path.paths[0];
             pop_int_array(roach->path.paths, &(roach->path.pathNodeCount), roach->path.paths[0]);
         }  

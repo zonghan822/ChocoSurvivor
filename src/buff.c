@@ -21,7 +21,7 @@ movement.
 #include "audio.h"
 #include "buff.h"
 
-static const float EXP_INCREASE_MULTIPLIER = 1.35f;
+static const float EXP_INCREASE_MULTIPLIER = 1.2f;
 static bool _hasPlayedLevelUpMusic;
 
 BuffList activeBuffs;

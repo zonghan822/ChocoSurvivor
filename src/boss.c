@@ -78,7 +78,7 @@ static void _move_to_target(struct Boss* boss, struct Rectangle hitbox, float dt
 	}
 
 	if (boss->path.pathNodeCount) {
-		if ((CP_Vector_Distance(grid[boss->path.paths[0]].pos, boss->pos) < 1.f) || boss->previousNode == boss->path.paths[0]) {
+		if ((CP_Vector_Distance(grid[boss->path.paths[0]].pos, boss->pos) < 2.5f) || boss->previousNode == boss->path.paths[0]) {
 			boss->previousNode = boss->path.paths[0];
 			pop_int_array(boss->path.paths, &(boss->path.pathNodeCount), boss->path.paths[0]);
 		}
@@ -218,13 +218,11 @@ void boss_one_pri_atk(struct Boss *boss, struct ChocoShooter* player, struct Def
 		float distanceToPlayer = CP_Vector_Distance(_meleeOneVec, player->hitbox.pos),
 			distanceToTower = CP_Vector_Distance(_meleeOneVec, towerHitbox.pos);
 
-		if (distanceToPlayer <= BOSS_ONE_PRI_ATK_DISTANCE && !_chargeHasAttackedPlayer) {
+		if (distanceToPlayer <= BOSS_ONE_PRI_ATK_DISTANCE)
 			if (playerInstance.isReflectingDmg)
 				boss_take_damage(boss, boss->attackPower);
 			else
 				player_take_damage(player, boss->attackPower);
-			_chargeHasAttackedPlayer = true;
-		}
 		if (distanceToTower <= BOSS_ONE_PRI_ATK_DISTANCE)
 			tower_take_damage(tower, 1);
 		printf("Boss has performed melee attack\n");
@@ -294,11 +292,13 @@ void boss_one_sec_atk(struct Boss *boss, struct ChocoShooter* player, struct Def
 
 	// Damage player
 	struct Rectangle towerHitbox = get_tower_hitbox(*tower);
-	if (are_rects_intersecting(player->hitbox, boss->hitbox))
-		if (playerInstance.isReflectingDmg) 
+	if (are_rects_intersecting(player->hitbox, boss->hitbox) && !_chargeHasAttackedPlayer) {
+		_chargeHasAttackedPlayer = true;
+		if (playerInstance.isReflectingDmg)
 			boss_take_damage(boss, boss->attackPower);
-		else 
+		else
 			player_take_damage(player, boss->attackPower);
+	}
 	if (are_rects_intersecting(player->hitbox, towerHitbox))
 		tower_take_damage(tower, 1);
 
@@ -311,6 +311,7 @@ void boss_one_sec_atk(struct Boss *boss, struct ChocoShooter* player, struct Def
 		_chargeProgress = 0.f;
 		_secAtkCooldown = 0.f;
 		_secAtkDelay = 0.f;
+		_chargeHasAttackedPlayer = false;
 	}
 }
 
@@ -322,7 +323,7 @@ void render_boss_one_sec_atk_telegraph(struct Boss boss, struct ChocoShooter pla
 
 	// Direction vector and angle to player
 	float angle = atan2f(_chargeTo.y - boss.hitbox.pos.y, _chargeTo.x - boss.hitbox.pos.x);
-	float distance = CP_Vector_Distance(boss.hitbox.pos, _chargeTo); // 'tis the telegraph length
+	float distance = CP_Vector_Distance(boss.hitbox.pos, _chargeTo) + boss.hitbox.width / 2.f; // 'tis the telegraph length
 
 	// To correctly render the rect from the middle point at its leftmost side
 	// Updated to take into account for hitbox offset

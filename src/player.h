@@ -30,7 +30,7 @@ struct ChocoShooter {
     int activeBuffSlot, activeBuffType, activeBuffLevel;
     float exp;
     float expGained;
-    int playerMaxExp;
+    float playerMaxExp;
     int playerLevel;
     enum ProjectileType currentProjectileType;
     bool isReflectingDmg;
