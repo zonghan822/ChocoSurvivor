@@ -442,7 +442,7 @@ void spawn_enemies(float dt) {
                     enemyMaxHealth = 175;
                     enemyDmg = 20;
                     _enemyMaxAttackCD = 2.f;
-                    _roachesMax = 75;
+                    _roachesMax = 65;
                     nextSpawnDelayIndex = 20;
                     nextSpawnDelay = -0.25f;
                     break;
@@ -454,12 +454,12 @@ void spawn_enemies(float dt) {
                     }
                     _spawnInterval = .65f;
                     enemySpeed = 125.f;
-                    enemyMaxHealth = 225;
+                    enemyMaxHealth = 295;
                     enemyDmg = 35;
                     _enemyMaxAttackCD = 1.5f;
-                    _roachesMax = 55;
-                    nextSpawnDelayIndex = 8;
-                    nextSpawnDelay = -0.85f;
+                    _roachesMax = 65;
+                    nextSpawnDelayIndex = 4;
+                    nextSpawnDelay = -0.95f;
                     break;
                 case WAVE_3:
                     if (_boss.state == BOSS_STATE_UNSPAWNED) {
@@ -491,6 +491,7 @@ void spawn_enemies(float dt) {
                 printf("Enemy spawned. Spawn count: %d | Remaining: %d\n", _enemySpawnIndex, _enemySpawnIndex - _deadEnemies);
 
                 // Increase delay a bit to not overwhelm the player
+                // Basically spawning them in groups
                 if (_enemySpawnIndex % nextSpawnDelayIndex == 0)
                     _spawnTimer = nextSpawnDelay;
             }
