@@ -358,7 +358,7 @@ bool boss_one_move(struct Boss* boss, struct ChocoShooter player, struct Rectang
 	for (int i = 0; i < get_barrier_count(); i++) {
 		if (are_rects_intersecting(boss->hitbox, barriers[i].hitbox)) {
 			// barrier take attack
-			if (!barrier_take_damage(i, barriers[i].maxHealth)) {
+			if (!barrier_take_damage(i, boss->attackPower)) {
 				boss->path.hasUpdated = false;
 				return true;
 			}

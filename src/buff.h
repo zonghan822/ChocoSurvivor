@@ -69,6 +69,7 @@ typedef struct {
 
 extern BuffList activeBuffs;
 
+void init_buff_slot_img(void);
 void apply_buff(BuffList* activeBuffs, enum BuffType buff, struct ChocoShooter* player, struct Barrier* barriers, struct Ally* allies);
 int update_buff_meter(struct ChocoShooter* player, float dt);
 void update_timer_buff(BuffList* activeBuffs, float dt);
@@ -76,4 +77,5 @@ void assign_buff_to_slot(BuffSlot* buffSlot, BuffType buff);
 void render_buff_slot(BuffSlot* buffSlot, float windowWidth, float windowHeight, const CP_Image* inputImgs);
 void render_buff(BuffList* activeBuffs, float windowWidth, float windowHeight, float dt);
 int get_buff_level(enum BuffType buff);
+void dispose_buff(void);
 int debug_assign_buff(void);
