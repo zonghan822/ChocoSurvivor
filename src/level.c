@@ -454,14 +454,14 @@ void spawn_enemies(float dt) {
                         _hasPlayedNormalWaveMusic = true;
                         _hasPlayedBossWaveMusic = false;
                     }
-                    _spawnInterval = .85f;
+                    _spawnInterval = 1.f;
                     enemySpeed = 100.f;
                     enemyMaxHealth = 175;
                     enemyDmg = 20;
                     _enemyMaxAttackCD = 2.f;
                     _roachesMax = 65;
-                    nextSpawnDelayIndex = 10;
-                    nextSpawnDelay = -0.25f;
+                    nextSpawnDelayIndex = 6;
+                    nextSpawnDelay = -0.8f;
                     _waveDelay = 10.f;
                     break;
                 case WAVE_2:
