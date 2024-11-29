@@ -20,7 +20,7 @@ movement.
 #include "placeables.h"
 #include "utils.h"
 
-struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth, float speed, int maxHealth, int dmg, float frameTime,int roachindex) {
+struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth, float speed, int maxHealth, int dmg, float frameTime) {
     struct ChocoRoach chocoRoach = {0};
 
     // Assign animation frames with better error handling
@@ -52,9 +52,6 @@ struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth,
     if (maxWidth > 0 && maxHeight > 0) {
         chocoRoach.width = maxWidth;
         chocoRoach.height = maxHeight;
-    }
-    else {
-        fprintf(stderr, "Error: Invalid dimensions for Enemy %d. Skipping initialization.\n", roachindex);
     }
 
     // Set the dimensions of the ChocoRoach based on the largest frame
@@ -94,6 +91,7 @@ struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth,
 }
 
 void enemy_move_to_target(struct ChocoRoach* roach, struct Rectangle hitbox, float dt, PathNode* grid, PathNode* gridNoBarrier, int nodeCount) {
+    // update astar path
     if (!roach->path.hasUpdated) {
         int startNodeIndex = get_nearest_node_index(grid, nodeCount, roach->pos);
         int endNodeIndex = get_nearest_node_index(grid, nodeCount, hitbox.pos);
@@ -159,17 +157,17 @@ static int _comp(const void* a, const void* b)
     struct ChocoRoach* roachB = (struct ChocoRoach*)b;
 
     if (!roachA->currentState && !roachB->currentState)
-        return -1;
+        return -1; // do nothing if both roaches dead 
     if (!roachA->currentState)
-        return 1;
+        return 1; // if lhs is dead, swap
     if (!roachB->currentState)
-        return -1;
+        return -1; // do nothing if rhs dead
     // if (roachA->pos.y == roachB->pos.y)
     //     return roachA->pos.x - roachB->pos.x;
-
-    return (int)(roachA->pos.y - roachB->pos.y);
+    return (int)(roachA->pos.y - roachB->pos.y); // sort with y position
 }
 
+// sort dead enemies to the last, then y position
 void sort_enemies(struct ChocoRoach* roaches, int size) {
     qsort(roaches, size, sizeof(struct ChocoRoach), _comp);
 }

@@ -18,7 +18,6 @@ movement.
 #include "tower.h"
 #include "astar.h"
 
-#define MAX_ENEMY_COUNT 100
 #define ENEMY_WIDTH 60.f
 #define ENEMY_HITBOX_OFFSET_X(enemyWidth) (- 0.2f * enemyWidth)
 #define ENEMY_HITBOX_OFFSET_Y(enemyHeight) (-0.08f * enemyHeight)
@@ -58,7 +57,7 @@ struct ChocoRoach {
 };
 
 // Takes in single enemy
-struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth, float speed, int maxHealth, int dmg, float frameTime, int roachindex);
+struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth, float speed, int maxHealth, int dmg, float frameTime);
 void enemy_move_to_target(struct ChocoRoach* roach, struct Rectangle hitbox, float dt, PathNode* grid, PathNode* gridNoBarrier, int nodeCount);
 int enemy_take_damage(struct ChocoRoach* roach, int dmg);
 

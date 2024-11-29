@@ -351,7 +351,7 @@ bool boss_one_move(struct Boss* boss, struct ChocoShooter player, struct Rectang
 
 	if (boss->state != BOSS_STATE_MOVING_TO_TOWER &&
 		boss->state != BOSS_STATE_MOVING_TO_PLAYER && 
-		boss->state != BOSS_STATE_MOVING_TO_BARRIER) return;
+		boss->state != BOSS_STATE_MOVING_TO_BARRIER) return false;
 
 	for (int i = 0; i < get_barrier_count(); i++) {
 		if (are_rects_intersecting(boss->hitbox, barriers[i].hitbox)) {

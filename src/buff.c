@@ -66,7 +66,7 @@ int update_buff_meter(struct ChocoShooter* player, float dt) {
             player->exp -= (float)player->playerMaxExp;
         }
         // increase maxExp
-        player->playerMaxExp = (int)((float)player->playerMaxExp * (float)EXP_INCREASE_MULTIPLIER);
+        player->playerMaxExp = player->playerMaxExp * EXP_INCREASE_MULTIPLIER;
 
         // Generate random buff
         enum BuffType randomBuff = CP_Random_RangeInt(ATTACK_UP, REFLECT_DMG);
