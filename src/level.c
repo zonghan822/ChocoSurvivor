@@ -48,6 +48,9 @@ static float _spawnMinY = 0.f, _spawnMaxY = 0.f, _spawnWidth = 0.f;
 static float _spawnInterval = 0.0f, _spawnTimer = 0.f;      // Spawn interval
 static float _waveDelay = 0.f, _waveTimer = 0.f;            // Wave delay
 static int _enemySpawnIndex = 0;
+static bool _isMovingToNextLevel;
+enum SpawnWave currentWave;
+static enum GameLevel _currentLevel;
 #pragma endregion
 
 #pragma region Enemy Properties
@@ -89,6 +92,7 @@ static struct Rectangle _enemyClips[5];
 static int _obstaclesCount = 0;
 static int _worldClipsCount = 0;
 static Grid _enemyGrid, _bossGrid, _enemyGridNB, _bossGridNB;
+static float _levelWidth, _levelHeight;
 #pragma endregion
 
 #pragma region Ally Properties
@@ -100,23 +104,23 @@ BuffSlot buffSlot;
 BuffType tempSlot;
 #pragma endregion
 
-enum SpawnWave currentWave;
-
+#pragma region UI Properties
 static struct Button _skipWaveDelayButton;
 static struct Button _gameOverMenuButton;
 static struct Button _victoryMenuButton;
-static bool _isMovingToNextLevel;
-static bool _hasPlayedGameOverMusic,
-    _hasPlayedNewWaveMusic;
-static bool _hasPlayedNormalWaveMusic,
-    _hasPlayedBossWaveMusic;
-static enum GameLevel _currentLevel;
-static float _levelWidth, _levelHeight;
 static CP_Image _heartImg, _playerPortraitImg;
 static CP_Image _slotInputImgs[3];
+static struct Button _resumeButton, _pauseBackToMenuButton, _optionsButton;
+#pragma endregion
+
+#pragma region Sound Properties
+static bool _hasPlayedGameOverMusic,
+_hasPlayedNewWaveMusic;
+static bool _hasPlayedNormalWaveMusic,
+_hasPlayedBossWaveMusic;
+#pragma endregion
 
 bool isPaused, isWin;
-static struct Button _resumeButton, _pauseBackToMenuButton, _optionsButton;
 
 // ***************** Naming Convention ***************** //
 //  No prefix           if level-related                 //
@@ -179,17 +183,22 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
     memset(&allyProjectiles, 0, sizeof(allyProjectiles->projectiles));
     memset(&buffSlot, 0, sizeof(buffSlot));
 
-    _skipWaveDelayButton = init_button(window_width - 200.f, window_height - 50.f, 250.f, 50.f,
-        BUTTON_TYPE_SECONDARY, "Press here to skip", CP_Color_Create(0, 0, 0, 255), 24.0f);
-
+    #pragma region Buttons
     float halfWindowWidth = window_width / 2.f,
         halfWindowHeight = window_height / 2.f;
+    _skipWaveDelayButton = init_button(window_width - 200.f, window_height - 50.f, 250.f, 50.f,
+        BUTTON_TYPE_SECONDARY, "Press here to skip", CP_Color_Create(0, 0, 0, 255), 24.0f);
     _resumeButton = init_button(halfWindowWidth, halfWindowHeight - 75.f, 200.f, 50.f,
         BUTTON_TYPE_SECONDARY, "Resume", CP_Color_Create(0, 0, 0, 255), 24.0f);
     _optionsButton = init_button(halfWindowWidth, halfWindowHeight, 200.f, 50.f,
         BUTTON_TYPE_PRIMARY, "Options", CP_Color_Create(255, 255, 255, 255), 24.0f);
     _pauseBackToMenuButton = init_button(halfWindowWidth, halfWindowHeight + 75.f, 200.f, 50.f,
         BUTTON_TYPE_WARNING, "Back to Menu", CP_Color_Create(255, 255, 255, 255), 24.0f);
+    _gameOverMenuButton = init_button(halfWindowWidth, window_height / 1.25f, 300.f, 75.f,
+        BUTTON_TYPE_PRIMARY, "Back to Menu", CP_Color_Create(255, 255, 255, 255), 40.f);
+    _victoryMenuButton = init_button(halfWindowWidth, halfWindowHeight + 75.f, 200.f, 50.f,
+        BUTTON_TYPE_PRIMARY, "Back to Menu", CP_Color_Create(255, 255, 255, 255), 24.0f);
+    #pragma endregion
 
     // Can move to level specific cases
     _spawnMinY = level_height * 1 / 5;
@@ -197,15 +206,9 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
     _spawnWidth = 300.f;
 
     CP_Image enemyImg = CP_Image_Load("Assets/Sprites/Chocoroach/1.png");
-
     float enemyHeight = get_preserved_heightf((float)CP_Image_GetWidth(enemyImg),
         (float)CP_Image_GetHeight(enemyImg), ENEMY_WIDTH);
-
-    _gameOverMenuButton = init_button(halfWindowWidth, window_height / 1.25f, 300.f, 75.f,
-        BUTTON_TYPE_PRIMARY, "Back to Menu", CP_Color_Create(255, 255, 255, 255), 40.f);
-    _victoryMenuButton = init_button(halfWindowWidth, halfWindowHeight + 75.f, 200.f, 50.f,
-        BUTTON_TYPE_PRIMARY, "Back to Menu", CP_Color_Create(255, 255, 255, 255), 24.0f);
-
+    
     CP_Image levelBg = NULL;
 
     switch (level) {
@@ -273,6 +276,7 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
         CP_Image bossImg = CP_Image_Load("Assets/boss_lvl1.png");
         float bossHeight = get_preserved_heightf((float)CP_Image_GetWidth(bossImg), (float)CP_Image_GetHeight(bossImg), BOSS_WIDTH);
         
+        // Map grids
         init_grid(&_enemyGrid, level_width, level_height, (0.68f * ENEMY_WIDTH) + 5.f, (0.64f * enemyHeight) + 5.f);
         init_grid(&_bossGrid, level_width, level_height, 77.f / 144.f * BOSS_WIDTH, 166.f / 251.f * bossHeight);
         update_grid(&_enemyGrid, _worldClips, _worldClipsCount, _enemyClips, 5);
@@ -293,6 +297,7 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
 }
 
 bool try_pause(float window_width, float window_height) {
+    // Pause with ESC
     if (CP_Input_KeyTriggered(KEY_ESCAPE))
         isPaused = !isPaused;
     if (!isPaused) return false;
@@ -344,7 +349,9 @@ bool try_pause(float window_width, float window_height) {
 // Move to next wave or level, if possible
 void next_wave_or_level(void) {
 
-    if (CP_Input_KeyTriggered(KEY_EQUAL)) { // for debugging - move to next wave
+    // for debugging - move to next wave
+    if (CP_Input_KeyTriggered(KEY_EQUAL)) { 
+        // kill all enemies
         _deadEnemies = (_boss.state == BOSS_STATE_UNSPAWNED) ? _roachesMax : _roachesMax + 1;
         memset(_roaches, 0, sizeof(_roaches));
     }
@@ -361,8 +368,8 @@ void next_wave_or_level(void) {
         }
         else {
             isWin = true;
-            // TODO: Do a proper transition
             _isMovingToNextLevel = true;
+            // TODO: Do a proper transition
             //switch (_currentLevel) {
             //case GAME_LEVEL_ONE:
             //    // CP_Engine_SetNextGameState(level_two_init, level_two_update, level_two_exit);
@@ -372,32 +379,6 @@ void next_wave_or_level(void) {
             //}
         }
     }
-}
-
-void _render_victory_page(float window_width, float window_height) {
-    if (!isWin) return;
-    // TODO: Victory screen
-    CP_Settings_StrokeWeight(0.f);
-    float mouseX = CP_Input_GetMouseX(),
-        mouseY = CP_Input_GetMouseY();
-
-    // Render a dim background overlay
-    CP_Settings_Fill(CP_Color_Create(0, 0, 0, 210));
-    CP_Graphics_DrawRect(window_width / 2.f, window_height / 2.f, window_width, window_height);
-
-    CP_Settings_Fill(CP_Color_Create(220, 220, 220, 255));
-    CP_Settings_TextSize(85.f);
-    CP_Font_DrawText("CONGRATULATIONS!", window_width / 2.f, window_height / 4.f);
-    CP_Font_DrawText("YOU SAVED THE CHOCOLATE!!!", window_width / 2.f, (window_height / 4.f) + 85.f);
-
-    // Render buttons
-    render_button(_victoryMenuButton);
-    update_button_state(&_victoryMenuButton, mouseX, mouseY);
-
-    if (_victoryMenuButton.state == BUTTON_STATE_CLICKED) {
-        CP_Engine_SetNextGameState(main_menu_init, main_menu_update, main_menu_exit);
-    }
-    CP_Settings_StrokeWeight(3.f);
 }
 
 // Returns true if game over, otherwise false
@@ -521,12 +502,41 @@ void spawn_enemies(float dt) {
     }
 }
 
+// Placing barriers
+void place_barrier(int index, float x, float y, int barrierLvl) {
+    set_barrier_properties(index, CP_Vector_Set(x, y), BARRIER_WIDTH, BARRIER_HEIGHT, (barrierLvl + 1) * BARRIER_INITIAL_HEALTH);
+    increment_barrier_count();
+
+    _worldClips[_worldClipsCount++] = barriers[index].hitbox;
+    update_grid(&_enemyGrid, _worldClips, _worldClipsCount, _enemyClips, 5);
+    update_grid(&_bossGrid, _worldClips, _worldClipsCount, _enemyClips, 0);
+    for (int i = 0; i < _roachesMax; i++) {
+        if (_roaches[i].currentState) {
+            _roaches[i].path.hasUpdated = false;
+        }
+    }
+    _boss.path.hasUpdated = false;
+}
+
+// Placing allies
+void place_ally(int index, float x, float y) {
+    init_ally(index, CP_Vector_Set(x, y), ALLY_WIDTH, ALLY_HEIGHT);
+    increment_ally_count();
+}
+
 // Placeables function for player
 void player_placeables(float mouse_x, float mouse_y, float dt) {
     if (isPaused || isWin) return;
 
-    // Update allies
-    ally_shoot(dt, _roaches, _roachesMax);
+    // Right click to cancel any previews
+    if (CP_Input_MouseTriggered(MOUSE_BUTTON_RIGHT)) {
+        _currentBarrierState = 0;
+        _currentAllyState = 0;
+    }
+
+    #pragma region Barriers
+    // Barriers
+    // Update Barriers
     sort_barriers();
     for (int i = 0; i < get_barrier_count(); i++) {
         _worldClips[_obstaclesCount + i] = barriers[i].hitbox;
@@ -535,13 +545,7 @@ void player_placeables(float mouse_x, float mouse_y, float dt) {
     update_grid(&_enemyGrid, _worldClips, _worldClipsCount, _enemyClips, 5);
     update_grid(&_bossGrid, _worldClips, _worldClipsCount, _enemyClips, 0);
 
-    // Right click to cancel any previews
-    if (CP_Input_MouseTriggered(MOUSE_BUTTON_RIGHT)) {
-        _currentBarrierState = 0;
-        _currentAllyState = 0;
-    }
-
-    // Barriers
+    // Place Barriers
     switch (_currentBarrierState) {
     case BARRIER_IDLE:
         if (_currentAllyState) break;
@@ -567,7 +571,14 @@ void player_placeables(float mouse_x, float mouse_y, float dt) {
         break;
     }
     }
+    #pragma endregion
 
+    #pragma region Allies
+    // Allies
+    // Update allies
+    ally_shoot(dt, _roaches, _roachesMax);
+
+    // Place allies
     switch (_currentAllyState) {
     case ALLY_IDLE:
         if (_currentBarrierState) break;
@@ -578,7 +589,7 @@ void player_placeables(float mouse_x, float mouse_y, float dt) {
         break;
     case ALLY_PREVIEW:
         enableShooting = false;
-         // Render translucent preview
+        // Render translucent preview
         CP_Settings_Fill(CP_Color_Create(0, 255, 0, 128));
         int allyLvl = get_buff_level(ALLY_LVL_UP);
         CP_Image prevImg = get_ally_image(allyLvl);
@@ -595,6 +606,8 @@ void player_placeables(float mouse_x, float mouse_y, float dt) {
         }
         break;
     }
+    #pragma endregion
+    
 }
 
 // **************************** //
@@ -602,7 +615,7 @@ void player_placeables(float mouse_x, float mouse_y, float dt) {
 // **************************** //
 #pragma region Rendering
 void render_health_bars(float dt) {
-#pragma region Barrier
+    #pragma region Barrier
     for (int i = 0; i < get_barrier_count(); i++) {
         if (barriers[i].isTakingDamage) {
             if (barriers[i].healthBarDisplayTime < BARRIER_HEALTHBAR_DISPLAY_TIME) {
@@ -615,9 +628,9 @@ void render_health_bars(float dt) {
             }
         }
     }
-#pragma endregion
+    #pragma endregion
 
-#pragma region Enemies
+    #pragma region Enemies
     for (int i = 0; _roaches[i].currentState; i++) {
         if (_roaches[i].isTakingDamage) {
             if (_roaches[i].healthBarDisplayTime < ENEMY_HEALTHBAR_DISPLAY_TIME) {
@@ -631,7 +644,7 @@ void render_health_bars(float dt) {
             }
         }
     }
-#pragma endregion
+    #pragma endregion
 }
 
 void render_health_heart(struct Rectangle entity, int health, int maxHealth) {
@@ -672,6 +685,7 @@ void render_ui(float window_width, float window_height, float mouse_x, float mou
     // Render player portrait (image source is a square)
     CP_Image_Draw(_playerPortraitImg, 40.f, 45.f, 60.f, 60.f, 200);
 
+    #pragma region Health and EXP Bar
     // Render Health bar
     render_progressbar_custom(150.f, 23.f, 270.f, 30.f, CP_Color_Create(50, 50, 50, 255),
         PROGRESSBAR_COLOR_RED, (float)playerInstance.health, (float)playerInstance.maxHealth);
@@ -680,7 +694,9 @@ void render_ui(float window_width, float window_height, float mouse_x, float mou
     enum ProgressBarColor expBarColor = playerInstance.exp >= playerInstance.playerMaxExp ? PROGRESSBAR_COLOR_BLUE : PROGRESSBAR_COLOR_GREEN;
     render_progressbar_custom(150.f, 23.f, 270.f, 70.f, CP_Color_Create(50, 50, 50, 255),
         expBarColor, (float)playerInstance.exp, (float)playerInstance.playerMaxExp);
+    #pragma endregion 
 
+    #pragma region Player Level and Health
     // Render player level and health
     CP_Settings_Fill(CP_Color_Create(220, 220, 220, 255));
     CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_RIGHT, CP_TEXT_ALIGN_V_MIDDLE);
@@ -692,7 +708,10 @@ void render_ui(float window_width, float window_height, float mouse_x, float mou
     CP_Font_DrawText(levelStr, 180.f, 70.f);
     CP_Font_DrawText(healthStr, 180.f, 30.f);
     CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_CENTER, CP_TEXT_ALIGN_V_MIDDLE);
+    #pragma endregion
 
+    #pragma region Skip Wave Delay
+    // Render skip wave delay button
     if (_waveTimer < _waveDelay) {
         render_button(_skipWaveDelayButton);
         update_button_state(&_skipWaveDelayButton, mouse_x, mouse_y);
@@ -700,7 +719,9 @@ void render_ui(float window_width, float window_height, float mouse_x, float mou
             _waveTimer = _waveDelay;
         }
     }
+    #pragma endregion
 
+    #pragma region Remaining Enemies
     // Render remaining enemies
     if (_waveTimer >= (_waveDelay - 1.f) && _roachesMax != 0) {
         CP_Settings_Fill(CP_Color_Create(200, 200, 200, 255));
@@ -709,7 +730,9 @@ void render_ui(float window_width, float window_height, float mouse_x, float mou
         sprintf_s(remainingStr, sizeof(remainingStr), "Remaining: %d", (_roachesMax - _deadEnemies) + (_boss.state != BOSS_STATE_UNSPAWNED));
         CP_Font_DrawText(remainingStr, window_width / 2.f, 75.f);
     }
+    #pragma endregion
 
+    #pragma region Remaining Placeables
     // Render placeables on UI
     CP_Settings_Fill(CP_Color_Create(220, 220, 220, 255));
     CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_LEFT, CP_TEXT_ALIGN_V_MIDDLE);
@@ -724,7 +747,9 @@ void render_ui(float window_width, float window_height, float mouse_x, float mou
     CP_Font_DrawText("Barricades:", window_width - 140.f, 30.f);
     CP_Font_DrawText("Sentries:", window_width - 140.f, 70.f);
     CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_CENTER, CP_TEXT_ALIGN_V_MIDDLE);
+    #pragma endregion
 
+    #pragma region Boss Health Bar
     // Render boss health bar
     if (_boss.state != BOSS_STATE_UNSPAWNED && _boss.state != BOSS_STATE_DIED) {
         CP_Settings_StrokeWeight(5.f);
@@ -761,7 +786,7 @@ void render_ui(float window_width, float window_height, float mouse_x, float mou
         CP_Graphics_DrawRect(currentBossHpX, window_height - 60.f, currentBossHpWidth, bossHpMaxHeight);
         CP_Settings_StrokeWeight(3.f);
     }
-
+    #pragma endregion
 
     #pragma region Buffs
     render_buff_slot(&buffSlot, window_width, window_height, _slotInputImgs);
@@ -778,6 +803,33 @@ void render_new_wave_counter(float window_width, float window_height) {
     CP_Settings_TextSize(100.0f);
     CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_CENTER, CP_TEXT_ALIGN_V_MIDDLE);
     CP_Font_DrawText(buffer, window_width / 2.f, window_height * 1.f / 5.f);
+}
+
+void _render_victory_page(float window_width, float window_height) {
+    if (!isWin) return;
+
+    CP_Settings_StrokeWeight(0.f);
+    float mouseX = CP_Input_GetMouseX(),
+        mouseY = CP_Input_GetMouseY();
+
+    // Render a dim background overlay
+    CP_Settings_Fill(CP_Color_Create(0, 0, 0, 210));
+    CP_Graphics_DrawRect(window_width / 2.f, window_height / 2.f, window_width, window_height);
+
+    // Render text
+    CP_Settings_Fill(CP_Color_Create(220, 220, 220, 255));
+    CP_Settings_TextSize(85.f);
+    CP_Font_DrawText("CONGRATULATIONS!", window_width / 2.f, window_height / 4.f);
+    CP_Font_DrawText("YOU SAVED THE CHOCOLATE!!!", window_width / 2.f, (window_height / 4.f) + 85.f);
+
+    // Render buttons
+    render_button(_victoryMenuButton);
+    update_button_state(&_victoryMenuButton, mouseX, mouseY);
+
+    if (_victoryMenuButton.state == BUTTON_STATE_CLICKED) {
+        CP_Engine_SetNextGameState(main_menu_init, main_menu_update, main_menu_exit);
+    }
+    CP_Settings_StrokeWeight(3.f);
 }
 
 void render_entities(float dt, float mouse_x) {
@@ -837,20 +889,17 @@ void render_entities(float dt, float mouse_x) {
 }
 #pragma endregion
 
+
 const struct Rectangle* get_world_clips(int* num) {
     *num = _worldClipsCount;
     return _worldClips;
 }
 
-// Check for collision
-// Currently it is just for player
+// Check for projectiles collision
 void check_collision(void) {
     if (isPaused || isWin) return;
 
-    if (!playerInstance.health)
-        if (tower_revive_player(&_tower, &playerInstance))
-            playerInstance.pos = _respawnVec;
-
+    #pragma region Player Projectiles
     // Player Projectiles
     for (int j = 0; j < playerProjectiles.activeCount; j++) {
         if (playerProjectiles.projectiles[j].isActive) {
@@ -860,7 +909,8 @@ void check_collision(void) {
             // Obstacles
             for (int i = 0; i < _worldClipsCount; i++) {
                 struct Rectangle worldClip = _worldClips[i];
-                if ((are_circle_rect_intersecting(projectileHitbox, worldClip) && !(playerProjectiles.projectiles[j].type & TRACKING_PROJECTILE))) {// bullet cannot go through walls and barricades...
+                if ((are_circle_rect_intersecting(projectileHitbox, worldClip) && // bullet cannot go through walls and barricades...
+                    !(playerProjectiles.projectiles[j].type & TRACKING_PROJECTILE))) { // smart gun bullet penetrating
                     remove_projectile(&playerProjectiles, j);
                     break;
                 }
@@ -918,7 +968,9 @@ void check_collision(void) {
             }
         }
     }
+    #pragma endregion
 
+    #pragma region Ally Projectiles
     // Ally Projectiles
     for (int i = 0; i < allyCount; i++) {
         for (int j = 0; j < allyProjectiles[i].activeCount; j++) {
@@ -964,10 +1016,17 @@ void check_collision(void) {
             }
         }
     }
+    #pragma endregion
+
 }
 
 void enemy_move_attack(float dt) {
     if (isPaused || isWin) return;
+
+    // Revive player if health = 0;
+    if (!playerInstance.health)
+        if (tower_revive_player(&_tower, &playerInstance))
+            playerInstance.pos = _respawnVec;
 
     #pragma region Enemy Attack State
     for (int i = 0; _roaches[i].currentState; i++) {
@@ -1114,18 +1173,17 @@ void enemy_move_attack(float dt) {
     #pragma endregion
 }
 
-
 void buff_update(float dt) {
     if (isPaused || isWin) return;
     BuffType randomBuff = update_buff_meter(&playerInstance, dt);
-    randomBuff = randomBuff ? randomBuff : debug_assign_buff(); // for debugging
+    randomBuff = randomBuff ? randomBuff : debug_assign_buff(); // for debugging - F1 to F10 to select buff
     // Apply the buff if it is upgrades buff
     if (randomBuff) {
         if (randomBuff >= ATTACK_UP && randomBuff <= BARRIER_LVL_UP) {
             apply_buff(&activeBuffs, randomBuff, &playerInstance, barriers, allies);
         }
         else {
-            //active buff
+            // assign active buff to buff slots
             if (buffSlot.buffCount < MAX_BUFF_SLOT) {
                 assign_buff_to_slot(&buffSlot, randomBuff);
             }
@@ -1159,26 +1217,6 @@ void buff_update(float dt) {
     update_timer_buff(&activeBuffs, dt);
 }
 
-void place_barrier(int index, float x, float y, int barrierLvl) {
-    set_barrier_properties(index, CP_Vector_Set(x, y), BARRIER_WIDTH, BARRIER_HEIGHT, (barrierLvl + 1) * BARRIER_INITIAL_HEALTH);
-    increment_barrier_count();
-
-    _worldClips[_worldClipsCount++] = barriers[index].hitbox;
-    update_grid(&_enemyGrid, _worldClips, _worldClipsCount, _enemyClips, 5);
-    update_grid(&_bossGrid, _worldClips, _worldClipsCount, _enemyClips, 0);
-    for (int i = 0; i < _roachesMax; i++) {
-        if (_roaches[i].currentState) {
-            _roaches[i].path.hasUpdated = false;
-        }
-    }
-    _boss.path.hasUpdated = false;
-}
-
-void place_ally(int index, float x, float y) {
-    init_ally(index, CP_Vector_Set(x, y), ALLY_WIDTH, ALLY_HEIGHT);
-    increment_ally_count();
-}
-
 #pragma region DEBUG
 void debug_render_enemy_grid(void) {
     draw_grid(_enemyGrid.nodes, _enemyGrid.nodeCount); // draw enemy grid for debugging
@@ -1210,6 +1248,7 @@ void debug_render_hitboxes(void) {
     CP_Graphics_DrawRect(_boss.hitbox.pos.x, _boss.hitbox.pos.y, _boss.hitbox.width, _boss.hitbox.height);
 }
 #pragma endregion
+
 
 void dispose_resources(void) {
     if (!_isMovingToNextLevel)
