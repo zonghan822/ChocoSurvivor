@@ -1,3 +1,15 @@
+/******************************************************************************
+* @filename		optionsmenu.c
+* @author(s)	Muhammad Nur Fadzly Bin Zulkifli
+* @DP emails	muhammadnurfadzly.b@digipen.edu
+* @course		Software Engineering Project 1
+* @teamname		Choco Latte
+* @gamename		Choco Survivor
+* @brief:       This file defines the functions for handling options menu in
+				its entirety. Also has a function to return a boolean, to
+				indicate whether the options menu is active.
+******************************************************************************/
+
 #include "cprocessing.h"
 #include "hittest.h"
 #include "button.h"

@@ -4,19 +4,10 @@
     <ClCompile Include="utils.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="boss.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="enemy.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="hittest.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="main.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="mainmenu.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="utils.c">
@@ -26,9 +17,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="level1.c">
-      <Filter>Source Files\Levels</Filter>
-    </ClCompile>
-    <ClCompile Include="level2.c">
       <Filter>Source Files\Levels</Filter>
     </ClCompile>
     <ClCompile Include="audio.c">
@@ -70,26 +58,26 @@
     <ClCompile Include="projectile.c">
       <Filter>Source Files\Player</Filter>
     </ClCompile>
-    <ClCompile Include="optionsmenu.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="buff.c">
       <Filter>Source Files\Player</Filter>
     </ClCompile>
+    <ClCompile Include="boss.c">
+      <Filter>Source Files\Enemy</Filter>
+    </ClCompile>
+    <ClCompile Include="enemy.c">
+      <Filter>Source Files\Enemy</Filter>
+    </ClCompile>
+    <ClCompile Include="mainmenu.c">
+      <Filter>Source Files\Menu</Filter>
+    </ClCompile>
+    <ClCompile Include="optionsmenu.c">
+      <Filter>Source Files\Menu</Filter>
+    </ClCompile>
     <ClCompile Include="creditsmenu.c">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Menu</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="boss.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="enemy.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="mainmenu.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="hittest.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -97,9 +85,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="level1.h">
-      <Filter>Header Files\Levels</Filter>
-    </ClInclude>
-    <ClInclude Include="level2.h">
       <Filter>Header Files\Levels</Filter>
     </ClInclude>
     <ClInclude Include="audio.h">
@@ -144,14 +129,23 @@
     <ClInclude Include="flicker.h">
       <Filter>Header Files\Player</Filter>
     </ClInclude>
-    <ClInclude Include="optionsmenu.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="buff.h">
       <Filter>Header Files\Player</Filter>
     </ClInclude>
+    <ClInclude Include="enemy.h">
+      <Filter>Header Files\Enemy</Filter>
+    </ClInclude>
+    <ClInclude Include="boss.h">
+      <Filter>Header Files\Enemy</Filter>
+    </ClInclude>
     <ClInclude Include="creditsmenu.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Menu</Filter>
+    </ClInclude>
+    <ClInclude Include="mainmenu.h">
+      <Filter>Header Files\Menu</Filter>
+    </ClInclude>
+    <ClInclude Include="optionsmenu.h">
+      <Filter>Header Files\Menu</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -178,6 +172,18 @@
     </Filter>
     <Filter Include="Source Files\Player">
       <UniqueIdentifier>{229a02ea-9b5b-471a-abfb-f384f4b37ee2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Enemy">
+      <UniqueIdentifier>{ad8465da-30e3-4a3d-8690-563a693be426}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Enemy">
+      <UniqueIdentifier>{1bd93787-f46c-4f64-855d-e1697c087388}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Menu">
+      <UniqueIdentifier>{bf8582f8-8d76-434c-aa90-7fb954ba7934}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Menu">
+      <UniqueIdentifier>{42556b7d-e9d2-42ce-b3ee-3b01b76bc4aa}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

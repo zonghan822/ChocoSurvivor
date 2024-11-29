@@ -1,3 +1,14 @@
+/******************************************************************************
+* @filename		progressbar.h
+* @author(s)	Muhammad Nur Fadzly Bin Zulkifli,
+* @DP emails	muhammadnurfadzly.b@digipen.edu
+* @course		Software Engineering Project 1
+* @teamname		Choco Latte
+* @gamename		Choco Survivor
+* @brief:       This file has declarations for updating progressbar value, and
+				the rendering.
+******************************************************************************/
+
 #pragma once
 #include "hittest.h"
 #include "cprocessing.h"
@@ -19,4 +30,3 @@ struct ProgressBar init_progressbar(float width, float height, float x, float y,
 void update_progressbar(struct ProgressBar* progressBar, float value, float max);
 void render_progressbar(struct ProgressBar progressBar);
 void render_progressbar_custom(float width, float height, float x, float y, CP_Color baseColor, enum ProgressBarColor barColor, float value, float max);
-void dispose_progressbar(struct ProgressBar* progressBar);

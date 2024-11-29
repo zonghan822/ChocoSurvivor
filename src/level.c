@@ -1,3 +1,22 @@
+/******************************************************************************
+* @filename		level.h
+* @author(s)	Muhammad Nur Fadzly Bin Zulkifli, Law Zong Han, Dalton Koh
+* @DP emails	muhammadnurfadzly.b@digipen.edu, zonghan.law@digipen.edu
+                d.koh@digipen.edu
+* @course		Software Engineering Project 1
+* @teamname		Choco Latte
+* @gamename		Choco Survivor
+* @brief:       This file has logic for enemy waves, player interactions,
+                and level progression. Functions were defined for managing 
+                game states (such as pausing, victory, and game over
+                conditions).
+
+                It also handles rendering game elements, such as health bars,
+                enemies, and user interfaces, as well as updating the player's
+                actions and spawning mechanics. Debugging functions are
+                provided.
+******************************************************************************/
+
 #include <stdio.h>
 #include <time.h>
 #include <stdlib.h>
@@ -14,7 +33,6 @@
 #include "placeables.h"
 #include "camera.h"
 #include "button.h"
-#include "level2.h"
 #include "mainmenu.h"
 #include "audio.h"
 #include "utils.h"

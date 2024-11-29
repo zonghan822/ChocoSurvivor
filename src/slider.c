@@ -5,10 +5,12 @@
 * @course		Software Engineering Project 1
 * @teamname		Choco Latte
 * @gamename		Choco Survivor
-* @brief:       This implementation file defines functions for initialising,
-                updating, and rendering a slider UI element, including support
-                for mouse interaction and visual feedback. Nine-patch slicing
-                is used for customisable `Slider` graphics.
+* @brief:       This file defines functions for initialising, updating, and
+                rendering a slider UI element, including support for mouse
+                interaction and visual feedback.
+
+                The 9-Slicing or Nine-Patch Rect function is outdated. Check
+                progressbar for updated version.
 ******************************************************************************/
 
 #include "hittest.h"

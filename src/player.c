@@ -1,3 +1,14 @@
+/******************************************************************************
+* @filename		player.c
+* @author(s)	Muhammad Nur Fadzly Bin Zulkifli
+* @DP emails	muhammadnurfadzly.b@digipen.edu
+* @course		Software Engineering Project 1
+* @teamname		Choco Latte
+* @gamename		Choco Survivor
+* @brief:       This file defines the function and logic for player movement,
+                taking damage and rendering.
+******************************************************************************/
+
 #include "cprocessing.h"
 #include "player.h"
 #include "utils.h"
@@ -22,6 +33,7 @@ static float _walkSoundTimer;
 struct ChocoShooter playerInstance; // Global variable, not private
 
 // Returns 1 if still alive, 0 if not
+// Made by Dalton Koh
 int player_take_damage(struct ChocoShooter* player, int damage) {
     if (player->flickerState.isFlickering) {
         //printf("chocoshooter is invincible and cannot take damage right now.\n");
@@ -103,6 +115,8 @@ struct ChocoShooter init_player(CP_Vector pos, float speed, int maxHealth, int a
     return player;
 }
 
+// Originally written by Law Zong Han and Dalton Koh
+// Rewritten by Muhammad Nur Fadzly to fix issues and refining.
 void move_player(struct ChocoShooter* player, float dt, float level_width, float level_height, const struct Rectangle* clip_entities, const int clip_count) {
     if (_walkSoundTimer < WALK_SOUND_INTERVAL)
         _walkSoundTimer += dt;

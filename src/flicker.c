@@ -9,11 +9,9 @@
 #include "boss.h"
 #include "flicker.h"
 
-// Constants for flickering effect
 static const float flickerInterval = 0.1f;
 static const float flickerDuration = 1.5f;
 
-// Define flicker states for player and boss
 struct FlickerState playerFlickerState = { false, 0.0f, 0.0f, true };
 struct FlickerState bossFlickerState = { false, 0.0f, 0.0f, true };
 

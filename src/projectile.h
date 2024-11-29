@@ -1,12 +1,16 @@
 /******************************************************************************
-*@filename		projectile.h
-*@author(s)		Law Zong Han
-*@DP emails		zonghan.law@digipen.edu
-*@course		Software Engineering Project 1
-*@teamname		Choco Latte
-*@gamename		Choco Survivor
-*@brief:
-This file is a header file for 
+* @filename		projectile.h
+* @author(s)	Law Zong Han, Muhammad Nur Fadzly
+* @DP emails	zonghan.law@digipen.edu, muhammadnurfadzly.b@digipen.edu
+* @course		Software Engineering Project 1
+* @teamname		Choco Latte
+* @gamename		Choco Survivor
+* @brief:       This header file declares the necessary functions for handling
+                projectiles. Creating, updating projectile position, rendering
+                and removing it once its lifetime is up.
+
+                Basis written by Law Zong Han but restructured/rewritten by
+                Muhammad Nur Fadzly.
 ******************************************************************************/
 
 #pragma once

@@ -1,3 +1,17 @@
+/******************************************************************************
+* @filename		button.c
+* @author(s)	Muhammad Nur Fadzly Bin Zulkifli,
+* @DP emails	muhammadnurfadzly.b@digipen.edu
+* @course		Software Engineering Project 1
+* @teamname		Choco Latte
+* @gamename		Choco Survivor
+* @brief:       This file provides function definitions to handle logic for
+                button rendering, and updating its button states.
+
+                The 9-Slicing or Nine-Patch Rect function is outdated. Check
+                progressbar for updated version.
+******************************************************************************/
+
 #include "button.h"
 #include "hittest.h"
 #include "audio.h"

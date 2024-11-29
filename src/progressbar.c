@@ -1,3 +1,17 @@
+/******************************************************************************
+* @filename		progressbar.c
+* @author(s)	Muhammad Nur Fadzly Bin Zulkifli,
+* @DP emails	muhammadnurfadzly.b@digipen.edu
+* @course		Software Engineering Project 1
+* @teamname		Choco Latte
+* @gamename		Choco Survivor
+* @brief:       This file has definitions for updating progressbar value, and
+                the rendering logic through 9-Slicing or Nine-Patch Rect.
+
+                The 9-Slicing or Nine-Patch Rect function is the most updated
+                version of them all.
+******************************************************************************/
+
 #include "hittest.h"
 #include "cprocessing.h"
 #include "progressbar.h"
@@ -180,8 +194,4 @@ void render_progressbar(struct ProgressBar progressBar) {
         }
     }
 #pragma endregion
-}
-
-void dispose_progressbar(struct ProgressBar* progressBar) {
-    CP_Image_Free(&tilemap);
 }

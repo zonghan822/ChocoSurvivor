@@ -1,7 +1,8 @@
 /******************************************************************************
 * @filename		level.h
-* @author(s)	Muhammad Nur Fadzly Bin Zulkifli, Law Zong Han
+* @author(s)	Muhammad Nur Fadzly Bin Zulkifli, Law Zong Han, Dalton Koh
 * @DP emails	muhammadnurfadzly.b@digipen.edu, zonghan.law@digipen.edu
+                d.koh@digipen.edu
 * @course		Software Engineering Project 1
 * @teamname		Choco Latte
 * @gamename		Choco Survivor

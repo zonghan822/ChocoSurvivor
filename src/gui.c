@@ -1,3 +1,14 @@
+/******************************************************************************
+* @filename		gui.c
+* @author(s)	Muhammad Nur Fadzly Bin Zulkifli,
+* @DP emails	muhammadnurfadzly.b@digipen.edu
+* @course		Software Engineering Project 1
+* @teamname		Choco Latte
+* @gamename		Choco Survivor
+* @brief:       Fairly simple file to just init tilemaps and dispose tilemaps
+				for use in level files.
+******************************************************************************/
+
 #include "gui.h"
 #include "cprocessing.h"
 

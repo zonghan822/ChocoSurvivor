@@ -1,3 +1,15 @@
+/******************************************************************************
+* @filename		tower.h
+* @author(s)	Muhammad Nur Fadzly Bin Zulkifli
+* @DP emails	muhammadnurfadzly.b@digipen.edu
+* @course		Software Engineering Project 1
+* @teamname		Choco Latte
+* @gamename		Choco Survivor
+* @brief:       This file declares the functions for rendering of tower,
+				returning its hitbox and its logic for taking damage from
+				various sources.
+******************************************************************************/
+
 #pragma once
 #include "cprocessing.h"
 #include "utils.h"

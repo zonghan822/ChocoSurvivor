@@ -1,3 +1,15 @@
+/******************************************************************************
+* @filename		button.h
+* @author(s)	Muhammad Nur Fadzly Bin Zulkifli,
+* @DP emails	muhammadnurfadzly.b@digipen.edu
+* @course		Software Engineering Project 1
+* @teamname		Choco Latte
+* @gamename		Choco Survivor
+* @brief:       This interface declares functions and enums for an interactive
+				button. Enums for the state of buttons and its type are also
+				defined.
+******************************************************************************/
+
 #pragma once
 
 #include "hittest.h"

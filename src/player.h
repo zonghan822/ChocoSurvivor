@@ -1,3 +1,16 @@
+/******************************************************************************
+* @filename		player.h
+* @author(s)	Muhammad Nur Fadzly Bin Zulkifli
+* @DP emails	muhammadnurfadzly.b@digipen.edu
+* @course		Software Engineering Project 1
+* @teamname		Choco Latte
+* @gamename		Choco Survivor
+* @brief:       This file declares the functions necessary for player movement,
+                instantiating its initial values, attributes such as health,
+                speed, exp and so on. Also handles taking damage from sources,
+                and rendering.
+******************************************************************************/
+
 #pragma once
 #include <stdbool.h>
 #include "cprocessing.h"

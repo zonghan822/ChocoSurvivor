@@ -1,3 +1,14 @@
+/******************************************************************************
+* @filename		tower.c
+* @author(s)	Muhammad Nur Fadzly Bin Zulkifli
+* @DP emails	muhammadnurfadzly.b@digipen.edu
+* @course		Software Engineering Project 1
+* @teamname		Choco Latte
+* @gamename		Choco Survivor
+* @brief:       This file handles rendering of tower, its hitbox and taking
+				damage. It is a fairly simple file.
+******************************************************************************/
+
 #include "tower.h"
 #include "player.h"
 #include "cprocessing.h"

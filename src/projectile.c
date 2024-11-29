@@ -1,12 +1,17 @@
 /******************************************************************************
-*@filename		projectile.c
-*@author(s)		Law Zong Han
-*@DP emails		zonghan.law@digipen.edu
-*@course		Software Engineering Project 1
-*@teamname		Choco Latte
-*@gamename		Choco Survivor
-*@brief:
-This file is a file for .
+* @filename		projectile.c
+* @author(s)	Law Zong Han, Muhammad Nur Fadzly
+* @DP emails	zonghan.law@digipen.edu, muhammadnurfadzly.b@digipen.edu
+* @course		Software Engineering Project 1
+* @teamname		Choco Latte
+* @gamename		Choco Survivor
+* @brief:       This file is for creating projectiles by player or an ally.
+                Could also be used for enemies but feature is scrapped.
+                Functions handle creating, rendering, updating and removing
+                projectiles when necessary.
+
+                Basis written by Law Zong Han but restructured/rewritten by
+                Muhammad Nur Fadzly.
 ******************************************************************************/
 
 #include "projectile.h"
@@ -27,7 +32,6 @@ static float _playerLastShotTime = 0.f;
 ProjectilePool allyProjectiles[MAX_ALLIES];
 static float _allyProjectileSpeed = 750.f, _allyProjectileDiameter = 11.f;
 static float _allyLastShotTime[MAX_ALLIES] = { 0 };
-
 
 static bool _add_projectile(ProjectilePool* pool, struct Projectile projectile) {
     if (pool->activeCount < MAX_PLAYER_PROJECTILES) {
@@ -63,7 +67,7 @@ void player_shoot(float dt, bool can_shoot, float mouse_x, float mouse_y) {
 
             // Shoot projectile logic
             {
-                // Disabled for gameplay adjustment
+                // ****** Disabled for gameplay adjustment ****** //
                 // x is the min or max x of player (extreme left or right of player)
                 // float playerWidth = fabsf(playerInstance.width);//playerInstance.width < 0 ? -playerInstance.width : playerInstance.width;
                 //projectile.pos.x = (projectile.shootDirection.x < 0)
@@ -80,6 +84,7 @@ void player_shoot(float dt, bool can_shoot, float mouse_x, float mouse_y) {
     }
 }
 
+// Made by Dalton Koh
 void ally_shoot(float dt, struct ChocoRoach* enemies, int enemyCount) {
     for (int i = 0; i < allyCount; i++) {
         if (allies[i].state < ALLY_IDLE)

@@ -1,3 +1,17 @@
+/******************************************************************************
+* @filename		panel.c
+* @author(s)	Muhammad Nur Fadzly Bin Zulkifli,
+* @DP emails	muhammadnurfadzly.b@digipen.edu
+* @course		Software Engineering Project 1
+* @teamname		Choco Latte
+* @gamename		Choco Survivor
+* @brief:       This file has definitions for rendering panels through 9-Slicing
+                or Nine-Patch Rect.
+
+                The 9-Slicing or Nine-Patch Rect function is outdated. Check
+                progressbar for updated version.
+******************************************************************************/
+
 #include "cprocessing.h"
 #include "hittest.h"
 #include "panel.h"

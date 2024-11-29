@@ -1,3 +1,20 @@
+/******************************************************************************
+* @filename		level1.c
+* @author(s)	Muhammad Nur Fadzly Bin Zulkifli, Law Zong Han, Dalton Koh
+* @DP emails	muhammadnurfadzly.b@digipen.edu, zonghan.law@digipen.edu,
+                d.koh@digipen.edu
+* @course		Software Engineering Project 1
+* @teamname		Choco Latte
+* @gamename		Choco Survivor
+* @brief:       This file was originally written to be hardcoded, everything
+                written was meant for level1 but later had issues with level2
+                due to copy-paste. Most functions were moved to level.c for
+                reusability in level2.c.
+
+                Level1.c has level-specific functions such as the tutorial
+                functions.
+******************************************************************************/
+
 #include <stdio.h>
 #include <time.h>
 #include <stdlib.h>
@@ -8,7 +25,6 @@
 #include "mainmenu.h"
 #include "level.h"
 #include "level1.h"
-#include "level2.h"
 #include "camera.h"
 #include "hittest.h"
 #include "utils.h"
