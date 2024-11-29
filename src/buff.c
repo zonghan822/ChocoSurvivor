@@ -403,6 +403,8 @@ int get_buff_level(enum BuffType buff) {
             return activeBuffs.buffs[i].level;
         }
     }
+
+    return 0;
 }
 
 void dispose_buff(void) {

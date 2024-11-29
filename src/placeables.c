@@ -139,14 +139,16 @@ void increment_ally_count(void) {
 #pragma warning( push )
 #pragma warning( disable : 6386)
 void init_ally(int index, CP_Vector pos, float width, float height) {
-
+    if (index >= MAX_ALLIES) return;
     int allyLevel = get_buff_level(ALLY_LVL_UP);
-    if (index < MAX_ALLIES)
-        allies[index].pos = pos;
-        allies[index].width = width;
-        allies[index].height = height;
-        allies[index].attackSpeed = 5.35f + ((float)allyLevel * ALLY_ATTACK_SPEED_INCREMENT);
-        allies[index].attackPower = 5 + (allyLevel * ALLY_ATTACK_POWER_INCREMENT);
+    allies[index].pos = pos;
+    allies[index].width = width;
+    allies[index].height = height;
+    allies[index].attackSpeed = 5.35f + ((float)allyLevel * ALLY_ATTACK_SPEED_INCREMENT);
+    allies[index].attackPower = 5 + (allyLevel * ALLY_ATTACK_POWER_INCREMENT);
+
+    printf("Ally %d instantiated with attributes:\n\tLevel: %d, Speed: %f, Damage: %d\n",
+        index, allyLevel, allies[index].attackSpeed, allies[index].attackPower);
 }
 #pragma warning( pop )
 
