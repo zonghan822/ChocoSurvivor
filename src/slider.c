@@ -51,7 +51,8 @@ void update_slider(struct Slider* slider, float value) {
 }
 
 void update_slider_by_mouse(struct Slider* slider, float mouse_x, float mouse_y) {
-    if (is_mouse_on_circle(slider->thumb, mouse_x, mouse_y) && CP_Input_MouseTriggered(MOUSE_BUTTON_LEFT))
+    if ((is_mouse_on_rect(slider->track, mouse_x, mouse_y) || is_mouse_on_circle(slider->thumb, mouse_x, mouse_y))
+        && CP_Input_MouseTriggered(MOUSE_BUTTON_LEFT))
         slider->state = SLIDER_STATE_HELD;
 
     if (slider->state == SLIDER_STATE_HELD)
@@ -61,8 +62,8 @@ void update_slider_by_mouse(struct Slider* slider, float mouse_x, float mouse_y)
         slider->thumb.pos.x = CP_Math_ClampFloat(mouse_x, xLeft, xRight);
 
         // Get normalized value
-        float v = fabsf((xLeft - slider->thumb.pos.x) / slider->track.width);
-        slider->value = CP_Math_ClampFloat(v, 0, 1.f);
+        float normalizedValue = fabsf((xLeft - slider->thumb.pos.x) / slider->track.width);
+        slider->value = CP_Math_ClampFloat(normalizedValue, 0, 1.f);
     }
 
     if (CP_Input_MouseReleased(MOUSE_BUTTON_LEFT))
