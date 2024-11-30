@@ -1,3 +1,13 @@
+/******************************************************************************
+* @filename		placeables.c
+* @author(s)	Dalton koh
+* @DP emails	d.koh@digipen.edu
+* @course		Software Engineering Project 1
+* @teamname		Choco Latte
+* @gamename		Choco Survivor
+* @brief:       This file defines the functions necessary for the creation of barriers and allies
+******************************************************************************/
+
 #include "placeables.h"
 #include <stdio.h>
 #include <float.h>

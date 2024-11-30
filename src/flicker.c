@@ -1,6 +1,17 @@
+/******************************************************************************
+* @filename		flicker.c
+* @author(s)	Dalton koh  
+* @DP emails	d.koh@digipen.edu
+* @course		Software Engineering Project 1
+* @teamname		Choco Latte
+* @gamename		Choco Survivor
+* @brief:       This file defines the functions necessary for damage invulnerability 
+                flickering effect, the coding below covers functions required to showcase
+                the flickering effect for both boss and chocoshooter.
+******************************************************************************/
+
 #include <stdio.h>
 #include <stdbool.h>
-
 #include "cprocessing.h"
 #include "utils.h"
 #include "mainmenu.h"

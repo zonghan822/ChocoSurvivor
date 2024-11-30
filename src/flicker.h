@@ -1,3 +1,14 @@
+/******************************************************************************
+* @filename		flicker.h
+* @author(s)	Dalton koh
+* @DP emails	d.koh@digipen.edu
+* @course		Software Engineering Project 1
+* @teamname		Choco Latte
+* @gamename		Choco Survivor
+* @brief:       This file calls the functions necessary for damage invulnerability
+                flickering effect.
+******************************************************************************/
+
 #pragma once
 #include "cprocessing.h"
 #include "utils.h"
