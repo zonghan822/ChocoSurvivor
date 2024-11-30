@@ -95,17 +95,17 @@ void render_credits_menu(float mouse_x, float mouse_y, float window_width, float
 		CP_Settings_Fill(CP_Color_Create(255, 255, 255, 255));
 		CP_Settings_TextSize(40.0f);
 		CP_Font_DrawText("LAW ZONG HAN", (_creditsPanel.pos.x - _creditsPanel.width / 4.f), (_creditsPanel.pos.y - _creditsPanel.height / 4.f) + lineGap);
-		CP_Font_DrawText("DALTON KOH", (_creditsPanel.pos.x - _creditsPanel.width / 4.f), (_creditsPanel.pos.y - _creditsPanel.height / 4.f + (2 * lineGap)));
+		CP_Font_DrawText("DALTON KOH", (_creditsPanel.pos.x - _creditsPanel.width / 4.f), (_creditsPanel.pos.y - _creditsPanel.height / 4.f + (2.f * lineGap)));
 		CP_Settings_TextSize(30.0f);
 		CP_Font_DrawText("MUHAMMAD NUR FADZLY", (_creditsPanel.pos.x - _creditsPanel.width / 4.f), (_creditsPanel.pos.y - _creditsPanel.height / 4.f + (3 * lineGap)));
-		CP_Font_DrawText("BIN ZULKIFLI", (_creditsPanel.pos.x - _creditsPanel.width / 4.f), (_creditsPanel.pos.y - _creditsPanel.height / 4.f + (3 * lineGap) + 30.f));
+		CP_Font_DrawText("BIN ZULKIFLI", (_creditsPanel.pos.x - _creditsPanel.width / 4.f), (_creditsPanel.pos.y - _creditsPanel.height / 4.f + (3.f * lineGap) + 30.f));
 
 		CP_Settings_TextSize(40.0f);
 		CP_Font_DrawText("CHENG DING XIANG", (_creditsPanel.pos.x + _creditsPanel.width / 4.f), (_creditsPanel.pos.y - _creditsPanel.height / 4.f) + lineGap);
-		CP_Font_DrawText("GERALD WONG", (_creditsPanel.pos.x + _creditsPanel.width / 4.f), (_creditsPanel.pos.y - _creditsPanel.height / 4.f + (2 * lineGap)));
+		CP_Font_DrawText("GERALD WONG", (_creditsPanel.pos.x + _creditsPanel.width / 4.f), (_creditsPanel.pos.y - _creditsPanel.height / 4.f + (2.f * lineGap)));
 		CP_Settings_TextSize(30.0f);
-		CP_Font_DrawText("SOROOR MALEKMOHMMADI", (_creditsPanel.pos.x + _creditsPanel.width / 4.f), (_creditsPanel.pos.y - _creditsPanel.height / 4.f + (3 * lineGap)));
-		CP_Font_DrawText("FARADOUNBEH", (_creditsPanel.pos.x + _creditsPanel.width / 4.f), (_creditsPanel.pos.y - _creditsPanel.height / 4.f + (3 * lineGap) + 30.f));
+		CP_Font_DrawText("SOROOR MALEKMOHMMADI", (_creditsPanel.pos.x + _creditsPanel.width / 4.f), (_creditsPanel.pos.y - _creditsPanel.height / 4.f + (3.f * lineGap)));
+		CP_Font_DrawText("FARADOUNBEH", (_creditsPanel.pos.x + _creditsPanel.width / 4.f), (_creditsPanel.pos.y - _creditsPanel.height / 4.f + (3.f * lineGap) + 30.f));
 
 		CP_Settings_TextSize(40.0f);
 		CP_Font_DrawText("ANJANA RAJENDRAN", _creditsPanel.pos.x, _creditsPanel.pos.y + 80.f + lineGap);
@@ -116,36 +116,39 @@ void render_credits_menu(float mouse_x, float mouse_y, float window_width, float
 		CP_Settings_TextSize(45.0f);
 		CP_Settings_Fill(CP_Color_Create(128, 0, 0, 255));
 		CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_CENTER, CP_TEXT_ALIGN_V_MIDDLE);
-		CP_Font_DrawText("CREATED AT", _creditsPanel.pos.x, (_creditsPanel.pos.y - _creditsPanel.height / 2) + 80.f);
+		CP_Font_DrawText("CREATED AT", _creditsPanel.pos.x, (_creditsPanel.pos.y - _creditsPanel.height / 2.f) + 80.f);
 		CP_Font_DrawText("PRESIDENT", _creditsPanel.pos.x, _creditsPanel.pos.y - 140.f);
 		CP_Font_DrawText("EXECUTIVES", _creditsPanel.pos.x, _creditsPanel.pos.y);
 
 		float lineGap = 50.f;
 		CP_Settings_Fill(CP_Color_Create(255, 255, 255, 255));
 		CP_Settings_TextSize(40.0f);
-		CP_Font_DrawText("DigiPen Institute of Technology Singapore", _creditsPanel.pos.x, (_creditsPanel.pos.y - _creditsPanel.height / 2) + 80.f + lineGap);
+		CP_Font_DrawText("DigiPen Institute of Technology Singapore", _creditsPanel.pos.x, (_creditsPanel.pos.y - _creditsPanel.height / 2.f) + 80.f + lineGap);
 		CP_Font_DrawText("CLAUDE COMAIR", _creditsPanel.pos.x, _creditsPanel.pos.y - 150.f + lineGap);
 
 		lineGap = 40.f;
 		CP_Settings_TextSize(35.0f);
 		CP_Font_DrawText("JASON CHU   MICHELE COMAIR   CHRISTOPHER COMAIR", _creditsPanel.pos.x, _creditsPanel.pos.y + lineGap);
-		CP_Font_DrawText("ALEXANDER COMAIR   MICHAEL GATS   TAN CHEK MING", _creditsPanel.pos.x, _creditsPanel.pos.y + (2 * lineGap));
-		CP_Font_DrawText("PRASANNA GHALI   MANDY WONG   JOHNNY DEEK", _creditsPanel.pos.x, _creditsPanel.pos.y + (3 * lineGap));
+		CP_Font_DrawText("ALEXANDER COMAIR   MICHAEL GATS   TAN CHEK MING", _creditsPanel.pos.x, _creditsPanel.pos.y + (2.f * lineGap));
+		CP_Font_DrawText("PRASANNA GHALI   MANDY WONG   JOHNNY DEEK", _creditsPanel.pos.x, _creditsPanel.pos.y + (3.f * lineGap));
 		break;
 	}
 	case CREDITS_PAGE_THREE: {
 		CP_Settings_TextSize(45.0f);
 		CP_Settings_Fill(CP_Color_Create(128, 0, 0, 255));
 		CP_Settings_TextAlignment(CP_TEXT_ALIGN_H_CENTER, CP_TEXT_ALIGN_V_MIDDLE);
-		CP_Font_DrawText("ASSETS USED", _creditsPanel.pos.x, (_creditsPanel.pos.y - _creditsPanel.height / 3));
+		CP_Font_DrawText("ASSETS USED", _creditsPanel.pos.x, (_creditsPanel.pos.y - _creditsPanel.height / 3.f));
 
 		float lineGap = 50.f;
 		CP_Settings_Fill(CP_Color_Create(255, 255, 255, 255));
 		CP_Settings_TextSize(40.0f);
-		CP_Font_DrawText("Music Jingles BY Kenney.nl", _creditsPanel.pos.x, (_creditsPanel.pos.y - _creditsPanel.height / 3) + lineGap);
-		CP_Font_DrawText("Interface Sounds BY Kenney.nl", _creditsPanel.pos.x, (_creditsPanel.pos.y - _creditsPanel.height / 3) + (2 * lineGap));
-		CP_Font_DrawText("UI Pack - Pixel Adventure BY Kenney.nl", _creditsPanel.pos.x, (_creditsPanel.pos.y - _creditsPanel.height / 3) + (3 * lineGap));
-		CP_Font_DrawText("Not Jam Music Pack BY Not Jam", _creditsPanel.pos.x, (_creditsPanel.pos.y - _creditsPanel.height / 3) + (4 * lineGap));
+		CP_Font_DrawText("Music Jingles BY Kenney.nl", _creditsPanel.pos.x, (_creditsPanel.pos.y - _creditsPanel.height / 3.f) + lineGap);
+		CP_Font_DrawText("Interface Sounds BY Kenney.nl", _creditsPanel.pos.x, (_creditsPanel.pos.y - _creditsPanel.height / 3.f) + (2.f * lineGap));
+		CP_Font_DrawText("UI Pack - Pixel Adventure BY Kenney.nl", _creditsPanel.pos.x, (_creditsPanel.pos.y - _creditsPanel.height / 3.f) + (3.f * lineGap));
+		CP_Font_DrawText("Not Jam Music Pack BY Not Jam", _creditsPanel.pos.x, (_creditsPanel.pos.y - _creditsPanel.height / 3.f) + (4.f * lineGap));
+
+		CP_Settings_TextSize(30.0f);
+		CP_Font_DrawText("Made using FMOD Studio by Firelight Technologies Pty Ltd.", _creditsPanel.pos.x, (_creditsPanel.pos.y + _creditsPanel.height / 3.f) - 120.f);
 	}
 	}
 	
