@@ -1,13 +1,13 @@
 /******************************************************************************
 *@filename		enemy.c
-*@author(s)		Law Zong Han
-*@DP emails		zonghan.law@digipen.edu
+*@author(s)		Law Zong Han, Dalton Koh
+*@DP emails		zonghan.law@digipen.edu, d.koh@digipen.edu
 *@course		Software Engineering Project 1
 *@teamname		Choco Latte
 *@gamename		Choco Survivor
 *@brief:
-This file is a header file for astar pathfinding algorithm for enemy and boss
-movement.
+This file contains functions to handle enemy character 'ChocoRoach' in the game,
+including initialising, movement, attack, damage, sorting and rendering. 
 ******************************************************************************/
 
 #include <math.h>
@@ -23,9 +23,11 @@ movement.
 struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth, float speed, int maxHealth, int dmg, float frameTime) {
     struct ChocoRoach chocoRoach = {0};
 
-    // Assign animation frames with better error handling
-
     // Set up enemy properties
+
+    /********************************
+          Written by Dalton Koh
+    *********************************/
     chocoRoach.roachFrames[0] = CP_Image_Load("Assets/Sprites/Chocoroach/1.png");
     chocoRoach.roachFrames[1] = CP_Image_Load("Assets/Sprites/Chocoroach/2.png");
     chocoRoach.roachFrames[2] = CP_Image_Load("Assets/Sprites/Chocoroach/3.png");
@@ -58,10 +60,19 @@ struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth,
     chocoRoach.width = maxWidth;  // Assign the widest frame's width
     chocoRoach.height = maxHeight; // Assign the tallest frame's height
 
-    // Set the height of the ChocoRoach based on the tallest frame
-    chocoRoach.height = maxHeight;
+    // Initialize animation properties
+    chocoRoach.currentFrame = 0;
+    chocoRoach.frameTime = frameTime; // Use the provided frame time
+    chocoRoach.timeAccumulator = 0.0f;
+
+
+    /********************************
+         Written by Law Zong Han
+    *********************************/
+    // enemy spawn in random location from left side of the map
     chocoRoach.pos.x = CP_Random_RangeFloat(-chocoRoach.width - spawnWidth, -chocoRoach.width);
     chocoRoach.pos.y = CP_Random_RangeFloat(spawnMinY, spawnMaxY);
+
     chocoRoach.speed = speed;
     chocoRoach.health = maxHealth;
     chocoRoach.maxHealth = maxHealth;
@@ -82,35 +93,44 @@ struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth,
     chocoRoach.path.pathNodeCount = 0;
     chocoRoach.path.hasUpdated = false;
 
-    // Initialize animation properties
-    chocoRoach.currentFrame = 0;
-    chocoRoach.frameTime = frameTime; // Use the provided frame time
-    chocoRoach.timeAccumulator = 0.0f;
-
     return chocoRoach;
 }
 
+/*****************************
+     Made by Law Zong Han
+******************************/
+// to handle enemy movement with astar pathfinding
 void enemy_move_to_target(struct ChocoRoach* roach, struct Rectangle hitbox, float dt, PathNode* grid, PathNode* gridNoBarrier, int nodeCount) {
     // update astar path
     if (!roach->path.hasUpdated) {
         int startNodeIndex = get_nearest_node_index(grid, nodeCount, roach->pos);
         int endNodeIndex = get_nearest_node_index(grid, nodeCount, hitbox.pos);
+
+        // if next node is destination, move to destination
         if (startNodeIndex == endNodeIndex) {
             roach->path.paths[0] = endNodeIndex;
             roach->path.pathNodeCount = 1;
         }
         else {
             roach->path.pathNodeCount = find_astar_path(grid, nodeCount, startNodeIndex, endNodeIndex, roach->path.paths);
+
+            // if no path (path is blocked by barriers), ignore barriers
+            // enemy will attack barrier when collide, defined in enemy movement logic in level.c
             if (roach->path.pathNodeCount == 0) {
                 int startNodeIndexNB = get_nearest_node_index(gridNoBarrier, nodeCount, roach->pos);
                 int endNodeIndexNB = get_nearest_node_index(gridNoBarrier, nodeCount, hitbox.pos);
                 roach->path.pathNodeCount = find_astar_path(gridNoBarrier, nodeCount, startNodeIndexNB, endNodeIndexNB, roach->path.paths);
             }
         }
+        // end update
         roach->path.hasUpdated = true;
     }
 
     if (roach->path.pathNodeCount) {
+        
+        // remove the path node from the path when reached
+        // use distance to check to avoid missing intersection when moving too fast.
+        // can increase the distance threshold to increase smoothness but loss in movement accuracy
         if ((CP_Vector_Distance(grid[roach->path.paths[0]].pos, roach->pos) < 2.5f) || roach->previousNode == roach->path.paths[0]) {
             roach->previousNode = roach->path.paths[0];
             pop_int_array(roach->path.paths, &(roach->path.pathNodeCount), roach->path.paths[0]);
@@ -118,8 +138,10 @@ void enemy_move_to_target(struct ChocoRoach* roach, struct Rectangle hitbox, flo
     }
 
     if (roach->path.pathNodeCount)
+        // move to node
         roach->moveDirection = CP_Vector_Normalize((CP_Vector_Subtract(grid[roach->path.paths[0]].pos, roach->pos)));
     else 
+        // move to the target when no more path
         roach->moveDirection = CP_Vector_Normalize((CP_Vector_Subtract(hitbox.pos, roach->pos)));
     
     roach->width = (roach->moveDirection.x < 0.f && roach->width > 0.f) || (roach->moveDirection.x > 0.f && roach->width < 0.f) ? -roach->width: roach->width;
@@ -127,30 +149,7 @@ void enemy_move_to_target(struct ChocoRoach* roach, struct Rectangle hitbox, flo
     roach->pos.y += roach->moveDirection.y * roach->speed * dt;
 }
 
-void render_enemies(struct ChocoRoach* roaches, int size, float deltaTime) {
-    for (int i = 0; i < size; i++) {
-        if (roaches[i].currentState != ENEMY_STATE_DIED) {
-            // Update animation frame
-            roaches[i].timeAccumulator += deltaTime;
-            if (roaches[i].timeAccumulator >= roaches[i].frameTime) {
-                roaches[i].timeAccumulator -= roaches[i].frameTime;
-                roaches[i].currentFrame = (roaches[i].currentFrame + 1) % ROACH_FRAMES; // Cycle through frames
-            }
-
-            // Check for valid frame and dimensions
-            if (!roaches[i].roachFrames[roaches[i].currentFrame]) {
-                printf("Error: Enemy %d frame %d is NULL. Skipping draw.\n", i, roaches[i].currentFrame);
-                continue;
-            }
-
-            // Draw current frame
-            CP_Image_Draw(roaches[i].roachFrames[roaches[i].currentFrame],
-                roaches[i].pos.x, roaches[i].pos.y,
-                roaches[i].width, roaches[i].height, 255);
-        }
-    }
-}
-
+// comparer function for qsort
 static int _comp(const void* a, const void* b)
 {
     struct ChocoRoach* roachA = (struct ChocoRoach*)a;
@@ -181,4 +180,32 @@ int enemy_take_damage(struct ChocoRoach* roach, int dmg) {
         return 1;
     }
     return 0;
+}
+
+
+/**************************************************
+   Rewritten by Dalton Koh for walking animation
+***************************************************/
+void render_enemies(struct ChocoRoach* roaches, int size, float deltaTime) {
+    for (int i = 0; i < size; i++) {
+        if (roaches[i].currentState != ENEMY_STATE_DIED) {
+            // Update animation frame
+            roaches[i].timeAccumulator += deltaTime;
+            if (roaches[i].timeAccumulator >= roaches[i].frameTime) {
+                roaches[i].timeAccumulator -= roaches[i].frameTime;
+                roaches[i].currentFrame = (roaches[i].currentFrame + 1) % ROACH_FRAMES; // Cycle through frames
+            }
+
+            // Check for valid frame and dimensions
+            if (!roaches[i].roachFrames[roaches[i].currentFrame]) {
+                printf("Error: Enemy %d frame %d is NULL. Skipping draw.\n", i, roaches[i].currentFrame);
+                continue;
+            }
+
+            // Draw current frame
+            CP_Image_Draw(roaches[i].roachFrames[roaches[i].currentFrame],
+                roaches[i].pos.x, roaches[i].pos.y,
+                roaches[i].width, roaches[i].height, 255);
+        }
+    }
 }

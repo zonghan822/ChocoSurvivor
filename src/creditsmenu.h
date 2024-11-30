@@ -6,8 +6,10 @@
 *@teamname		Choco Latte
 *@gamename		Choco Survivor
 *@brief:
-This file is a header file for astar pathfinding algorithm for enemy and boss
-movement.
+This header file declares functions to handle credits menu including checking
+for status and rendering of the credits menu. 
+Referred to the optionsmenu.c developed by Muhammad Nur Fadzly when creating 
+the functions in this file.
 ******************************************************************************/
 
 #pragma once

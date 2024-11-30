@@ -6,8 +6,10 @@
 *@teamname		Choco Latte
 *@gamename		Choco Survivor
 *@brief:
-This file is a header file for astar pathfinding algorithm for enemy and boss
-movement.
+This file includes function to render the credits menu and a boolean function to
+return the status of the menu. 
+Referred to the optionsmenu.c developed by Muhammad Nur Fadzly when creating this 
+file.
 ******************************************************************************/
 
 #include "cprocessing.h"
@@ -22,6 +24,7 @@ static struct Button _backToMenuButton;
 static struct Rectangle _creditsPanel = { .width = 950.f, .height = 700.f };
 static CP_Image _tutImageLmb;
 
+// state of current page
 static enum CreditsPage {
 	PAGE_NULL,
 	CREDITS_PAGE_ONE,

@@ -1,13 +1,16 @@
 /******************************************************************************
 *@filename		enemy.h
-*@author(s)		Law Zong Han
-*@DP emails		zonghan.law@digipen.edu
+*@author(s)		Law Zong Han, Dalton Koh
+*@DP emails		zonghan.law@digipen.edu, d.koh@digipen.edu
 *@course		Software Engineering Project 1
 *@teamname		Choco Latte
 *@gamename		Choco Survivor
 *@brief:
-This file is a header file for astar pathfinding algorithm for enemy and boss
-movement.
+This header file declares the enemy character 'ChocoRoach' in struct, enemy state,
+and functions to handle the 'ChocoRoach'. It contains function to initialise an
+enemy by providing the enemy properties parameters, implementing astar pathfinding
+for movement and managing the damage for the enemy. It also includes functions to 
+manage array of struct 'ChocoRoach' for rendering and sorting.
 ******************************************************************************/
 
 #pragma once
@@ -36,11 +39,11 @@ enum EnemyState {
 struct ChocoRoach {
     CP_Image roachFrames[ROACH_FRAMES];
     CP_Vector pos;
-    float width;
-    float height;
-    float speed;
-    int health;
-    int maxHealth;
+    float width; 
+    float height; 
+    float speed; 
+    int health; 
+    int maxHealth; 
     int dmg;
     float attackCooldown;
     CP_Vector moveDirection;
@@ -55,6 +58,7 @@ struct ChocoRoach {
     int previousNode;
     AStarPath path;
 };
+
 
 // Takes in single enemy
 struct ChocoRoach init_enemy(float spawnMinY, float spawnMaxY, float spawnWidth, float speed, int maxHealth, int dmg, float frameTime);

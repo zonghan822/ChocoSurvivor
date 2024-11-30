@@ -1,13 +1,15 @@
 /******************************************************************************
 *@filename		buff.c
-*@author(s)		Law Zong Han
-*@DP emails		zonghan.law@digipen.edu
+*@author(s)		Law Zong Han, Dalton Koh
+*@DP emails		zonghan.law@digipen.edu, d.koh@digipen.edu
 *@course		Software Engineering Project 1
 *@teamname		Choco Latte
 *@gamename		Choco Survivor
 *@brief:
-This file is a header file for astar pathfinding algorithm for enemy and boss
-movement.
+This file defines the function to handle the buff feature. It includes function
+to update the buff meter, applying buffs, update the buffs over time and rendering
+of the buff icon. The function for debugging the buffs are also provided in this
+file.
 ******************************************************************************/
 
 #include "cprocessing.h"
@@ -27,19 +29,10 @@ static CP_Image _atkUpImg, _atkSpdUpImg, _healthUpImg, _allyLvlUpImg, _barrierLv
 static CP_Image _healImg, _smartImg, _frozingImg, _fastImg, _reflectImg;
 BuffList activeBuffs;
 
-void init_buff_slot_img(void) {
-    _atkUpImg = CP_Image_Load("Assets/GUI/Icons/atkbuff.png");
-    _atkSpdUpImg = CP_Image_Load("Assets/GUI/Icons/atk_spd_up.png");
-    _healthUpImg = CP_Image_Load("Assets/GUI/Icons/hpup.png");
-    _allyLvlUpImg = CP_Image_Load("Assets/GUI/Icons/sentry_lvl_up.png");
-    _barrierLvlUpImg = CP_Image_Load("Assets/GUI/Icons/barricade_lvl_up.png");
-    _healImg = CP_Image_Load("Assets/GUI/Icons/heal.png");
-    _smartImg = CP_Image_Load("Assets/GUI/Icons/smartgun.png");
-    _frozingImg = CP_Image_Load("Assets/GUI/Icons/freezingshots.png");
-    _fastImg = CP_Image_Load("Assets/GUI/Icons/fastshots.png");
-    _reflectImg = CP_Image_Load("Assets/GUI/Icons/reflectdmg.png");
-}
 
+/****************************************
+   Made by Dalton Koh and Law Zong Han
+******************************************/
 // Sidenote: EXP would refer to buff meter
 int update_buff_meter(struct ChocoShooter* player, float dt) {
     // if no exp to update return and do nothing
@@ -47,11 +40,19 @@ int update_buff_meter(struct ChocoShooter* player, float dt) {
         return 0;
     }
 
+    /********************************
+         Written by Law Zong Han
+    *********************************/
+    // for slowly increasing exp
     float expGainedSpeed = 100.f;
     float expGained = expGainedSpeed * dt;
     player->exp += min(player->expGained, expGained);
     player->expGained = max(0, player->expGained - expGained);
 
+
+    /********************************
+          Written by Dalton Koh
+    *********************************/
     // Full or exceeded EXP
     if (player->exp >= (float)player->playerMaxExp) {
         player->playerLevel++;
@@ -59,7 +60,7 @@ int update_buff_meter(struct ChocoShooter* player, float dt) {
             play_sound_advanced(SOUND_MUSIC_LEVEL_UP, 1.f, 0);
             _hasPlayedLevelUpMusic = true;
         }
-        
+
         // Wrap around only if exceeding
         if (player->exp > (float)player->playerMaxExp) {
             // Wrap around
@@ -79,16 +80,21 @@ int update_buff_meter(struct ChocoShooter* player, float dt) {
 }
 
 void apply_buff(BuffList* activeBuffs, enum BuffType buff, struct ChocoShooter* player, struct Barrier* barriers, struct Ally* allies) {
-    if (buff == NO_BUFF) 
+    /********************************
+         Written by Law Zong Han
+    *********************************/
+    if (buff == NO_BUFF)
         return;
 
     bool isNotApplied = true;
 
     for (int i = 0; i < activeBuffs->buffCount; i++) {
         if (activeBuffs->buffs[i].type == buff) {
+            // for upgrades, level up
             if (buff >= ATTACK_UP && buff <= BARRIER_LVL_UP) {
                 activeBuffs->buffs[i].level++;
             }
+            // for timer buff, stack time
             else if (buff != HEAL) {
                 activeBuffs->buffs[i].timeLeft += BUFF_TIME;
             }
@@ -99,7 +105,9 @@ void apply_buff(BuffList* activeBuffs, enum BuffType buff, struct ChocoShooter* 
         }
     }
 
-    if (isNotApplied){
+    // if the buff not applied yet, init the buff and assign to buff array
+    if (isNotApplied) {
+        // Upgrades
         if (buff >= ATTACK_UP && buff <= BARRIER_LVL_UP) {
             Buff temp = {
                 .type = buff,
@@ -110,6 +118,7 @@ void apply_buff(BuffList* activeBuffs, enum BuffType buff, struct ChocoShooter* 
             };
             activeBuffs->buffs[activeBuffs->buffCount++] = temp;
         }
+        // Timer buff
         else if (buff != HEAL) {
             Buff temp = {
                 .type = buff,
@@ -120,6 +129,7 @@ void apply_buff(BuffList* activeBuffs, enum BuffType buff, struct ChocoShooter* 
             };
             activeBuffs->buffs[activeBuffs->buffCount++] = temp;
         }
+        // Healing
         else {
             Buff temp = {
                 .type = buff,
@@ -132,7 +142,9 @@ void apply_buff(BuffList* activeBuffs, enum BuffType buff, struct ChocoShooter* 
         }
     }
 
-
+    /********************************
+          Written by Dalton Koh
+    *********************************/
     switch (buff) {
     case ATTACK_UP:
         printf("Attack Up!\n");
@@ -160,7 +172,7 @@ void apply_buff(BuffList* activeBuffs, enum BuffType buff, struct ChocoShooter* 
             activeBuffs->buffs[activeBuffs->buffCount - 1].renderText = "Health Up";
         }
         break;
-    }   
+    }
     case ALLY_LVL_UP:
         printf("Sentry Level Up!\n");
         for (int i = 0; i < MAX_ALLIES; i++) {
@@ -186,12 +198,18 @@ void apply_buff(BuffList* activeBuffs, enum BuffType buff, struct ChocoShooter* 
         break;
     case HEAL:
         printf("Health Recover!\n");
-        player->health = min(player->health + player->maxHealth/2, player->maxHealth);
+        player->health = min(player->health + player->maxHealth / 2, player->maxHealth);
         if (isNotApplied) {
             activeBuffs->buffs[activeBuffs->buffCount - 1].img = _healImg;
             activeBuffs->buffs[activeBuffs->buffCount - 1].renderText = "Health Recover";
         }
         break;
+
+
+    /********************************
+         Written by Law Zong Han
+    *********************************/
+    // Added active buffs
     case SMART_PISTOL:
         printf("Smart Gun Activated!\n");
         player->currentProjectileType |= TRACKING_PROJECTILE;
@@ -222,43 +240,15 @@ void apply_buff(BuffList* activeBuffs, enum BuffType buff, struct ChocoShooter* 
         if (isNotApplied) {
             activeBuffs->buffs[activeBuffs->buffCount - 1].img = _reflectImg;
             activeBuffs->buffs[activeBuffs->buffCount - 1].renderText = "Reflect Damage";
-            activeBuffs->buffs[activeBuffs->buffCount - 1].renderTime /= 3.25f;
         }
         break;
     }
 }
 
-void update_timer_buff(BuffList* activeBuffs, float dt) {
-    for (int i = 0; i < activeBuffs->buffCount; i++) {
-        if (activeBuffs->buffs[i].isTimerBuff) {
-            activeBuffs->buffs[i].timeLeft -= dt;
-            if (activeBuffs->buffs[i].timeLeft <= 0) {
-                switch (activeBuffs->buffs[i].type) {
-                case SMART_PISTOL:
-                    playerInstance.currentProjectileType ^= TRACKING_PROJECTILE;
-                    break;
-                case FROZING_SHOTS:
-                    playerInstance.currentProjectileType ^= FREEZING_PROJECTILE;
-                    break;
-                case MULTI_SHOTS:
-                    playerInstance.currentProjectileType ^= FAST_PROJECTILE;
-                    break;
-                case REFLECT_DMG:
-                    playerInstance.isReflectingDmg = false;
-                    break;
-                }
-                for (int j = i; j < activeBuffs->buffCount; j++) {
-                    Buff temp = activeBuffs->buffs[j];
-                    activeBuffs->buffs[j] = activeBuffs->buffs[j + 1];
-                    activeBuffs->buffs[j + 1] = temp;
-                }
-                activeBuffs->buffCount--;
-                i--;
-            }
-        }
-    }
-}
 
+/*****************************
+      Made by Dalton Koh
+******************************/
 void assign_buff_to_slot(BuffSlot* buffSlot, BuffType buff) {
     for (int i = 0; i < MAX_BUFF_SLOT; i++) {
         if (!buffSlot->buffs[i]) {
@@ -302,7 +292,55 @@ void render_buff_slot(BuffSlot* buffSlot, float windowWidth, float windowHeight,
         case REFLECT_DMG:
             CP_Image_Draw(_reflectImg, slotX[i], slotY, slotW, slotH, 255);
             break;
-        }  
+        }
+    }
+}
+
+
+/*****************************
+     Made by Law Zong Han
+******************************/
+void init_buff_slot_img(void) {
+    _atkUpImg = CP_Image_Load("Assets/GUI/Icons/atkbuff.png");
+    _atkSpdUpImg = CP_Image_Load("Assets/GUI/Icons/atk_spd_up.png");
+    _healthUpImg = CP_Image_Load("Assets/GUI/Icons/hpup.png");
+    _allyLvlUpImg = CP_Image_Load("Assets/GUI/Icons/sentry_lvl_up.png");
+    _barrierLvlUpImg = CP_Image_Load("Assets/GUI/Icons/barricade_lvl_up.png");
+    _healImg = CP_Image_Load("Assets/GUI/Icons/heal.png");
+    _smartImg = CP_Image_Load("Assets/GUI/Icons/smartgun.png");
+    _frozingImg = CP_Image_Load("Assets/GUI/Icons/freezingshots.png");
+    _fastImg = CP_Image_Load("Assets/GUI/Icons/fastshots.png");
+    _reflectImg = CP_Image_Load("Assets/GUI/Icons/reflectdmg.png");
+}
+
+void update_timer_buff(BuffList* activeBuffs, float dt) {
+    for (int i = 0; i < activeBuffs->buffCount; i++) {
+        if (activeBuffs->buffs[i].isTimerBuff) {
+            activeBuffs->buffs[i].timeLeft -= dt;
+            if (activeBuffs->buffs[i].timeLeft <= 0) {
+                switch (activeBuffs->buffs[i].type) {
+                case SMART_PISTOL:
+                    playerInstance.currentProjectileType ^= TRACKING_PROJECTILE;
+                    break;
+                case FROZING_SHOTS:
+                    playerInstance.currentProjectileType ^= FREEZING_PROJECTILE;
+                    break;
+                case MULTI_SHOTS:
+                    playerInstance.currentProjectileType ^= FAST_PROJECTILE;
+                    break;
+                case REFLECT_DMG:
+                    playerInstance.isReflectingDmg = false;
+                    break;
+                }
+                for (int j = i; j < activeBuffs->buffCount; j++) {
+                    Buff temp = activeBuffs->buffs[j];
+                    activeBuffs->buffs[j] = activeBuffs->buffs[j + 1];
+                    activeBuffs->buffs[j + 1] = temp;
+                }
+                activeBuffs->buffCount--;
+                i--;
+            }
+        }
     }
 }
 
@@ -403,7 +441,6 @@ int get_buff_level(enum BuffType buff) {
             return activeBuffs.buffs[i].level;
         }
     }
-
     return 0;
 }
 

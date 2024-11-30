@@ -6,7 +6,10 @@
 *@teamname		Choco Latte
 *@gamename		Choco Survivor
 *@brief:
-* This file contains astar pathfinding algorithm for enemy and boss movement.
+This file contains astar pathfinding algorithm for enemy and boss movement.
+Functions to create and update grid are defined in this file to create nodes 
+for astar node movement. It also contains function to create a list, append list,
+and pop list, so that thay can be utilised in astar pahfinding algorithm.
 ******************************************************************************/
 
 #include "cprocessing.h"
@@ -17,7 +20,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
+// To initialise a grid with Path Node given the map size and node size
 void init_grid(Grid* grid, float levelWidth, float levelHeight, float nodeWidth, float nodeHeight) {
 	grid->nodeCountX = (int)(levelWidth / nodeWidth);
 	grid->nodeCountY = (int)(levelHeight / nodeHeight);
@@ -65,6 +68,8 @@ static bool is_valid_node(PathNode node, float nodeWidth, float nodeHeight, stru
 	return true;
 }
 
+// To update the connections of the nodes in the grid
+// When the node is obstructed, no connections
 void update_grid(Grid* grid, struct Rectangle* worldClips, int clipsSize, struct Rectangle* enemyClips, int enemyClipsSize) {
 	int size = clipsSize + enemyClipsSize;
 	struct Rectangle* tempArray = (struct Rectangle*)malloc((unsigned long)size * sizeof(struct Rectangle));
@@ -149,6 +154,7 @@ void draw_grid(PathNode* grid, int nodeCount) {
 	}
 }
 
+// To get the nearest node index in a grid based on the distance of the given position
 int get_nearest_node_index(PathNode* grid, int nodeCount, CP_Vector position) {
 	int closestNodeIndex = 0;
 	if (grid == NULL) return 0;
@@ -212,6 +218,8 @@ static void reverse_array(int* array, int arrayCount) {
 	}
 }
 
+// get the shortest path from the startNode to the endNode and store the path in pathArray
+// return the count of the path
 int find_astar_path(PathNode* grid, int nodeCount, int startNodeIndex, int endNodeIndex, int* pathArray) {
 
 	AStarNode startNode = { .nodeIndex = startNodeIndex, .fCost = 0.f, .gCost = 0.f, .hCost = 0.f, .parentNode = NULL };

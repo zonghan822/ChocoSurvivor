@@ -502,6 +502,11 @@ void spawn_enemies(float dt) {
     }
 }
 
+
+#pragma region Placeables Feature
+// ***************************** //
+// *        Placeables         * //
+// ***************************** //
 // Placing barriers
 void place_barrier(int index, float x, float y, int barrierLvl) {
     set_barrier_properties(index, CP_Vector_Set(x, y), BARRIER_WIDTH, BARRIER_HEIGHT, (barrierLvl + 1) * BARRIER_INITIAL_HEALTH);
@@ -534,7 +539,7 @@ void player_placeables(float mouse_x, float mouse_y, float dt) {
         _currentAllyState = 0;
     }
 
-    #pragma region Barriers
+#pragma region Barriers
     // Barriers
     // Update Barriers
     sort_barriers();
@@ -571,9 +576,9 @@ void player_placeables(float mouse_x, float mouse_y, float dt) {
         break;
     }
     }
-    #pragma endregion
+#pragma endregion
 
-    #pragma region Allies
+#pragma region Allies
     // Allies
     // Update allies
     ally_shoot(dt, _roaches, _roachesMax);
@@ -606,14 +611,16 @@ void player_placeables(float mouse_x, float mouse_y, float dt) {
         }
         break;
     }
-    #pragma endregion
-    
-}
+#pragma endregion
 
+}
+#pragma endregion
+
+
+#pragma region Rendering
 // **************************** //
 // *        Rendering         * //
 // **************************** //
-#pragma region Rendering
 void render_health_bars(float dt) {
     #pragma region Barrier
     for (int i = 0; i < get_barrier_count(); i++) {
@@ -1020,6 +1027,7 @@ void check_collision(void) {
 
 }
 
+// Enemies movement and attack logic
 void enemy_move_attack(float dt) {
     if (isPaused || isWin) return;
 
@@ -1173,6 +1181,7 @@ void enemy_move_attack(float dt) {
     #pragma endregion
 }
 
+// Buff Feature
 void buff_update(float dt) {
     if (isPaused || isWin) return;
     BuffType randomBuff = update_buff_meter(&playerInstance, dt);
@@ -1217,7 +1226,11 @@ void buff_update(float dt) {
     update_timer_buff(&activeBuffs, dt);
 }
 
+
 #pragma region DEBUG
+// **************************** //
+// *          Debug           * //
+// **************************** //
 void debug_render_enemy_grid(void) {
     draw_grid(_enemyGrid.nodes, _enemyGrid.nodeCount); // draw enemy grid for debugging
     // draw_grid(_enemyGridNB.nodes, _enemyGrid.nodeCount); // draw enemy grid for debugging

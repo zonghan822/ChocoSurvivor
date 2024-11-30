@@ -1,7 +1,7 @@
 /******************************************************************************
 * @filename		utils.c
-* @author(s)	Muhammad Nur Fadzly Bin Zulkifli
-* @DP emails	muhammadnurfadzly.b@digipen.edu
+* @author(s)	Muhammad Nur Fadzly Bin Zulkifli, Law Zong Han
+* @DP emails	muhammadnurfadzly.b@digipen.edu, zonghan.law@digipen.edu
 * @course		Software Engineering Project 1
 * @teamname		Choco Latte
 * @gamename		Choco Survivor
@@ -12,7 +12,9 @@
                 entity's health, and a custom cursor renderer that scales and
                 positions a given cursor image. Additionally, it includes a 
                 helper function to round a dimension up to the nearest multiple
-                of a divisor (mainly for Nine-Patch Rect or 9 Slicing).
+                of a divisor (mainly for Nine-Patch Rect or 9 Slicing). A 
+                function to remove an element from an int array is also included
+                in this file.
 ******************************************************************************/
 
 #include <stdlib.h>
@@ -23,6 +25,9 @@
 #include "camera.h"
 #include "hittest.h"
 
+/********************************
+   Made by Muhammad Nur Fadzly  
+*********************************/
 float get_preserved_widthf(float width, float height, float new_height) {
 	float aspectRatio = width / height;
 	return new_height / aspectRatio;
@@ -62,7 +67,24 @@ float resize_by_divisor(float dimension, int divisor) {
     return dimension;
 }
 
-// Made by Law Zong Han
+void render_cursor(CP_Image cursor) {
+    CP_Settings_ImageMode(CP_POSITION_CORNER);
+    float cursorWidth = 60.f;
+    float mouseX = CP_Input_GetMouseX(),
+        mouseY = CP_Input_GetMouseY();
+    // 20.f is to correct its draw position with the actual cursor position
+    float cursorImgWidth = ((float)CP_Image_GetWidth(cursor)),
+        cursorImgHeight = ((float)CP_Image_GetHeight(cursor));
+    CP_Image_Draw(cursor, mouseX - 20.f, mouseY, cursorWidth,
+        get_preserved_heightf(cursorImgWidth, cursorImgHeight, cursorWidth), 255);
+    CP_Settings_ImageMode(CP_POSITION_CENTER);
+}
+
+
+/*****************************
+     Made by Law Zong Han    
+******************************/
+
 void render_health_bar(struct Rectangle entity, int health, int maxHealth) {
     // Set position of health bar
     float healthBarW = entity.width;
@@ -84,29 +106,16 @@ void render_health_bar(struct Rectangle entity, int health, int maxHealth) {
     CP_Settings_RectMode(CP_POSITION_CENTER);
 }
 
-void pop_int_array(int* arr, int *size, int element) {
+void pop_int_array(int* arr, int* size, int element) {
     for (int i = 0; i < *size; i++) {
         if (arr[i] == element) {
-            for (int j = i; j < (*size)-1; j++) {
+            for (int j = i; j < (*size) - 1; j++) {
                 int tmp = arr[j];
-                arr[j] = arr[j+1];
+                arr[j] = arr[j + 1];
                 arr[j + 1] = tmp;
             }
             (*size)--;
             break;
         }
     }
-}
-
-void render_cursor(CP_Image cursor) {
-    CP_Settings_ImageMode(CP_POSITION_CORNER);
-    float cursorWidth = 60.f;
-    float mouseX = CP_Input_GetMouseX(),
-        mouseY = CP_Input_GetMouseY();
-    // 20.f is to correct its draw position with the actual cursor position
-    float cursorImgWidth = ((float)CP_Image_GetWidth(cursor)),
-        cursorImgHeight = ((float)CP_Image_GetHeight(cursor));
-    CP_Image_Draw(cursor, mouseX - 20.f, mouseY, cursorWidth,
-        get_preserved_heightf(cursorImgWidth, cursorImgHeight, cursorWidth), 255);
-    CP_Settings_ImageMode(CP_POSITION_CENTER);
 }
