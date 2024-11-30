@@ -1,3 +1,15 @@
+/******************************************************************************
+* @filename		placeables.h
+* @author(s)	Dalton koh
+* @DP emails	d.koh@digipen.edu
+* @course		Software Engineering Project 1
+* @teamname		Choco Latte
+* @gamename		Choco Survivor
+* @brief:       This file declares the functions necessary for the creation of barriers and allies 
+                . Which also entails the attributes of the two kind of placeables and its initial values.
+                The main features and rendering of the placeables are also detailed here.
+******************************************************************************/
+
 #pragma once
 #include "cprocessing.h"
 #include "utils.h"
