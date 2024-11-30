@@ -31,11 +31,15 @@
 /********************************
    Made by Muhammad Nur Fadzly  
 *********************************/
+// The `f` stands for float.
+// As `CP_Image_GetWidth()`, and `CP_Image_GetHeight()` and a few others
+// will return `int` type.
 float get_preserved_widthf(float width, float height, float new_height) {
 	float aspectRatio = width / height;
 	return new_height / aspectRatio;
 }
 
+// Same as above
 float get_preserved_heightf(float width, float height, float new_width) {
 	float aspectRatio = width / height;
 	return new_width / aspectRatio;
