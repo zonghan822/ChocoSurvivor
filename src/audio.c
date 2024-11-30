@@ -70,7 +70,8 @@ static CP_Sound _soundMusicGameOver,
 	_soundMusicNewMapLevel,
 	_soundMusicNormalWave,
 	_soundMusicBossWave,
-	_soundMusicMainMenu;
+	_soundMusicMainMenu,
+	_soundMusicVictory;
 #pragma endregion
 #pragma endregion
 
@@ -122,6 +123,8 @@ static CP_Sound _get_sound_object(enum SoundType sound_type) {
 			return _soundMusicBossWave;
 		case SOUND_MUSIC_MAIN_MENU:
 			return _soundMusicMainMenu;
+		case SOUND_MUSIC_VICTORY:
+			return _soundMusicVictory;
 		case SOUND_UI_BUTTON_HOVER:
 			return _soundUiButtonHover;
 		case SOUND_UI_BUTTON_BACK_CLICK:
@@ -167,6 +170,7 @@ static enum SoundGroup _get_sound_group(enum SoundType sound_type) {
 		case SOUND_MUSIC_NORMAL_WAVE:
 		case SOUND_MUSIC_BOSS_WAVE:
 		case SOUND_MUSIC_MAIN_MENU:
+		case SOUND_MUSIC_VICTORY:
 		    return SOUNDGROUP_MUSIC;
 
 		// UI Group
@@ -244,6 +248,7 @@ void init_sounds(void) {
 	_soundMusicNormalWave = CP_Sound_Load("Assets/Sounds/Music/SwitchWithMeTheme_Loopable.ogg");
 	_soundMusicBossWave = CP_Sound_Load("Assets/Sounds/Music/DragAndDreadTheme_Loopable.ogg");
 	_soundMusicMainMenu = CP_Sound_Load("Assets/Sounds/Music/MeltdownTheme_Loopable.ogg");
+	_soundMusicVictory = CP_Sound_Load("Assets/Sounds/Music/ChillMenu_Loopable.ogg");
 
 	// UI
 	_soundUiButtonHover = CP_Sound_Load("Assets/Sounds/bong_001.ogg");
@@ -326,6 +331,7 @@ void dispose_sounds(void) {
 	CP_Sound_Free(&_soundMusicNormalWave);
 	CP_Sound_Free(&_soundMusicBossWave);
 	CP_Sound_Free(&_soundMusicMainMenu);
+	CP_Sound_Free(&_soundMusicVictory);
 
 	// Barricade Sounds
 	// CP_Sound_Free(&_soundBarricadeHurt);

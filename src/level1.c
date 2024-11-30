@@ -369,7 +369,7 @@ void level_one_update(void) {
     render_ui(_windowWidth, _windowHeight, mouseX, mouseY, dt);
     try_pause(_windowWidth, _windowHeight);
     _render_mouse_tutorials();
-    _render_victory_page(_windowWidth, _windowHeight);
+    render_victory_page(_windowWidth, _windowHeight);
 
     render_cursor(_cursor);
     apply_camera();

@@ -118,9 +118,10 @@ static struct Button _resumeButton, _pauseBackToMenuButton, _optionsButton;
 
 #pragma region Sound Properties
 static bool _hasPlayedGameOverMusic,
-_hasPlayedNewWaveMusic;
+    _hasPlayedNewWaveMusic;
 static bool _hasPlayedNormalWaveMusic,
-_hasPlayedBossWaveMusic;
+    _hasPlayedBossWaveMusic;
+static bool _hasPlayedVictoryMusic;
 #pragma endregion
 
 bool isPaused, isWin;
@@ -165,10 +166,9 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
     // Reset values
     isPaused = isWin = false;
     _isMovingToNextLevel = false;
-    _hasPlayedGameOverMusic = false;
-    _hasPlayedNewWaveMusic = false;
     enableShooting = false;
-    _hasPlayedNormalWaveMusic = _hasPlayedBossWaveMusic = false;
+    _hasPlayedGameOverMusic = _hasPlayedNewWaveMusic = false;
+    _hasPlayedVictoryMusic = _hasPlayedNormalWaveMusic = _hasPlayedBossWaveMusic = false;
     _enemyAttackTarget = 0;
     _previewPosition = CP_Vector_Zero();
     _finalPosition = CP_Vector_Zero();
@@ -815,8 +815,13 @@ void render_new_wave_counter(float window_width, float window_height) {
     CP_Font_DrawText(buffer, window_width / 2.f, window_height * 1.f / 5.f);
 }
 
-void _render_victory_page(float window_width, float window_height) {
+void render_victory_page(float window_width, float window_height) {
     if (!isWin) return;
+    if (!_hasPlayedVictoryMusic) {
+        _hasPlayedVictoryMusic = true;
+        stop_sound_group(SOUNDGROUP_MUSIC);
+        play_sound(SOUND_MUSIC_VICTORY);
+    }
 
     CP_Settings_StrokeWeight(0.f);
     float mouseX = CP_Input_GetMouseX(),

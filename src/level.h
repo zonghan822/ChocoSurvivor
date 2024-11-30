@@ -47,7 +47,7 @@ bool try_pause(float window_width, float window_height);
 
 void next_wave_or_level(void);
 
-void _render_victory_page(float window_width, float window_height);
+void render_victory_page(float window_width, float window_height);
 
 bool try_game_over(float window_width, float window_height, CP_Image cursor);
 

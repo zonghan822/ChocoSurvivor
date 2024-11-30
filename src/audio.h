@@ -67,6 +67,7 @@ enum SoundType {
 	SOUND_MUSIC_NORMAL_WAVE,
 	SOUND_MUSIC_BOSS_WAVE,
 	SOUND_MUSIC_MAIN_MENU,
+	SOUND_MUSIC_VICTORY,
 #pragma endregion
 
 #pragma region UI
