@@ -1,4 +1,7 @@
 /******************************************************************************
+* All content © 2024 DigiPen Institute of Technology Singapore,
+* all rights reserved.
+*
 * @filename		projectile.h
 * @author(s)	Law Zong Han, Muhammad Nur Fadzly
 * @DP emails	zonghan.law@digipen.edu, muhammadnurfadzly.b@digipen.edu

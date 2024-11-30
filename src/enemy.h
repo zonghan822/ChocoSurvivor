@@ -1,4 +1,7 @@
 /******************************************************************************
+* All content © 2024 DigiPen Institute of Technology Singapore,
+* all rights reserved.
+*
 *@filename		enemy.h
 *@author(s)		Law Zong Han, Dalton Koh
 *@DP emails		zonghan.law@digipen.edu, d.koh@digipen.edu

@@ -1,4 +1,7 @@
 /******************************************************************************
+* All content © 2024 DigiPen Institute of Technology Singapore,
+* all rights reserved.
+*
 *@filename		astar.h
 *@author(s)		Law Zong Han
 *@DP emails		zonghan.law@digipen.edu

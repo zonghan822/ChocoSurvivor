@@ -1,11 +1,15 @@
 /******************************************************************************
+* All content © 2024 DigiPen Institute of Technology Singapore,
+* all rights reserved.
+*
 * @filename		placeables.c
 * @author(s)	Dalton koh
 * @DP emails	d.koh@digipen.edu
 * @course		Software Engineering Project 1
 * @teamname		Choco Latte
 * @gamename		Choco Survivor
-* @brief:       This file defines the functions necessary for the creation of barriers and allies
+* @brief:       This file defines the functions necessary for the creation of 
+                barriers and allies
 ******************************************************************************/
 
 #include "placeables.h"

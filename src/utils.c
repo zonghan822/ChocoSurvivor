@@ -1,4 +1,7 @@
 /******************************************************************************
+* All content © 2024 DigiPen Institute of Technology Singapore,
+* all rights reserved.
+*
 * @filename		utils.c
 * @author(s)	Muhammad Nur Fadzly Bin Zulkifli, Law Zong Han
 * @DP emails	muhammadnurfadzly.b@digipen.edu, zonghan.law@digipen.edu

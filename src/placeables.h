@@ -1,4 +1,7 @@
 /******************************************************************************
+* All content © 2024 DigiPen Institute of Technology Singapore,
+* all rights reserved.
+*
 * @filename		placeables.h
 * @author(s)	Dalton koh
 * @DP emails	d.koh@digipen.edu

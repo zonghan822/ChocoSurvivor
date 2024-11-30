@@ -1,4 +1,7 @@
 /******************************************************************************
+* All content © 2024 DigiPen Institute of Technology Singapore,
+* all rights reserved.
+*
 * @filename		optionsmenu.c
 * @author(s)	Muhammad Nur Fadzly Bin Zulkifli
 * @DP emails	muhammadnurfadzly.b@digipen.edu
