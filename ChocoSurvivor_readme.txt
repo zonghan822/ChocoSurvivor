@@ -53,5 +53,10 @@ Delete		Show hitboxes
 =		Next wave (only enable after wave delay)
 
 
+Screen resolution:
+-------------------------------------------------------------------------------------------------
+Fixed at 1600x900
+
+
 Thanks for playing!!!
 
