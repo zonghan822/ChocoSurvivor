@@ -14,7 +14,7 @@
 #include <stdio.h>
 
 static struct Button _playButton, _optionsButton, _creditsButton, _quitButton;
-static CP_Image _cursor;
+static CP_Image _cursor, _bg;
 
 // DigiPen logo
 // Show only once, so it doesn't show again after going back to menu
@@ -50,6 +50,7 @@ void main_menu_init(void) {
 	_buttonRectWidth = 300.f;
 
 	_digiPenLogoImg = CP_Image_Load("Assets/DigiPen_Singapore_WEB_WHITE.png");
+	_bg = CP_Image_Load("Assets/menu.png");
 
 	CP_Color white = CP_Color_Create(255, 255, 255, 255);
 	_playButton = init_button(_buttonRectX, _buttonRectY - (_buttonRectHeight * 1.75f), _buttonRectWidth, _buttonRectHeight, BUTTON_TYPE_SECONDARY,
@@ -102,6 +103,7 @@ void main_menu_update(void) {
 	}
 
 	CP_Graphics_ClearBackground(CP_Color_Create(128, 128, 128, 255));
+	CP_Image_Draw(_bg, _windowWidth / 2.f, _windowHeight / 2.f, _windowWidth, _windowHeight, 255);
 
 	CP_Settings_TextSize(125.0f);
 	CP_Settings_Fill(CP_Color_Create(0, 0, 0, 255));
@@ -176,6 +178,7 @@ void main_menu_update(void) {
 void main_menu_exit(void) {
 	CP_Image_Free(&_cursor);
 	CP_Image_Free(&_digiPenLogoImg);
+	CP_Image_Free(&_bg);
 	_digiPenLogoTimer = 4.51f;
 
 	dispose_sounds();
