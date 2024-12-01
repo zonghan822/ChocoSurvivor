@@ -276,7 +276,7 @@ CP_Image init_level(enum GameLevel level, float level_width, float level_height,
         _worldClipsCount = _obstaclesCount = 6;
 
         // Boss and grids
-        CP_Image bossImg = CP_Image_Load("Assets/boss_lvl1.png");
+        CP_Image bossImg = CP_Image_Load("Assets/Sprites/boss_1.png");
         float bossHeight = get_preserved_heightf((float)CP_Image_GetWidth(bossImg), (float)CP_Image_GetHeight(bossImg), BOSS_WIDTH);
         
         // Map grids
