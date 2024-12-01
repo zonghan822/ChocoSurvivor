@@ -106,8 +106,8 @@ void main_menu_update(void) {
 	CP_Graphics_ClearBackground(CP_Color_Create(128, 128, 128, 255));
 	CP_Image_Draw(_bg, _windowWidth / 2.f, _windowHeight / 2.f, _windowWidth, _windowHeight, 255);
 
-	float titleImgWidth = CP_Image_GetWidth(_title),
-		titleImgHeight = CP_Image_GetHeight(_title),
+	float titleImgWidth = (float)CP_Image_GetWidth(_title),
+		titleImgHeight = (float)CP_Image_GetHeight(_title),
 		titleWidth = _windowHeight / 1.5f,
 		preservedHeight = get_preserved_heightf(titleImgWidth, titleImgHeight, titleWidth);
 	CP_Image_Draw(_title, _windowWidth / 2.f, _windowHeight / 6.f, titleWidth, preservedHeight, 255);
